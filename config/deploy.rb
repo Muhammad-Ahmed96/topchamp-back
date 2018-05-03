@@ -21,11 +21,6 @@ set :deploy_to, '/var/www/top_champ'
 
 # Default value for :pty is false
 set :pty, true
-set :ssh_options, {
-    forward_agent: true,
-    auth_methods: ["publickey"],
-    keys: ["top-champ-qa.pem"]
-}
 
 # Default value for :linked_files is []
 # append :linked_files, "config/database.yml"
