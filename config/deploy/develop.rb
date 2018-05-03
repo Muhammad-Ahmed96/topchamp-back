@@ -13,7 +13,7 @@ set :rails_env, "development"
 set :ssh_options, {
     forward_agent: true,
     auth_methods: ["publickey"],
-    keys: ["top-champ-develop.pem"]
+    keys: ["top_champ_develop.pem"]
 }
 
 
