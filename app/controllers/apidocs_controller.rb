@@ -24,6 +24,7 @@ class ApidocsController < ApplicationController
 
   # A list of all classes that have swagger_* declarations.
   SWAGGERED_CLASSES = [
+      ApplicationSessionsController,
       self,
   ].freeze
 
