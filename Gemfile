@@ -42,8 +42,9 @@ group :development do
   gem "capistrano-rails", "~> 1.3", require: false
   gem 'capistrano-passenger'
   gem 'capistrano-rbenv'
-  gem 'swagger-blocks'
 end
+
+gem 'swagger-blocks'
 
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
