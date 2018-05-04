@@ -42,6 +42,7 @@ group :development do
   gem "capistrano-rails", "~> 1.3", require: false
   gem 'capistrano-passenger'
   gem 'capistrano-rbenv'
+  gem 'capistrano-rake', require: false
 end
 
 gem 'swagger-blocks'
