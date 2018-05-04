@@ -33,7 +33,6 @@ Authentication headers example:
         key :type, :string
       end
       response 200 do
-        key :name, 'User'
         key :description, 'This route will return a JSON representation of the User model on successful login along with the access-token and client in the header of the response.
 in Header response :
 access-token: wwwww
@@ -42,32 +41,17 @@ expiry:       yyyyy
 token-type: Bearer
 uid:          zzzzz'
         schema do
-          key :required, [:id, :email, :provider, :uid, :allow_password_change, :name, :nickname, :image]
-          property :id do
-            key :type, :integer
-            key :format, :int64
+          key :required, [:data]
+          property :data do
+            key :'$ref', :User
           end
-          property :email do
-            key :type, :string
-          end
-          property :provider do
-            key :type, :string
-          end
-          property :uid do
-            key :type, :string
-          end
-          property :allow_password_change do
-            key :type, :boolean
-          end
-          property :name do
-            key :type, :string
-          end
-          property :nickname do
-            key :type, :string
-          end
-          property :image do
-            key :type, :string
-          end
+
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
         end
       end
       response :default do
@@ -106,7 +90,19 @@ uid:          zzzzz'
         key :type, :string
       end
       response 200 do
-        key :description, '.'
+        key :required, [:success]
+        key :description, 'User is singout'
+        schema do
+          property :success do
+            key :type, :boolean
+          end
+        end
+      end
+      response 404 do
+        key :description, 'not found'
+        schema do
+          key :'$ref', :ErrorModel
+        end
       end
       response :default do
         key :description, 'unexpected error'
