@@ -70,21 +70,21 @@ uid:          zzzzz'
       key :tags, ['sign_out']
       parameter do
         key :name, :uid
-        key :in, :body
+        key :in, :header
         key :description, 'Email of user, uuid in the request headers'
         key :required, true
         key :type, :string
       end
       parameter do
         key :name, :client
-        key :in, :body
+        key :in, :header
         key :description, 'Client in the request headers'
         key :required, true
         key :type, :string
       end
       parameter do
         key :name, 'access-token'
-        key :in, :body
+        key :in, :header
         key :description, 'Access token in the request headers'
         key :required, true
         key :type, :string
