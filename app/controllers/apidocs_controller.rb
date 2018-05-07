@@ -27,6 +27,7 @@ class ApidocsController < ApplicationController
       User,
       ApplicationSessionsController,
       ErrorModel,
+      SuccessModel,
       self,
   ].freeze
 
