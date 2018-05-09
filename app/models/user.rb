@@ -1,21 +1,23 @@
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   include Swagger::Blocks
+  acts_as_paranoid
   # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable and :omniauthable
+  # :confirmable, :lockable, :timeoutable and :omniauthable, :validatable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable, :confirmable
+         :recoverable, :rememberable, :trackable, :confirmable
   include DeviseTokenAuth::Concerns::User
+  def as_json(options = {})
+    super(options.merge({ except: [:password, :name, :nickname, :provider, :allow_password_change] }))
+  end
 
-=begin
   validates :password, presence: false
   validates :first_name, length: { maximum: 50 }, presence: true
   validates :middle_initial, length: { maximum: 1 }, presence: true
   validates :last_name, length: { maximum: 50 }, presence: true
   validates :badge_name, length: { maximum: 50 }, presence: true
   validates :birth_date, presence: true
-  validates :email, presence: true
+  validates :gender, inclusion: { in: Genders.collection },presence: true
   validates :role, inclusion: { in: Roles.collection }, presence: true
-=end
 
   swagger_schema :User do
     key :required, [:id, :email, :provider, :uid, :allow_password_change, :first_name, :middle_initial,

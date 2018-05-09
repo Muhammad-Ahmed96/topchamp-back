@@ -56,3 +56,11 @@ gem 'rack-cors'
 gem 'devise_token_auth'
 
 gem 'classy_enum'
+
+
+gem 'acts_as_paranoid', github: 'ActsAsParanoid/acts_as_paranoid'
+
+gem 'kaminari'
+gem 'pager_api'
+
+gem 'active_model_serializers', '~> 0.10.0'

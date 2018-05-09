@@ -1,11 +1,13 @@
-class UsersController < ApplicationController
+class SportsController < ApplicationController
   before_action :set_resource, only: [:show, :update, :destroy]
 
   def index
-    paginate User.unscoped, per_page: 50, root: :data
+    json_response_data(Sport.all, :created)
+    #paginate Sport.unscoped, per_page: 50
   end
+
   def create
-    resource = User.create!(resource_params)
+    resource = Sport.create!(resource_params)
     json_response_data(resource, :created)
   end
 
@@ -14,8 +16,8 @@ class UsersController < ApplicationController
   end
 
   def update
-    resource.update!(resource_params)
-    json_response_data(resource, :updated)
+    @resource.update!(resource_params)
+    json_response_data(@resource, :updated)
   end
 
   def destroy
@@ -27,10 +29,10 @@ class UsersController < ApplicationController
 
   def resource_params
     # whitelist params
-    params.permit(:first_name, :middle_initial, :last_name, :badge_name, :birth_date, :email, :role, :gender)
+    params.permit(:name)
   end
 
   def set_resource
-    @resource = User.find(params[:id])
+    @resource = Sport.find(params[:id])
   end
 end
