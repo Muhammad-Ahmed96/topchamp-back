@@ -6,6 +6,9 @@ class UsersController < ApplicationController
   end
   def create
     resource = User.create!(resource_params)
+    if !params[:sports].nil?
+      resource.sport_ids  = params[:sports]
+    end
     json_response_data(resource)
   end
 
@@ -14,6 +17,9 @@ class UsersController < ApplicationController
   end
 
   def update
+    if !params[:sports].nil?
+      @resource.sport_ids  = params[:sports]
+    end
     @resource.update!(resource_params)
     json_response_data(@resource)
   end

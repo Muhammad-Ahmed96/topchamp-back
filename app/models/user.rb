@@ -1,13 +1,13 @@
 class User < ApplicationRecord
   include Swagger::Blocks
-  include DeviseTokenAuth::Concerns::User
   acts_as_paranoid
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable, :validatable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :confirmable
 
-  validates :password, presence: false
+  has_and_belongs_to_many :sports
+
   validates :first_name, length: { maximum: 50 }, presence: true
   validates :middle_initial, length: { maximum: 1 }, presence: true
   validates :last_name, length: { maximum: 50 }, presence: true
@@ -15,6 +15,8 @@ class User < ApplicationRecord
   validates :birth_date, presence: true
   validates :gender, inclusion: { in: Genders.collection },presence: true
   validates :role, inclusion: { in: Roles.collection }, presence: true
+  validates :password, presence: false
+  include DeviseTokenAuth::Concerns::User
 
   swagger_schema :User do
     key :required, [:id, :email, :provider, :uid, :allow_password_change, :first_name, :middle_initial,
