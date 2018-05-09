@@ -9,7 +9,7 @@ server "34.215.140.55", user: "ubuntu", roles: %w{app db web}
 # server "db.example.com", user: "deploy", roles: %w{db}
 #
 set :rails_env, "develop_deploy"
-
+set :branch, 'develop'
 set :ssh_options, {
     forward_agent: true,
     auth_methods: ["publickey"],

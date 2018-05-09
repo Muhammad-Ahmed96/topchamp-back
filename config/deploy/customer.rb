@@ -9,6 +9,7 @@ server "54.200.72.86", user: "ubuntu", roles: %w{app db web}
 # server "db.example.com", user: "deploy", roles: %w{db}
 
 set :rails_env, "customer"
+set :branch, 'qa'
 
 set :ssh_options, {
     forward_agent: true,
