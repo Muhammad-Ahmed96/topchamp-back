@@ -1,6 +1,5 @@
 Rails.application.routes.draw do
-  mount_devise_token_auth_for 'User', at: 'api', controllers: { sessions: 'application_sessions',
-                                                                passwords: 'application_password' }
+  mount_devise_token_auth_for 'User', at: 'api'
   scope :api, defaults: { format: :json } do
     resources :users,  only: [:index, :create, :show, :update, :destroy]
     resources :sports,  only: [:index]
