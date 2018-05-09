@@ -14,8 +14,8 @@ class UsersController < ApplicationController
   end
 
   def update
-    resource.update!(resource_params)
-    json_response_data(resource, :updated)
+    @resource.update!(resource_params)
+    json_response_data(@resource, :updated)
   end
 
   def destroy

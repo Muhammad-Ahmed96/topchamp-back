@@ -10,7 +10,7 @@ user = User.find_by_uid('user@email.com')
 if user.nil?
   user = User.new(:email => 'user@email.com', :password => 'password', :password_confirmation => 'password',
                   :first_name => 'first_name', :middle_initial => 'm', :last_name=>'last_name',
-                  :gender => :Male, :role => :Administrator, :badge_name => 'badge_name',
+                  :gender => :Male, :role => :Sysadmin, :badge_name => 'badge_name',
                   :birth_date => '2000-01-01')
   user.confirm
   user.save!
@@ -20,7 +20,7 @@ user = User.find_by_uid('test@yopmail.com')
 if user.nil?
   user = User.new(:email => 'test@yopmail.com', :password => 'password', :password_confirmation => 'password',
                   :first_name => 'first name', :middle_initial => 'm', :last_name=>'last name',
-                  :gender => :Male, :role => :Administrator, :badge_name => 'badge_name',
+                  :gender => :Male, :role => :Sysadmin, :badge_name => 'badge_name',
                   :birth_date => '2000-01-01')
   user.confirm
   user.save!

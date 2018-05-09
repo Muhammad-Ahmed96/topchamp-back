@@ -10,7 +10,7 @@ class Roles < ClassyEnum::Base
 
 end
 
-class Roles::Administrator < Roles
+class Roles::Sysadmin < Roles
 end
 
 class Roles::Agent < Roles
