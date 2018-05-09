@@ -6,7 +6,7 @@ class UsersController < ApplicationController
   end
   def create
     resource = User.create!(resource_params)
-    json_response_data(resource, :created)
+    json_response_data(resource)
   end
 
   def show
@@ -15,7 +15,7 @@ class UsersController < ApplicationController
 
   def update
     @resource.update!(resource_params)
-    json_response_data(@resource, :updated)
+    json_response_data(@resource)
   end
 
   def destroy

@@ -58,7 +58,7 @@ gem 'devise_token_auth'
 gem 'classy_enum'
 
 
-gem 'acts_as_paranoid', github: 'ActsAsParanoid/acts_as_paranoid'
+gem "paranoia", "~> 2.2"
 
 gem 'kaminari'
 gem 'pager_api'
