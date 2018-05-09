@@ -6,7 +6,7 @@ set :repo_url, "git@bitbucket.org:amplemind/topchamp_back.git"
 
 # Default branch is :master
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
-set :branch, 'develop'
+
 
 # Default deploy_to directory is /var/www/my_app_name
 # set :deploy_to, "/var/www/my_app_name"
