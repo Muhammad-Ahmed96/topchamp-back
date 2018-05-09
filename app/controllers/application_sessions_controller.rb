@@ -156,7 +156,7 @@ uid:          zzzzz'
     end
   end
 
-  # Log in process
+  # Update password
   swagger_path '/password' do
     operation :put do
       key :summary, 'Update password of reset'
@@ -180,14 +180,14 @@ uid:          zzzzz'
       end
       parameter do
         key :name, 'access-token'
-        key :in, :header
+        key :in, :body
         key :description, 'This serves as the user\'s password for each request.'
         key :required, true
         key :type, :string
       end
       parameter do
         key :name, 'token-type'
-        key :in, :header
+        key :in, :body
         key :description, 'Type of authentication'
         key :required, true
         key :type, :string
@@ -195,21 +195,21 @@ uid:          zzzzz'
       end
       parameter do
         key :name, 'client'
-        key :in, :header
+        key :in, :body
         key :description, 'This enables the use of multiple simultaneous sessions on different clients.'
         key :required, true
         key :type, :string
       end
       parameter do
         key :name, 'expiry'
-        key :in, :header
+        key :in, :body
         key :description, 'The date at which the current session will expire'
         key :required, true
         key :type, :string
       end
       parameter do
         key :name, 'uid'
-        key :in, :header
+        key :in, :body
         key :description, 'A unique value that is used to identify the user'
         key :required, true
         key :type, :string

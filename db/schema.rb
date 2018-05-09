@@ -44,6 +44,7 @@ ActiveRecord::Schema.define(version: 2018_05_07_193242) do
     t.string "last_name"
     t.string "gender"
     t.string "role"
+    t.string "badge_name"
     t.date "birth_date"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true

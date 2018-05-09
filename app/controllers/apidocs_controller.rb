@@ -26,6 +26,7 @@ class ApidocsController < ApplicationController
   SWAGGERED_CLASSES = [
       User,
       ApplicationSessionsController,
+      ResetTokenController,
       ErrorModel,
       SuccessModel,
       self,

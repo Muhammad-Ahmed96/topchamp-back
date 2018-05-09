@@ -5,7 +5,7 @@ class SuccessModel  # Notice, this is just a plain ruby object.
     key :required, [:success, :message]
     property :success do
       key :type, :boolean
-      key :default , false
+      key :default , true
     end
     property :message do
       key :type, :string

@@ -5,6 +5,7 @@ class AddInfoToUsers < ActiveRecord::Migration[5.2]
     add_column :users, :last_name, :string, :length => 50
     add_column :users, :gender, :string
     add_column :users, :role, :string
+    add_column :users, :badge_name, :string, :length => 50
     add_column :users, :birth_date, :date
   end
 end
