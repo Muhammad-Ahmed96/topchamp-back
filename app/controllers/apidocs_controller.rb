@@ -33,6 +33,7 @@ class ApidocsController < ApplicationController
       MedicalInformation,
       ApplicationSessionsController,
       ResetTokenController,
+      SportsController,
       UsersController,
       ErrorModel,
       SuccessModel,
