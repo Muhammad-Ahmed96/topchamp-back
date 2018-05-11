@@ -231,9 +231,165 @@ class UsersController < ApplicationController
     json_response_success(t("created_success", model: User.model_name.human), true)
   end
 
+  swagger_path '/users/:id' do
+    operation :get do
+      key :summary, 'Show a user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersShow'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      response 200 do
+        key :required, [:data]
+        schema do
+          property :data do
+            key :'$ref', :User
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
   def show
     authorize User
     json_response_data(@resource)
+  end
+
+  swagger_path '/users/:id' do
+    operation :put do
+      key :summary, 'Update a user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersUpdate'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      parameter do
+        key :name, :first_name
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :last_name
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :gender
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :email
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :badge_name
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :birth_date
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :middle_initial
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :role
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :profile
+        key :in, :body
+        key :required, false
+        key :type, :file
+      end
+      parameter do
+        key :name, :sports
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :contact_information
+        key :in, :body
+        key :description, 'Contact information'
+        schema do
+          key :'$ref', :ContactInformationInput
+        end
+      end
+      parameter do
+        key :name, :billing_address
+        key :in, :body
+        key :description, 'Billing address'
+        schema do
+          key :'$ref', :BillingAddressInput
+        end
+      end
+      parameter do
+        key :name, :shipping_address
+        key :in, :body
+        key :description, 'Shipping address'
+        schema do
+          key :'$ref', :ShippingAddressInput
+        end
+      end
+      parameter do
+        key :name, :association_information
+        key :in, :body
+        key :description, 'Association information'
+        schema do
+          key :'$ref', :AssociationInformationInput
+        end
+      end
+      parameter do
+        key :name, :medical_information
+        key :in, :body
+        key :description, 'Medical information'
+        schema do
+          key :'$ref', :MedicalInformationInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
   end
 
   def update
@@ -261,10 +417,60 @@ class UsersController < ApplicationController
     json_response_success(t("edited_success", model: User.model_name.human), true)
   end
 
+  swagger_path '/users/:id' do
+    operation :delete do
+      key :summary, 'Delete a user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersDelete'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
   def destroy
     authorize User
     @resource.destroy
     json_response_success(t("deleted_success", model: User.model_name.human), true)
+  end
+
+  swagger_path '/users/:id/activate' do
+    operation :put do
+      key :summary, 'Activate a user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersActivate'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
   end
 
   def activate
@@ -274,6 +480,30 @@ class UsersController < ApplicationController
     json_response_success(t("activated_success", model: User.model_name.human), true)
   end
 
+  swagger_path '/users/:id/inactive' do
+    operation :put do
+      key :summary, 'Inactive a user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersInactive'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def inactive
     authorize User
     @resource.status = :Inactive

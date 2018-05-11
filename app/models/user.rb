@@ -66,6 +66,10 @@ class User < ApplicationRecord
     self.try(:role) == "Sysadmin"
   end
 
+  def director?
+    self.try(:role) == "Director"
+  end
+
   def agent?
     self.try(:role) == "Agent"
   end

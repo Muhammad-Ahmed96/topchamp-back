@@ -1,6 +1,11 @@
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
+
   def self.my_order(column, direction = "desc")
-    order "#{column} #{direction}"
+    if column.present?
+      order "#{column} #{direction}"
+    else
+      self
+    end
   end
 end

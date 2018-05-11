@@ -8,10 +8,24 @@ class SportsController < ApplicationController
       key :operationId, 'sportsIndex'
       key :produces, ['application/json',]
       key :tags, ['sports']
-
+      parameter do
+        key :name, :column
+        key :in, :query
+        key :description, 'Column to order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :direction
+        key :in, :query
+        key :description, 'Direction to order, (ASC or DESC)'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, ''
         schema do
+          key :'$ref', :PaginateModel
           property :data do
             items do
               key :'$ref', :Sport
@@ -31,8 +45,10 @@ class SportsController < ApplicationController
     end
   end
   def index
-    json_response_data(Sport.all, :created)
-    #paginate Sport.unscoped, per_page: 50
+    #json_response_data(Sport.all, :created)
+    column = params[:column].nil? ? 'name' : params[:column]
+    direction = params[:direction].nil? ? 'asc' : params[:direction]
+    paginate Sport.unscoped.my_order(column, direction), per_page: 50
   end
 
   def create

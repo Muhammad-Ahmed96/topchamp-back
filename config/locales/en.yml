@@ -81,3 +81,5 @@ en:
        destroy?: 'You cannot delete this user'
        activate?: 'You cannot activate this user'
        inactive?: 'You cannot inactive this user'
+     event_type_policy:
+            index?: 'You cannot view event types'
