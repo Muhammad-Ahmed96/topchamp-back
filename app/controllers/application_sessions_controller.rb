@@ -43,7 +43,7 @@ uid:          zzzzz'
         schema do
           key :required, [:data]
           property :data do
-            key :'$ref', :UserLogin
+            key :'$ref', :User
           end
 
         end
@@ -236,6 +236,11 @@ uid:          zzzzz'
         key :description, 'unexpected error'
       end
     end
+  end
+
+
+  def render_create_success
+    json_response_serializer(@resource, UserSerializer)
   end
 
 end

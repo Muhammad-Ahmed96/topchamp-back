@@ -79,7 +79,7 @@ class User < ApplicationRecord
   end
 
   swagger_schema :UserLogin do
-    key :required, [:id, :email, :provider, :uid, :allow_password_change, :first_name, :middle_initial,
+    key :required, [:id, :email, :provider, :uid, :first_name, :middle_initial,
                     :last_name, :gender, :role, :birth_date, :image, :badge_name]
     property :id do
       key :type, :integer
@@ -93,9 +93,6 @@ class User < ApplicationRecord
     end
     property :uid do
       key :type, :string
-    end
-    property :allow_password_change do
-      key :type, :boolean
     end
     property :first_name do
       key :type, :string
@@ -118,15 +115,12 @@ class User < ApplicationRecord
     property :badge_name do
       key :type, :string
     end
-    property :image do
-      key :type, :string
-    end
   end
 
 
   swagger_schema :User do
     key :required, [:id, :email, :provider, :uid, :allow_password_change, :first_name, :middle_initial,
-                    :last_name, :gender, :role, :birth_date, :image, :badge_name, :sports, :contact_information,
+                    :last_name, :gender, :role, :birth_date, :profile, :badge_name, :sports, :contact_information,
                     :shipping_address, :association_information, :medical_information]
     property :id do
       key :type, :integer
