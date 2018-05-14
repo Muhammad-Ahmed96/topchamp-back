@@ -41,4 +41,5 @@ set :pty, true
 # set :ssh_options, verify_host_key: :secure
 
 append :linked_files, "config/database.yml", "config/secrets.yml"
-append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "vendor/bundle", "public/system", "public/uploads"
+append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "vendor/bundle","public/images",
+       "public/system", "public/uploads"

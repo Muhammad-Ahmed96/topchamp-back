@@ -38,13 +38,14 @@ group :development do
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
+  #Deployment
   gem "capistrano", "~> 3.10", require: false
   gem "capistrano-rails", "~> 1.3", require: false
   gem 'capistrano-passenger'
   gem 'capistrano-rbenv'
   gem 'capistrano-rake', require: false
 end
-
+#Documentation
 gem 'swagger-blocks'
 
 
@@ -53,14 +54,17 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 # allow cors
 gem 'rack-cors'
+#Auth token JWT
 gem 'devise_token_auth'
-
+#Enums
 gem 'classy_enum'
-
-
+#SoftDelete
 gem "paranoia", "~> 2.2"
-
+#Paginator
 gem 'kaminari'
 gem 'pager_api'
-
 gem 'active_model_serializers', '~> 0.10.0'
+#File management
+gem "paperclip", "~> 6.0.0"
+# authorization
+gem "pundit"

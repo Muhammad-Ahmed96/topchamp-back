@@ -7,7 +7,7 @@ class ResetTokenController < ApplicationController
       key :description, 'Requires reset password token.'
       key :operationId, 'resetPasswordToken'
       key :produces, ['application/json',]
-      key :tags, ['Validation reset password token']
+      key :tags, ['security']
       parameter do
         key :name, :reset_password_token
         key :in, :path

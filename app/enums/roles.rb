@@ -18,3 +18,6 @@ end
 
 class Roles::Member < Roles
 end
+
+class Roles::Director < Roles
+end

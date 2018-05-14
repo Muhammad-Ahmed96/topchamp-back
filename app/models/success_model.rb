@@ -2,7 +2,6 @@ class SuccessModel  # Notice, this is just a plain ruby object.
   include Swagger::Blocks
 
   swagger_schema :SuccessModel do
-    key :required, [:success, :message]
     property :success do
       key :type, :boolean
       key :default , true

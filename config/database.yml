@@ -24,7 +24,7 @@ default: &default
 development:
   <<: *default
   database: topchamp_development
-  username: postgres
+  username: daniel
   password: password
   host: localhost
 

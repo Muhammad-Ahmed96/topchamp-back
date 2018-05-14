@@ -17,7 +17,7 @@ Authentication headers example:
 "uid":          "zzzzz"'
       key :operationId, 'signIn'
       key :produces, ['application/json',]
-      key :tags, ['sign_in']
+      key :tags, ['security']
       parameter do
         key :name, :email
         key :in, :body
@@ -43,7 +43,7 @@ uid:          zzzzz'
         schema do
           key :required, [:data]
           property :data do
-            key :'$ref', :User
+            key :'$ref', :UserLogin
           end
 
         end
@@ -67,7 +67,7 @@ uid:          zzzzz'
       key :description, 'This route will invalidate the user\'s authentication token. You must pass in uid, client, and access-token in the request headers.'
       key :operationId, 'signOut'
       key :produces, ['application/json',]
-      key :tags, ['sign_out']
+      key :tags, ['security']
       parameter do
         key :name, :uid
         key :in, :header
@@ -117,7 +117,7 @@ uid:          zzzzz'
       key :description, 'Use this route to send a password reset confirmation email to users that registered by email'
       key :operationId, 'resetPassword'
       key :produces, ['application/json',]
-      key :tags, ['password']
+      key :tags, ['security']
       parameter do
         key :name, :email
         key :in, :body
@@ -163,7 +163,7 @@ uid:          zzzzz'
       key :description, 'Use this route to change users\' passwords'
       key :operationId, 'updatePassword'
       key :produces, ['application/json',]
-      key :tags, ['update password']
+      key :tags, ['security']
       parameter do
         key :name, :password
         key :in, :body

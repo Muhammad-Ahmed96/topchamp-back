@@ -10,10 +10,75 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_09_200118) do
+ActiveRecord::Schema.define(version: 2018_05_10_043414) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "association_informations", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "membership_type"
+    t.string "membership_id"
+    t.string "raking"
+    t.string "affiliation"
+    t.string "certification"
+    t.string "company"
+  end
+
+  create_table "billing_addresses", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "address_line_1"
+    t.string "address_line_2"
+    t.string "postal_code"
+    t.string "city"
+    t.string "state"
+  end
+
+  create_table "contact_informations", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "country_code_phone"
+    t.integer "cell_phone"
+    t.string "alternative_email"
+    t.string "address_line_1"
+    t.string "address_line_2"
+    t.string "postal_code"
+    t.string "state"
+    t.string "city"
+    t.integer "work_phone"
+    t.string "emergency_contact_full_name"
+    t.string "emergency_contact_country_code_phone"
+    t.integer "emergency_contact_phone"
+  end
+
+  create_table "event_types", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_types_on_deleted_at"
+  end
+
+  create_table "medical_informations", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "insurance_provider"
+    t.string "insurance_policy_number"
+    t.string "group_id"
+    t.string "primary_physician_full_name"
+    t.string "primary_physician_country_code_phone"
+    t.integer "primary_physician_phone"
+    t.string "dietary_restrictions"
+    t.string "allergies"
+  end
+
+  create_table "shipping_addresses", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "contact_name"
+    t.string "address_line_1"
+    t.string "address_line_2"
+    t.string "postal_code"
+    t.string "city"
+    t.string "state"
+  end
 
   create_table "sports", force: :cascade do |t|
     t.string "name"
@@ -60,6 +125,11 @@ ActiveRecord::Schema.define(version: 2018_05_09_200118) do
     t.string "badge_name"
     t.date "birth_date"
     t.datetime "deleted_at"
+    t.string "profile_file_name"
+    t.string "profile_content_type"
+    t.integer "profile_file_size"
+    t.datetime "profile_updated_at"
+    t.string "status", default: "Active"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -67,4 +137,9 @@ ActiveRecord::Schema.define(version: 2018_05_09_200118) do
     t.index ["uid", "provider"], name: "index_users_on_uid_and_provider", unique: true
   end
 
+  add_foreign_key "association_informations", "users"
+  add_foreign_key "billing_addresses", "users"
+  add_foreign_key "contact_informations", "users"
+  add_foreign_key "medical_informations", "users"
+  add_foreign_key "shipping_addresses", "users"
 end

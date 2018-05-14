@@ -28,3 +28,9 @@ end
 if Sport.count == 0
   sports = Sport.create([{name: 'Pickleball'}, {name: 'Football Soccer'}])
 end
+
+if EventType.count == 0
+  EventType.create([{name: 'Class'}, {name: 'Exposition'}, {name: 'Fundraiser'}, {name: 'Meeting'},
+                    {name: 'Reunion'}, {name: 'Tradeshow'}, {name: 'Training'}, {name: 'Tournament'},
+                    {name: 'Workshop'}])
+end
