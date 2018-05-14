@@ -25,10 +25,22 @@ class ApidocsController < ApplicationController
   # A list of all classes that have swagger_* declarations.
   SWAGGERED_CLASSES = [
       User,
+      Sport,
+      ContactInformation,
+      ShippingAddress,
+      BillingAddress,
+      AssociationInformation,
+      MedicalInformation,
+      EventType,
       ApplicationSessionsController,
+      RolesController,
       ResetTokenController,
+      SportsController,
+      #EventTypesController,
+      UsersController,
       ErrorModel,
       SuccessModel,
+      PaginateModel,
       self,
   ].freeze
 

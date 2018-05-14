@@ -12,6 +12,11 @@ module Response
   end
 
   def json_response_data(object, status = :ok)
-    render json: {data: object}, status: status
+    render json: {data: object}, status: status, adapter: :json
+  end
+
+  def json_response_serializer(object, serializer, status = :ok)
+    data = ActiveModelSerializers::SerializableResource.new(object, serializer: serializer, adapter: :json, root: :data).to_json
+    render json: data, status: status
   end
 end

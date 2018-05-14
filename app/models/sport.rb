@@ -5,8 +5,20 @@ class Sport < ApplicationRecord
   validates :name, presence: false,  length: { maximum: 50 }
 
   swagger_schema :Sport do
-    key :required, [:name]
+    key :required, [:id, :name]
     property :id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :name do
+      key :type, :string
+    end
+
+  end
+
+  swagger_schema :SportInput do
+    key :required, [:name]
+    property :name do
       key :type, :string
     end
 
