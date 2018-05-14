@@ -24,7 +24,13 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
       redirect_to(@resource.build_auth_url(params[:redirect_url],
                                            redirect_headers))
     else
-      render_edit_error
+      url = params[:redirect_url] << "?"
+      redirect_to url << {reset_password: true, reset_password_token: resource_params[:reset_password_token]}.to_query
     end
+  end
+
+
+  def render_edit_error
+    raise ActionController::RoutingError.new('Not Found')
   end
 end
