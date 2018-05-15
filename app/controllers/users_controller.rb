@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile]
   before_action :authenticate_user!
 # Update password
   swagger_path '/users' do
@@ -502,6 +502,43 @@ class UsersController < ApplicationController
     json_response_success(t("edited_success", model: User.model_name.human), true)
   end
 
+  swagger_path '/users/:id/profile' do
+    operation :put do
+      key :summary, 'Update profile picture to a user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersUpdateProfile'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      parameter do
+        key :name, :profile
+        key :in, :body
+        key :required, false
+        key :type, :file
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def profile
+    authorize User
+    @resource.update!(resource_profile_params)
+    json_response_success(t("edited_success", model: User.model_name.human), true)
+  end
+
   swagger_path '/users/:id' do
     operation :delete do
       key :summary, 'Delete a user'
@@ -602,6 +639,11 @@ class UsersController < ApplicationController
     # whitelist params
     params.permit(:first_name, :middle_initial, :last_name, :badge_name, :birth_date, :email, :role, :gender,
                   :profile)
+  end
+
+  def resource_profile_params
+    # whitelist params
+    params.permit(:profile)
   end
 
   def contact_information_params

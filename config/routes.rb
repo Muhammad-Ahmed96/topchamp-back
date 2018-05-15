@@ -6,6 +6,7 @@ Rails.application.routes.draw do
       member do
         put :activate
         put :inactive
+        put :profile
       end
     end
     resources :sports, only: [:index]
