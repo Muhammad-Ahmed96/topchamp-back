@@ -30,22 +30,18 @@ class User < ApplicationRecord
   validates :password, presence: false
   include DeviseTokenAuth::Concerns::User
 
-  def self.in_role(role)
-    if role.present?
-      where(role: role)
-    else
-      self
-    end
+  scope :in_status, lambda{ |status| where status: status if status.present? }
+  scope :in_role, lambda{ |role| where role: role if role.present? }
+  scope :search, lambda{ |search| where ["first_name LIKE ? OR last_name like ?", "%#{search}%", "%#{search}%"] if search.present? }
+  scope :first_name_like, lambda{ |search| where ["first_name LIKE ?", "%#{search}%"] if search.present? }
+  scope :last_name_like, lambda{ |search| where ["last_name LIKE ?", "%#{search}%"] if search.present? }
+  scope :gender_like, lambda{ |search| where ["gender LIKE ?", "%#{search}%"] if search.present? }
+  scope :email_like, lambda{ |search| where ["email LIKE ?", "%#{search}%"] if search.present? }
+  scope :last_sign_in_at_in, lambda{ |search| where last_sign_in_at:  search.beginning_of_day..search.end_of_day if search.present? }
+  scope :state_like, lambda{ |search| joins(:contact_information).merge(ContactInformation.where ["state LIKE ?", "%#{search}%"] ) if search.present? }
+  scope :city_like, lambda{ |search| joins(:contact_information).merge(ContactInformation.where ["city LIKE ?", "%#{search}%"] ) if search.present? }
+  scope :sport_in, lambda{ |search| joins(:sports).merge(Sport.where id: search) if search.present? }
 
-  end
-
-  def self.search(search)
-    if search.present?
-      where ["first_name LIKE ? OR last_name like ?", "%#{search}%", "%#{search}%"]
-    else
-      self
-    end
-  end
 
   def self.active
     where(status: :Active)
@@ -53,13 +49,6 @@ class User < ApplicationRecord
 
   def self.inactive
     where(status: :Inactive)
-  end
-  def self.is_status(status)
-    if status.present?
-      where(status: status)
-    else
-      self
-    end
   end
 
   def sysadmin?

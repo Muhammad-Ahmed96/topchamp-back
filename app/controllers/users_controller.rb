@@ -45,6 +45,62 @@ class UsersController < ApplicationController
         key :required, false
         key :type, :string
       end
+      parameter do
+        key :name, :first_name
+        key :in, :query
+        key :description, 'First name filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :last_name
+        key :in, :query
+        key :description, 'Last name filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :gender
+        key :in, :query
+        key :description, 'Gender filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :email
+        key :in, :query
+        key :description, 'Email filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :last_sign_in_at
+        key :in, :query
+        key :description, 'Last sign filter format(Y-m-d)'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :query
+        key :description, 'State filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :query
+        key :description, 'City filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :sport_id
+        key :in, :query
+        key :description, 'Id of te sport filter'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, ''
         schema do
@@ -71,11 +127,22 @@ class UsersController < ApplicationController
   def index
     authorize User
     search = params[:search].strip unless params[:search].nil?
-    role = params[:role].strip unless params[:role].nil?
     column = params[:column].nil? ? 'first_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     status = params[:status]
-    paginate User.unscoped.my_order(column, direction).in_role(role).search(search).is_status(status), per_page: 50, root: :data
+    role = params[:role]
+    first_name = params[:first_name]
+    last_name = params[:last_name]
+    gender = params[:gender]
+    email = params[:email]
+    last_sign_in_at = params[:last_sign_in_at]
+    state = params[:state]
+    city = params[:city]
+    sport_id = params[:sport_id]
+    paginate User.unscoped.my_order(column, direction).search(search).in_role(role)
+                 .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
+                 .email_like(email).last_sign_in_at_in(last_sign_in_at).state_like(state).city_like(city)
+                 .sport_in(sport_id), per_page: 50, root: :data
   end
 
   swagger_path '/users' do
