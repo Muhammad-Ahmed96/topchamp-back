@@ -95,6 +95,13 @@ class UsersController < ApplicationController
         key :type, :string
       end
       parameter do
+        key :name, :birth_date
+        key :in, :query
+        key :description, 'Birth date format(Y-m-d)'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :sport_id
         key :in, :query
         key :description, 'Id of te sport filter'
@@ -139,6 +146,7 @@ class UsersController < ApplicationController
     state = params[:state]
     city = params[:city]
     sport_id = params[:sport_id]
+    birth_date = params[:birth_date]
     column_contact_information = nil
     column_sports = nil
     if column.to_s == "state"  || column.to_s == "city"
@@ -149,7 +157,7 @@ class UsersController < ApplicationController
       column_sports = "name"
       column = nil
     end
-    paginate User.unscoped.my_order(column, direction).search(search).in_role(role)
+    paginate User.unscoped.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
                  .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
                  .email_like(email).last_sign_in_at_in(last_sign_in_at).state_like(state).city_like(city)
                  .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction), per_page: 50, root: :data

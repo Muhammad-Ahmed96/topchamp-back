@@ -32,6 +32,7 @@ class User < ApplicationRecord
 
   scope :in_status, lambda{ |status| where status: status if status.present? }
   scope :in_role, lambda{ |role| where role: role if role.present? }
+  scope :birth_date_in, lambda{ |birth_date| where birth_date: birth_date if birth_date.present? }
   scope :search, lambda{ |search| where ["first_name LIKE ? OR last_name like ?", "%#{search}%", "%#{search}%"] if search.present? }
   scope :first_name_like, lambda{ |search| where ["first_name LIKE ?", "%#{search}%"] if search.present? }
   scope :last_name_like, lambda{ |search| where ["last_name LIKE ?", "%#{search}%"] if search.present? }
