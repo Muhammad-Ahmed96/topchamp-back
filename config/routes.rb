@@ -11,6 +11,7 @@ Rails.application.routes.draw do
     resources :sports, only: [:index]
     resources :event_types, only: [:index]
     resources :roles, only: [:index]
+    resources :status, only: [:index]
     get 'check_reset_token/:reset_password_token', to: 'reset_token#check_reset'
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html

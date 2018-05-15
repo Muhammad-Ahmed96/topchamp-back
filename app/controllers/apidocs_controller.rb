@@ -36,6 +36,7 @@ class ApidocsController < ApplicationController
       RolesController,
       ResetTokenController,
       SportsController,
+      StatusController,
       #EventTypesController,
       UsersController,
       ErrorModel,
