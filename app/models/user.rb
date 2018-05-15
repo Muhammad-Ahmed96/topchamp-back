@@ -41,6 +41,8 @@ class User < ApplicationRecord
   scope :state_like, lambda{ |search| joins(:contact_information).merge(ContactInformation.where ["state LIKE ?", "%#{search}%"] ) if search.present? }
   scope :city_like, lambda{ |search| joins(:contact_information).merge(ContactInformation.where ["city LIKE ?", "%#{search}%"] ) if search.present? }
   scope :sport_in, lambda{ |search| joins(:sports).merge(Sport.where id: search) if search.present? }
+  scope :contact_information_order, lambda{ |column, direction = "desc"| includes(:contact_information).order("contact_informations.#{column} #{direction}") if column.present? }
+  scope :sports_order, lambda{ |column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present? }
 
 
   def self.active

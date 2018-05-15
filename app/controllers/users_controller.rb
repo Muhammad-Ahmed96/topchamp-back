@@ -27,7 +27,7 @@ class UsersController < ApplicationController
       parameter do
         key :name, :column
         key :in, :query
-        key :description, 'Column to order'
+        key :description, 'Column to order special "sport_name" parameter for sports order'
         key :required, false
         key :type, :string
       end
@@ -139,10 +139,20 @@ class UsersController < ApplicationController
     state = params[:state]
     city = params[:city]
     sport_id = params[:sport_id]
+    column_contact_information = nil
+    column_sports = nil
+    if column.to_s == "state"  || column.to_s == "city"
+      column_contact_information = column
+      column = nil
+    end
+    if column.to_s == "sport_name"
+      column_sports = "name"
+      column = nil
+    end
     paginate User.unscoped.my_order(column, direction).search(search).in_role(role)
                  .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
                  .email_like(email).last_sign_in_at_in(last_sign_in_at).state_like(state).city_like(city)
-                 .sport_in(sport_id), per_page: 50, root: :data
+                 .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction), per_page: 50, root: :data
   end
 
   swagger_path '/users' do
