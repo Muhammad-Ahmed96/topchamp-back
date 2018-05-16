@@ -40,7 +40,7 @@ class User < ApplicationRecord
   scope :gender_like, lambda {|search| where ["gender LIKE ?", "%#{search}%"] if search.present?}
   scope :email_like, lambda {|search| where ["email LIKE ?", "%#{search}%"] if search.present?}
   scope :last_sign_in_at_in, lambda {|search| where last_sign_in_at: search.beginning_of_day..search.end_of_day if search.present?}
-  scope :last_sign_in_at_like, lambda {|search| where("LOWER(to_char(last_sign_in_at, 'MONTH, Day, YYYY')) LIKE LOWER(?)", "%#{search}%") if search.present?}
+  scope :last_sign_in_at_like, lambda {|search| where("LOWER(concat(trim(to_char(last_sign_in_at, 'Month')),',',to_char(last_sign_in_at, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
   scope :state_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["state LIKE ?", "%#{search}%"]) if search.present?}
   scope :city_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["city LIKE ?", "%#{search}%"]) if search.present?}
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
