@@ -118,14 +118,217 @@ class VenuesController < ApplicationController
     facility_management_id = params[:facility_management_id]
     column_facility_management = nil
     if column.to_s == "facility_management"
-      column_facility_management = column
+      column_facility_management = "primary_contact_name"
       column = nil
     end
     paginate Venue.unscoped.my_order(column, direction).name_like(name).sport_in(sport_id).phone_number_like(phone_number)
       .is_facility(facility).state_like(state).city_like(city).is_status(status).facility_management_in(facility_management_id)
-                 .facility_management_order(column_facility_management), per_page: 50, root: :data
+                 .facility_management_order(column_facility_management, direction), per_page: 50, root: :data
   end
-
+  swagger_path '/venues' do
+    operation :post do
+      key :summary, 'Create venue'
+      key :description, 'Venues Catalog'
+      key :operationId, 'venuesCreate'
+      key :produces, ['application/json',]
+      key :tags, ['venues']
+      parameter do
+        key :name, :name
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :abbreviation
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :country_code
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :phone_number
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :link
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :facility
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :description
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :space
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :latitude
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :longitude
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :address_line_1
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :address_line_2
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :postal_code
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :country
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :availability_date_start
+        key :in, :body
+        key :required, true
+        key :type, :date
+      end
+      parameter do
+        key :name, :availability_date_end
+        key :in, :body
+        key :required, true
+        key :type, :date
+      end
+      parameter do
+        key :name, :availability_time_zone
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :restrictions
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :is_insurance_requirements
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
+        key :name, :insurance_requirements
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :is_decorations
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
+        key :name, :is_vehicles
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
+        key :name, :vehicles
+        key :in, :body
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
+        key :name, :days
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :array
+          items do
+              key :'$ref', :VenueDayInput
+            end
+        end
+      end
+      parameter do
+        key :name, :sports
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :facility_management
+        key :in, :body
+        key :description, 'Facility management'
+        schema do
+          key :'$ref', :VenueFacilityManagementInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def create
     authorize Venue
     resource = Venue.create!(resource_params)
@@ -146,11 +349,242 @@ class VenuesController < ApplicationController
     json_response_success(t("created_success", model: Venue.model_name.human), true)
   end
 
+  swagger_path '/venues/:id' do
+    operation :get do
+      key :summary, 'Show venue'
+      key :description, 'Venues Catalog'
+      key :operationId, 'venuesShow'
+      key :produces, ['application/json',]
+      key :tags, ['venues']
+      response 200 do
+        key :required, [:data]
+        schema do
+          property :data do
+            key :'$ref', :Venue
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def show
     authorize Venue
     json_response_data(@venue)
   end
-
+=begin
+  swagger_path '/venues/:id' do
+    operation :put do
+      key :summary, 'Update venue'
+      key :description, 'Venues Catalog'
+      key :operationId, 'venuesUpdate'
+      key :produces, ['application/json',]
+      key :tags, ['venues']
+      parameter do
+        key :name, :name
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :abbreviation
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :country_code
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :phone_number
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :link
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :facility
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :description
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :space
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :latitude
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :longitude
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :address_line_1
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :address_line_2
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :postal_code
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :country
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :availability_date_start
+        key :in, :body
+        key :required, true
+        key :type, :date
+      end
+      parameter do
+        key :name, :availability_date_end
+        key :in, :body
+        key :required, true
+        key :type, :date
+      end
+      parameter do
+        key :name, :availability_time_zone
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :restrictions
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :is_insurance_requirements
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
+        key :name, :insurance_requirements
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :is_decorations
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
+        key :name, :is_vehicles
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
+        key :name, :vehicles
+        key :in, :body
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
+        key :name, :days
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :array
+          items do
+            key :'$ref', :VenueDayInput
+          end
+        end
+      end
+      parameter do
+        key :name, :sports
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :facility_management
+        key :in, :body
+        key :description, 'Facility management'
+        schema do
+          key :'$ref', :VenueFacilityManagementInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+=end
   def update
     authorize Venue
     if !params[:facility_management].nil?
@@ -172,20 +606,89 @@ class VenuesController < ApplicationController
     @venue.update!(resource_params)
     json_response_success(t("edited_success", model: Venue.model_name.human), true)
   end
-
+  swagger_path '/venues/:id' do
+    operation :delete do
+      key :summary, 'Delete venue'
+      key :description, 'Venues Catalog'
+      key :operationId, 'venuesDelete'
+      key :produces, ['application/json',]
+      key :tags, ['venues']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def destroy
     authorize Venue
     @venue.destroy
     json_response_success(t("deleted_success", model: Venue.model_name.human), true)
   end
-
+  swagger_path '/venues/:id/activate' do
+    operation :put do
+      key :summary, 'Activate venue'
+      key :description, 'Venues Catalog'
+      key :operationId, 'venuesActivate'
+      key :produces, ['application/json',]
+      key :tags, ['venues']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def activate
     authorize Venue
     @venue.status = :Active
     @venue.save
     json_response_success(t("activated_success", model: Venue.model_name.human), true)
   end
-
+  swagger_path '/venues/:id/inactive' do
+    operation :put do
+      key :summary, 'Activate venue'
+      key :description, 'Inactivate Catalog'
+      key :operationId, 'venuesInactivate'
+      key :produces, ['application/json',]
+      key :tags, ['venues']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def inactive
     authorize Venue
     @venue.status = :Inactive

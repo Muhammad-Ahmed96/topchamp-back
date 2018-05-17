@@ -37,7 +37,7 @@ class Venue < ApplicationRecord
   scope :is_status, lambda {|status| where status: status if status.present?}
   scope :is_facility, lambda {|facility| where facility: facility if facility.present?}
   scope :name_like, lambda {|search| where ["LOWER(name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
-  scope :phone_number_like, lambda {|search| where ["LOWER(phone_number) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :phone_number_like, lambda {|search| where ["to_char(phone_number,'9999999999') LIKE ?", "%#{search}%"] if search.present?}
   scope :state_like, lambda {|search| where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :city_like, lambda {|search| where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
