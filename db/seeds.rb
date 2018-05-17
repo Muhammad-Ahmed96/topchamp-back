@@ -34,3 +34,9 @@ if EventType.count == 0
                     {name: 'Reunion'}, {name: 'Tradeshow'}, {name: 'Training'}, {name: 'Tournament'},
                     {name: 'Workshop'}])
 end
+
+if AttendeeType.count == 0
+  AttendeeType.create([{name: 'Advertiser'}, {name: 'Coach'}, {name: 'Exhibitor'}, {name: 'Instructor'},
+                    {name: 'Media'}, {name: 'Official'}, {name: 'Player'}, {name: 'Staff'}, {name: 'Spectator'},
+                       {name: 'Sponsor'}, {name: 'VIP'}])
+end

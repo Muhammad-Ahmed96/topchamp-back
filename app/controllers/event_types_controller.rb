@@ -8,6 +8,27 @@ class EventTypesController < ApplicationController
       key :operationId, 'eventTypeIndex'
       key :produces, ['application/json',]
       key :tags, ['event types']
+      parameter do
+        key :name, :search
+        key :in, :query
+        key :description, 'Keyword to search'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :column
+        key :in, :query
+        key :description, 'Column to order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :direction
+        key :in, :query
+        key :description, 'Direction to order'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, ''
         schema do

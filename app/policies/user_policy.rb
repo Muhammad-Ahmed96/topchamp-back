@@ -29,6 +29,10 @@ class UserPolicy < ApplicationPolicy
   def inactive?
     user.sysadmin? || user.agent?
   end
+
+  def profile?
+    user.sysadmin? || user.agent?
+  end
   class Scope < Scope
     def resolve
       scope

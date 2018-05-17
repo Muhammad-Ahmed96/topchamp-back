@@ -34,15 +34,15 @@ class User < ApplicationRecord
   scope :in_status, lambda {|status| where status: status if status.present?}
   scope :in_role, lambda {|role| where role: role if role.present?}
   scope :birth_date_in, lambda {|birth_date| where birth_date: birth_date if birth_date.present?}
-  scope :search, lambda {|search| where ["first_name LIKE ? OR last_name like ?", "%#{search}%", "%#{search}%"] if search.present?}
-  scope :first_name_like, lambda {|search| where ["first_name LIKE ?", "%#{search}%"] if search.present?}
-  scope :last_name_like, lambda {|search| where ["last_name LIKE ?", "%#{search}%"] if search.present?}
-  scope :gender_like, lambda {|search| where ["gender LIKE ?", "%#{search}%"] if search.present?}
-  scope :email_like, lambda {|search| where ["email LIKE ?", "%#{search}%"] if search.present?}
+  scope :search, lambda {|search| where ["LOWER(first_name) LIKE LOWER(?) OR LOWER(last_name) like LOWER(?)", "%#{search}%", "%#{search}%"] if search.present?}
+  scope :first_name_like, lambda {|search| where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :last_name_like, lambda {|search| where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :gender_like, lambda {|search| where ["LOWER(gender) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :email_like, lambda {|search| where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :last_sign_in_at_in, lambda {|search| where last_sign_in_at: search.beginning_of_day..search.end_of_day if search.present?}
   scope :last_sign_in_at_like, lambda {|search| where("LOWER(concat(trim(to_char(last_sign_in_at, 'Month')),',',to_char(last_sign_in_at, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
-  scope :state_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["state LIKE ?", "%#{search}%"]) if search.present?}
-  scope :city_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["city LIKE ?", "%#{search}%"]) if search.present?}
+  scope :state_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :city_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
   scope :contact_information_order, lambda {|column, direction = "desc"| includes(:contact_information).order("contact_informations.#{column} #{direction}") if column.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}

@@ -345,7 +345,7 @@ class UsersController < ApplicationController
 
   def show
     authorize User
-    json_response_data(@resource)
+    json_response_data(@user)
   end
 
   swagger_path '/users/:id' do
@@ -480,25 +480,25 @@ class UsersController < ApplicationController
   def update
     authorize User
     if !params[:sports].nil?
-      @resource.sport_ids = params[:sports]
+      @user.sport_ids = params[:sports]
     end
     if !params[:contact_information].nil?
-      @resource.create_contact_information! contact_information_params
+      @user.create_contact_information! contact_information_params
     end
     if !params[:billing_address].nil?
-      @resource.create_billing_address! billing_address_params
+      @user.create_billing_address! billing_address_params
     end
     if !params[:shipping_address].nil?
-      @resource.create_shipping_address! shipping_address_params
+      @user.create_shipping_address! shipping_address_params
     end
     if !params[:association_information].nil?
-      @resource.create_association_information! association_information_params
+      @user.create_association_information! association_information_params
     end
 
     if !params[:medical_information].nil?
-      @resource.create_medical_information! medical_information_params
+      @user.create_medical_information! medical_information_params
     end
-    @resource.update!(resource_params)
+    @user.update!(resource_params)
     json_response_success(t("edited_success", model: User.model_name.human), true)
   end
 
@@ -535,7 +535,7 @@ class UsersController < ApplicationController
 
   def profile
     authorize User
-    @resource.update!(resource_profile_params)
+    @user.update!(resource_profile_params)
     json_response_success(t("edited_success", model: User.model_name.human), true)
   end
 
@@ -566,7 +566,7 @@ class UsersController < ApplicationController
 
   def destroy
     authorize User
-    @resource.destroy
+    @user.destroy
     json_response_success(t("deleted_success", model: User.model_name.human), true)
   end
 
@@ -597,8 +597,8 @@ class UsersController < ApplicationController
 
   def activate
     authorize User
-    @resource.status = :Active
-    @resource.save
+    @user.status = :Active
+    @user.save
     json_response_success(t("activated_success", model: User.model_name.human), true)
   end
 
@@ -628,8 +628,8 @@ class UsersController < ApplicationController
   end
   def inactive
     authorize User
-    @resource.status = :Inactive
-    @resource.save
+    @user.status = :Inactive
+    @user.save
     json_response_success(t("inactivated_success", model: User.model_name.human), true)
   end
 
@@ -649,7 +649,7 @@ class UsersController < ApplicationController
   def contact_information_params
     # whitelist params
     params.require(:contact_information).permit(:cell_phone, :country_code_phone, :alternative_email, :address_line_1, :address_line_2,
-                                                :postal_code, :state, :city, :work_phone, :emergency_contact_full_name,
+                                                :postal_code, :state, :city,:country_code_work_phone , :work_phone, :emergency_contact_full_name,
                                                 :emergency_contact_country_code_phone, :emergency_contact_phone)
   end
 
@@ -675,6 +675,6 @@ class UsersController < ApplicationController
   end
 
   def set_resource
-    @resource = User.find(params[:id])
+    @user = User.find(params[:id])
   end
 end
