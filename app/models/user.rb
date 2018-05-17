@@ -154,6 +154,10 @@ class User < ApplicationRecord
       key :type, :string
     end
 
+    property :is_receive_text do
+      key :type, :boolean
+    end
+
     property :sports do
       key :type, :array
       items do
@@ -216,7 +220,9 @@ class User < ApplicationRecord
     property :last_sign_in_at do
       key :type, :string
     end
-
+    property :is_receive_text do
+      key :type, :boolean
+    end
     property :sports do
       key :type, :array
       items do

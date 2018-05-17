@@ -8,7 +8,9 @@ class VenuePicture < ApplicationRecord
   validates_with AttachmentSizeValidator, attributes: :picture, less_than: 2.megabytes
   validates_attachment_content_type :picture, content_type: /\Aimage\/.*\z/
 
-  def picture_original
-    picture.url
+  swagger_schema :VenuePicture do
+    property :picture do
+      key :type, :string
+    end
   end
 end

@@ -34,6 +34,8 @@ class ApidocsController < ApplicationController
       EventType,
       AttendeeType,
       ApplicationSessionsController,
+      VenueFacilityManagementController,
+      VenuesController,
       RolesController,
       ResetTokenController,
       SportsController,
@@ -44,6 +46,10 @@ class ApidocsController < ApplicationController
       ErrorModel,
       SuccessModel,
       PaginateModel,
+      VenueFacilityManagement,
+      Venue,
+      VenueDay,
+      VenuePicture,
       self,
   ].freeze
 

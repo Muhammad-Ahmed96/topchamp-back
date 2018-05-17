@@ -235,6 +235,12 @@ class UsersController < ApplicationController
         end
       end
       parameter do
+        key :name, :is_receive_text
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
         key :name, :contact_information
         key :in, :body
         key :description, 'Contact information'
@@ -418,6 +424,12 @@ class UsersController < ApplicationController
           key :type, :integer
           key :format, :int64
         end
+      end
+      parameter do
+        key :name, :is_receive_text
+        key :in, :body
+        key :required, false
+        key :type, :boolean
       end
       parameter do
         key :name, :contact_information
@@ -650,7 +662,7 @@ class UsersController < ApplicationController
     # whitelist params
     params.require(:contact_information).permit(:cell_phone, :country_code_phone, :alternative_email, :address_line_1, :address_line_2,
                                                 :postal_code, :state, :city,:country_code_work_phone , :work_phone, :emergency_contact_full_name,
-                                                :emergency_contact_country_code_phone, :emergency_contact_phone)
+                                                :emergency_contact_country_code_phone, :emergency_contact_phone, :is_receive_text)
   end
 
   def billing_address_params

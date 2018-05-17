@@ -5,6 +5,6 @@ class VenueSerializer < ActiveModel::Serializer
              :is_decorations, :decorations, :is_vehicles, :vehicles
   has_many :sports
   has_many :days, serializer: VenueDaySerializer
-  has_one :facility_management, serializer: VenueFacilityManagement
+  has_one :facility_management, serializer: VenueFacilityManagementSerializer
   has_one :pictures, serializer: VenuePictureSerializer
 end

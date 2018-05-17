@@ -13,10 +13,11 @@ Rails.application.routes.draw do
     resources :event_types, only: [:index]
     resources :attendee_type, only: [:index]
     resources :roles, only: [:index]
-    resources :facilities, only: [:index]
+    resources :status, only: [:index]
     resources :facilities, only: [:index]
     resources :days, only: [:index]
     resources :restrictions, only: [:index]
+    resources :venue_facility_management, only: [:index]
     resources :venues, only: [:index, :create, :show, :update, :destroy] do
       member do
         put :activate
