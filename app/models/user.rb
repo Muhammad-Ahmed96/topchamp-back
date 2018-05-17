@@ -15,8 +15,9 @@ class User < ApplicationRecord
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
-                    styles: {medium: "300x300>", thumb: "100x100>"}, default_url: "/images/:style/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/images/:style/missing.png"
   validates_attachment :profile
+  validate :check_dimensions
   validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
   validates_attachment_content_type :profile, content_type: /\Aimage\/.*\z/
 
@@ -30,22 +31,22 @@ class User < ApplicationRecord
   validates :password, presence: false
   include DeviseTokenAuth::Concerns::User
 
-  def self.in_role(role)
-    if role.present?
-      where(role: role)
-    else
-      self
-    end
+  scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :in_role, lambda {|role| where role: role if role.present?}
+  scope :birth_date_in, lambda {|birth_date| where birth_date: birth_date if birth_date.present?}
+  scope :search, lambda {|search| where ["first_name LIKE ? OR last_name like ?", "%#{search}%", "%#{search}%"] if search.present?}
+  scope :first_name_like, lambda {|search| where ["first_name LIKE ?", "%#{search}%"] if search.present?}
+  scope :last_name_like, lambda {|search| where ["last_name LIKE ?", "%#{search}%"] if search.present?}
+  scope :gender_like, lambda {|search| where ["gender LIKE ?", "%#{search}%"] if search.present?}
+  scope :email_like, lambda {|search| where ["email LIKE ?", "%#{search}%"] if search.present?}
+  scope :last_sign_in_at_in, lambda {|search| where last_sign_in_at: search.beginning_of_day..search.end_of_day if search.present?}
+  scope :last_sign_in_at_like, lambda {|search| where("LOWER(concat(trim(to_char(last_sign_in_at, 'Month')),',',to_char(last_sign_in_at, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
+  scope :state_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["state LIKE ?", "%#{search}%"]) if search.present?}
+  scope :city_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["city LIKE ?", "%#{search}%"]) if search.present?}
+  scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
+  scope :contact_information_order, lambda {|column, direction = "desc"| includes(:contact_information).order("contact_informations.#{column} #{direction}") if column.present?}
+  scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
 
-  end
-
-  def self.search(search)
-    if search.present?
-      where ["first_name LIKE ? OR last_name like ?", "%#{search}%", "%#{search}%"]
-    else
-      self
-    end
-  end
 
   def self.active
     where(status: :Active)
@@ -53,13 +54,6 @@ class User < ApplicationRecord
 
   def self.inactive
     where(status: :Inactive)
-  end
-  def self.is_status(status)
-    if status.present?
-      where(status: status)
-    else
-      self
-    end
   end
 
   def sysadmin?
@@ -248,6 +242,19 @@ class User < ApplicationRecord
 
     property :medical_information do
       key :'$ref', :MedicalInformationInput
+    end
+  end
+
+  private
+
+  def check_dimensions
+    required_width = 300
+    required_height = 300
+    temp_file = profile.queued_for_write[:original]
+    unless temp_file.nil?
+      dimensions = Paperclip::Geometry.from_file(temp_file.path)
+      errors.add(:image, "Maximun width must be #{required_width}px") unless dimensions.width <= required_width
+      errors.add(:image, "Maximun height must be #{required_height}px") unless dimensions.height <= required_height
     end
   end
 
