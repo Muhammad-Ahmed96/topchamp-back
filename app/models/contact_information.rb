@@ -38,6 +38,9 @@ class ContactInformation < ApplicationRecord
     property :city do
       key :type, :string
     end
+    property :country_code_work_phone do
+      key :type, :string
+    end
     property :work_phone do
       key :type, :integer
       key :format, :int64
@@ -79,6 +82,9 @@ class ContactInformation < ApplicationRecord
       key :type, :string
     end
     property :city do
+      key :type, :string
+    end
+    property :country_code_work_phone do
       key :type, :string
     end
     property :work_phone do
