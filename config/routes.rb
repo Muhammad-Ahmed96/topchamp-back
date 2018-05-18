@@ -19,7 +19,7 @@ Rails.application.routes.draw do
     resources :days, only: [:index]
     resources :restrictions, only: [:index]
     resources :venue_facility_management, only: [:index]
-    resources :venues, only: [:index, :create, :show, :destroy] do
+    resources :venues, only: [:index, :create, :show, :update, :destroy] do
       member do
         put :activate
         put :inactive

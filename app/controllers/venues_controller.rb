@@ -379,7 +379,6 @@ class VenuesController < ApplicationController
     authorize Venue
     json_response_data(@venue)
   end
-=begin
   swagger_path '/venues/:id' do
     operation :put do
       key :summary, 'Update venue'
@@ -594,7 +593,6 @@ class VenuesController < ApplicationController
       end
     end
   end
-=end
   def update
     authorize Venue
     if !params[:facility_management].nil?
