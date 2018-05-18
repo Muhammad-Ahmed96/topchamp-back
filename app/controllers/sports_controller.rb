@@ -45,6 +45,7 @@ class SportsController < ApplicationController
     end
   end
   def index
+    authorize Sport
     #json_response_data(Sport.all, :created)
     column = params[:column].nil? ? 'name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
@@ -52,20 +53,24 @@ class SportsController < ApplicationController
   end
 
   def create
+    authorize Sport
     resource = Sport.create!(resource_params)
     json_response_data(resource, :created)
   end
 
   def show
+    authorize Sport
     json_response_data(@resource)
   end
 
   def update
+    authorize Sport
     @resource.update!(resource_params)
     json_response_data(@resource, :updated)
   end
 
   def destroy
+    authorize Sport
     @resource.destroy
     json_response_success(t(:deleted), true)
   end

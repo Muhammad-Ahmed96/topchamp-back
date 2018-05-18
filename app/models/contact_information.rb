@@ -38,6 +38,9 @@ class ContactInformation < ApplicationRecord
     property :city do
       key :type, :string
     end
+    property :country_code_work_phone do
+      key :type, :string
+    end
     property :work_phone do
       key :type, :integer
       key :format, :int64
@@ -45,7 +48,7 @@ class ContactInformation < ApplicationRecord
     property :emergency_contact_full_name do
       key :type, :string
     end
-    property :emergency_contact_full_name do
+    property :emergency_contact_country_code_phone do
       key :type, :string
     end
     property :emergency_contact_phone do
@@ -81,6 +84,9 @@ class ContactInformation < ApplicationRecord
     property :city do
       key :type, :string
     end
+    property :country_code_work_phone do
+      key :type, :string
+    end
     property :work_phone do
       key :type, :integer
       key :format, :int64
@@ -88,7 +94,7 @@ class ContactInformation < ApplicationRecord
     property :emergency_contact_full_name do
       key :type, :string
     end
-    property :emergency_contact_full_name do
+    property :emergency_contact_country_code_phone do
       key :type, :string
     end
     property :emergency_contact_phone do
