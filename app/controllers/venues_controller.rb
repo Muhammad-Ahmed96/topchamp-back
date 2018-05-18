@@ -567,6 +567,16 @@ class VenuesController < ApplicationController
           key :'$ref', :VenueFacilityManagementInput
         end
       end
+      parameter do
+        key :name, :deleted_images
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
       response 200 do
         key :description, ''
         schema do
@@ -597,8 +607,10 @@ class VenuesController < ApplicationController
         @venue.days.destroy_all
         @venue.days.create!( day_params[:days])
     end
+    if params[:deleted_images]
+      @venue.pictures.where(id: params[:deleted_images]).destroy_all
+    end
     if params[:pictures]
-      @venue.pictures.destroy_all
       params[:pictures].each { |image|
         @venue.pictures.create!(picture: image)
       }

@@ -9,6 +9,10 @@ class VenuePicture < ApplicationRecord
   validates_attachment_content_type :picture, content_type: /\Aimage\/.*\z/
 
   swagger_schema :VenuePicture do
+    property :id do
+      key :type, :integer
+      key :format, :int64
+    end
     property :picture do
       key :type, :string
     end

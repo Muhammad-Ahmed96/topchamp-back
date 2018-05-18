@@ -1,4 +1,4 @@
-class AttendeeTypePolicy < ApplicationPolicy
+class AgendaTypePolicy < ApplicationPolicy
   attr_reader :user
   def index?
     user.sysadmin?
@@ -20,7 +20,6 @@ class AttendeeTypePolicy < ApplicationPolicy
   def destroy?
     user.sysadmin?
   end
-
   class Scope < Scope
     def resolve
       scope

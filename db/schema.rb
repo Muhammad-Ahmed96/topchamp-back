@@ -10,10 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_17_211831) do
+ActiveRecord::Schema.define(version: 2018_05_18_005315) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "agenda_types", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_agenda_types_on_deleted_at"
+  end
 
   create_table "association_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -67,6 +75,15 @@ ActiveRecord::Schema.define(version: 2018_05_17_211831) do
     t.index ["deleted_at"], name: "index_event_types_on_deleted_at"
   end
 
+  create_table "languages", force: :cascade do |t|
+    t.string "name"
+    t.string "locale"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_languages_on_deleted_at"
+  end
+
   create_table "medical_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "insurance_provider"
@@ -79,6 +96,16 @@ ActiveRecord::Schema.define(version: 2018_05_17_211831) do
     t.string "allergies"
   end
 
+  create_table "regions", force: :cascade do |t|
+    t.string "name"
+    t.string "base"
+    t.string "territoy"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_regions_on_deleted_at"
+  end
+
   create_table "shipping_addresses", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "contact_name"
@@ -87,6 +114,36 @@ ActiveRecord::Schema.define(version: 2018_05_17_211831) do
     t.string "postal_code"
     t.string "city"
     t.string "state"
+  end
+
+  create_table "sponsors", force: :cascade do |t|
+    t.string "company_name"
+    t.string "logo_file_name"
+    t.string "logo_content_type"
+    t.integer "logo_file_size"
+    t.datetime "logo_updated_at"
+    t.string "brand"
+    t.string "product"
+    t.string "franchise_brand"
+    t.string "business_category"
+    t.string "geography"
+    t.text "description"
+    t.string "contact_name"
+    t.string "country_code"
+    t.integer "phone"
+    t.string "email"
+    t.string "address_line_1"
+    t.string "address_line_2"
+    t.string "postal_code"
+    t.string "state"
+    t.string "city"
+    t.string "work_country_code"
+    t.integer "work_phone"
+    t.string "status", default: "Active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_sponsors_on_deleted_at"
   end
 
   create_table "sports", force: :cascade do |t|

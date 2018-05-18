@@ -43,6 +43,10 @@ class ApidocsController < ApplicationController
       EventTypesController,
       AttendeeTypeController,
       UsersController,
+      SponsorsController,
+      AgendaTypesController,
+      RegionsController,
+      LanguagesController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -50,6 +54,10 @@ class ApidocsController < ApplicationController
       Venue,
       VenueDay,
       VenuePicture,
+      AgendaType,
+      Region,
+      Sponsor,
+      Language,
       self,
   ].freeze
 

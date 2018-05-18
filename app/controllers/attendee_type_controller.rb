@@ -1,64 +1,64 @@
 class AttendeeTypeController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy]
-  before_action :authenticate_user!
-  swagger_path '/attendee_type' do
-    operation :get do
-      key :summary, 'Get attendee type list'
-      key :description, 'Attendee type Catalog'
-      key :operationId, 'attendeeTypeIndex'
-      key :produces, ['application/json',]
-      key :tags, ['attendee type']
-      parameter do
-        key :name, :search
-        key :in, :query
-        key :description, 'Keyword to search'
-        key :required, false
-        key :type, :string
-      end
-      parameter do
-        key :name, :column
-        key :in, :query
-        key :description, 'Column to order'
-        key :required, false
-        key :type, :string
-      end
-      parameter do
-        key :name, :direction
-        key :in, :query
-        key :description, 'Direction to order'
-        key :required, false
-        key :type, :string
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :PaginateModel
-          property :data do
-            items do
-              key :'$ref', :AttendeeType
+    before_action :set_resource, only: [:show, :update, :destroy]
+    before_action :authenticate_user!
+    swagger_path '/attendee_type' do
+      operation :get do
+        key :summary, 'Get attendee type list'
+        key :description, 'Attendee type Catalog'
+        key :operationId, 'attendeeTypeIndex'
+        key :produces, ['application/json',]
+        key :tags, ['attendee type']
+        parameter do
+          key :name, :search
+          key :in, :query
+          key :description, 'Keyword to search'
+          key :required, false
+          key :type, :string
+        end
+        parameter do
+          key :name, :column
+          key :in, :query
+          key :description, 'Column to order'
+          key :required, false
+          key :type, :string
+        end
+        parameter do
+          key :name, :direction
+          key :in, :query
+          key :description, 'Direction to order'
+          key :required, false
+          key :type, :string
+        end
+        response 200 do
+          key :description, ''
+          schema do
+            key :'$ref', :PaginateModel
+            property :data do
+              items do
+                key :'$ref', :AttendeeType
+              end
             end
           end
         end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
+        response 401 do
+          key :description, 'not authorized'
+          schema do
+            key :'$ref', :ErrorModel
+          end
+        end
+        response :default do
+          key :description, 'unexpected error'
         end
       end
-      response :default do
-        key :description, 'unexpected error'
-      end
     end
-  end
-  def index
-    authorize AttendeeType
-    search = params[:search].strip unless params[:search].nil?
-    column = params[:column].nil? ? 'name': params[:column]
-    direction = params[:direction].nil? ? 'asc': params[:direction]
-    paginate AttendeeType.unscoped.my_order(column, direction).search(search), per_page: 50, root: :data
-  end
+    def index
+      authorize AttendeeType
+      search = params[:search].strip unless params[:search].nil?
+      column = params[:column].nil? ? 'name': params[:column]
+      direction = params[:direction].nil? ? 'asc': params[:direction]
+      paginate AttendeeType.unscoped.my_order(column, direction).search(search), per_page: 50, root: :data
+    end
 =begin
   swagger_path '/attendee_type' do
     operation :post do
@@ -91,11 +91,11 @@ class AttendeeTypeController < ApplicationController
     end
   end
 =end
-  def create
-    authorize AttendeeType
-    resource = AttendeeType.create!(resource_params)
-    json_response_success(t("created_success", model: AttendeeType.model_name.human), true)
-  end
+    def create
+      authorize AttendeeType
+      resource = AttendeeType.create!(resource_params)
+      json_response_success(t("created_success", model: AttendeeType.model_name.human), true)
+    end
 =begin
   swagger_path '/attendee_type/:id' do
     operation :get do
@@ -124,10 +124,10 @@ class AttendeeTypeController < ApplicationController
     end
   end
 =end
-  def show
-    authorize AttendeeType
-    json_response_data(@resource)
-  end
+    def show
+      authorize AttendeeType
+      json_response_serializer(@attendeeType, AttendeeTypeSerializer)
+    end
 =begin
   swagger_path '/attendee_type/:id' do
     operation :put do
@@ -160,11 +160,11 @@ class AttendeeTypeController < ApplicationController
     end
   end
 =end
-  def update
-    authorize AttendeeType
-    @resource.update!(resource_params)
-    json_response_success(t("edited_success", model: AttendeeType.model_name.human), true)
-  end
+    def update
+      authorize AttendeeType
+      @attendeeType.update!(resource_params)
+      json_response_success(t("edited_success", model: AttendeeType.model_name.human), true)
+    end
 =begin
   swagger_path '/attendee_type/:id' do
     operation :delete do
@@ -191,19 +191,19 @@ class AttendeeTypeController < ApplicationController
     end
   end
 =end
-  def destroy
-    authorize AttendeeType
-    @resource.destroy
-    json_response_success(t("deleted_success", model: AttendeeType.model_name.human), true)
-  end
+    def destroy
+      authorize AttendeeType
+      @attendeeType.destroy
+      json_response_success(t("deleted_success", model: AttendeeType.model_name.human), true)
+    end
 
-  private
+    private
 
-  def resource_params
-    # whitelist params
-    params.permit(:name)
-  end
-  def set_resource
-    @resource = AttendeeType.find(params[:id])
-  end
+    def resource_params
+      # whitelist params
+      params.permit(:name)
+    end
+    def set_resource
+      @attendeeType = AttendeeType.find(params[:id])
+    end
 end

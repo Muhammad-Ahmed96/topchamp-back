@@ -1,3 +1,3 @@
 class VenuePictureSerializer < ActiveModel::Serializer
-  attributes :picture
+  attributes :id, :picture
 end

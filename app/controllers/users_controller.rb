@@ -351,7 +351,7 @@ class UsersController < ApplicationController
 
   def show
     authorize User
-    json_response_data(@user)
+    json_response_serializer(@user, UserSerializer)
   end
 
   swagger_path '/users/:id' do
