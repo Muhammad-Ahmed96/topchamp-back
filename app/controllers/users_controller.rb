@@ -641,6 +641,7 @@ class UsersController < ApplicationController
   def inactive
     authorize User
     @user.status = :Inactive
+    @user.tokens = nil
     @user.save
     json_response_success(t("inactivated_success", model: User.model_name.human), true)
   end
