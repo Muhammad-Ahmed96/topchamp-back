@@ -2,7 +2,6 @@ class RegionsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy]
   before_action :authenticate_user!
-=begin
   swagger_path '/regions' do
     operation :get do
       key :summary, 'Get region list'
@@ -68,7 +67,6 @@ class RegionsController < ApplicationController
       end
     end
   end
-=end
   def index
     authorize Region
     column = params[:column].nil? ? 'name': params[:column]

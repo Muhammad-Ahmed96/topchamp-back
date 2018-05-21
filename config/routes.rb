@@ -31,9 +31,9 @@ Rails.application.routes.draw do
         put :inactive
       end
     end
-    #resources :agenda_types, only: [:index]
-    #resources :regions, only: [:index]
-    #resources :languages, only: [:index]
+    resources :agenda_types, only: [:index]
+    resources :regions, only: [:index]
+    resources :languages, only: [:index]
     get 'check_reset_token/:reset_password_token', to: 'reset_token#check_reset'
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html

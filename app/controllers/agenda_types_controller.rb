@@ -2,7 +2,6 @@ class AgendaTypesController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy]
   before_action :authenticate_user!
-=begin
   swagger_path '/agenda_types' do
     operation :get do
       key :summary, 'Get agenda type list'
@@ -53,7 +52,6 @@ class AgendaTypesController < ApplicationController
       end
     end
   end
-=end
   def index
     authorize AgendaType
     search = params[:search].strip unless params[:search].nil?

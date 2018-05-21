@@ -2,7 +2,6 @@ class LanguagesController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy]
   before_action :authenticate_user!
-=begin
   swagger_path '/languages' do
     operation :get do
       key :summary, 'Get language list'
@@ -61,7 +60,6 @@ class LanguagesController < ApplicationController
       end
     end
   end
-=end
   def index
     authorize Language
     column = params[:column].nil? ? 'name': params[:column]
