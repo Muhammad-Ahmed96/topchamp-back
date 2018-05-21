@@ -75,7 +75,7 @@ class RegionsController < ApplicationController
     name = params[:name].strip unless params[:name].nil?
     base = params[:base].strip unless params[:base].nil?
     territoy = params[:territoy].strip unless params[:territoy].nil?
-    paginate Region.unscoped.my_order(column, direction).name_like(name).base_like(base).territoy_like(territoy), per_page: 50, root: :data
+    paginate Region.my_order(column, direction).name_like(name).base_like(base).territoy_like(territoy), per_page: 50, root: :data
   end
 =begin
   swagger_path '/regions' do

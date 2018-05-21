@@ -67,7 +67,7 @@ class LanguagesController < ApplicationController
 
     name = params[:name].strip unless params[:name].nil?
     locale = params[:locale].strip unless params[:locale].nil?
-    paginate Language.unscoped.my_order(column, direction).name_like(name).locale_like(locale), per_page: 50, root: :data
+    paginate Language.my_order(column, direction).name_like(name).locale_like(locale), per_page: 50, root: :data
   end
 =begin
   swagger_path '/languages' do

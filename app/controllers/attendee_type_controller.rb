@@ -57,7 +57,7 @@ class AttendeeTypeController < ApplicationController
       search = params[:search].strip unless params[:search].nil?
       column = params[:column].nil? ? 'name': params[:column]
       direction = params[:direction].nil? ? 'asc': params[:direction]
-      paginate AttendeeType.unscoped.my_order(column, direction).search(search), per_page: 50, root: :data
+      paginate AttendeeType.my_order(column, direction).search(search), per_page: 50, root: :data
     end
 =begin
   swagger_path '/attendee_type' do

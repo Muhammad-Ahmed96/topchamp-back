@@ -121,7 +121,7 @@ class VenuesController < ApplicationController
       column_facility_management = "primary_contact_name"
       column = nil
     end
-    paginate Venue.unscoped.my_order(column, direction).name_like(name).sport_in(sport_id).phone_number_like(phone_number)
+    paginate Venue.my_order(column, direction).name_like(name).sport_in(sport_id).phone_number_like(phone_number)
       .is_facility(facility).state_like(state).city_like(city).is_status(status).facility_management_in(facility_management_id)
                  .facility_management_order(column_facility_management, direction), per_page: 50, root: :data
   end
