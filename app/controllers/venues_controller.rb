@@ -74,9 +74,9 @@ class VenuesController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :facility_management_id
+        key :name, :facility_management
         key :in, :query
-        key :description, 'Facility management id filter'
+        key :description, 'Facility management Yes/No filter'
         key :required, false
         key :type, :string
       end
@@ -116,6 +116,7 @@ class VenuesController < ApplicationController
     city = params[:city]
     status = params[:status]
     facility_management_id = params[:facility_management_id]
+    facility_management = params[:facility_management]
     column_facility_management = nil
     if column.to_s == "facility_management"
       column_facility_management = "primary_contact_name"
@@ -123,7 +124,7 @@ class VenuesController < ApplicationController
     end
     paginate Venue.my_order(column, direction).name_like(name).sport_in(sport_id).phone_number_like(phone_number)
       .is_facility(facility).state_like(state).city_like(city).is_status(status).facility_management_in(facility_management_id)
-                 .facility_management_order(column_facility_management, direction), per_page: 50, root: :data
+                 .facility_management_order(column_facility_management, direction).with_facility_management(facility_management), per_page: 50, root: :data
   end
   swagger_path '/venues' do
     operation :post do

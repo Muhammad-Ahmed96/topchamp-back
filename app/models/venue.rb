@@ -42,6 +42,8 @@ class Venue < ApplicationRecord
   scope :city_like, lambda {|search| where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
   scope :facility_management_in, lambda {|search| joins(:facility_management).merge(VenueFacilityManagement.where id: search) if search.present?}
+  scope :with_facility_management, lambda {|search| left_joins(:facility_management).merge(search.to_s.downcase == "yes" ? (VenueFacilityManagement.where.not id: nil) :
+                                                                                               search.to_s.downcase == "no" ?  (VenueFacilityManagement.where id: nil) : self) if search.present?}
 
   scope :facility_management_order, lambda {|column, direction = "desc"| includes(:facility_management).order("venue_facility_managements.#{column} #{direction}") if column.present?}
 
