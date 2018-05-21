@@ -57,7 +57,7 @@ class SportsController < ApplicationController
     column = params[:column].nil? ? 'name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     search = params[:search].strip unless params[:search].nil?
-    paginate Sport.unscoped.my_order(column, direction).search(search), per_page: 50
+    paginate Sport.my_order(column, direction).search(search), per_page: 50
   end
 
   def create

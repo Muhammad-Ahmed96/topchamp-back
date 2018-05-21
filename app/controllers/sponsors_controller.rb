@@ -115,7 +115,7 @@ class SponsorsController < ApplicationController
     city = params[:city]
     status = params[:status]
     geography = params[:geography]
-    paginate Sponsor.unscoped.my_order(column, direction).in_status(status).in_geography(geography).company_name_like(company_name)
+    paginate Sponsor.my_order(column, direction).in_status(status).in_geography(geography).company_name_like(company_name)
                  .brand_like(brand).product_like(product).franchise_brand_like(franchise_brand).business_category_like(business_category)
                  .state_like(state).city_like(city), per_page: 50, root: :data
   end
