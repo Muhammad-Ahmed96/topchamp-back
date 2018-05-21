@@ -45,6 +45,7 @@ class ApidocsController < ApplicationController
       UsersController,
       SponsorsController,
       AgendaTypesController,
+      GeographyController,
       RegionsController,
       LanguagesController,
       FacilitiesController,
