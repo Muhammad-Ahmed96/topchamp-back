@@ -25,14 +25,12 @@ Rails.application.routes.draw do
         put :inactive
       end
     end
-=begin
     resources :sponsors, only: [:index, :create, :show, :update, :destroy] do
       member do
         put :activate
         put :inactive
       end
     end
-=end
     #resources :agenda_types, only: [:index]
     #resources :regions, only: [:index]
     #resources :languages, only: [:index]
