@@ -22,6 +22,13 @@ class SportsController < ApplicationController
         key :required, false
         key :type, :string
       end
+      parameter do
+        key :name, :search
+        key :in, :query
+        key :description, 'Keyword to search'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, ''
         schema do
@@ -49,7 +56,8 @@ class SportsController < ApplicationController
     #json_response_data(Sport.all, :created)
     column = params[:column].nil? ? 'name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
-    paginate Sport.unscoped.my_order(column, direction), per_page: 50
+    search = params[:search].strip unless params[:search].nil?
+    paginate Sport.unscoped.my_order(column, direction).search(search), per_page: 50
   end
 
   def create

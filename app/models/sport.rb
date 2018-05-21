@@ -4,6 +4,8 @@ class Sport < ApplicationRecord
   has_and_belongs_to_many :users
   validates :name, presence: false,  length: { maximum: 50 }
 
+  scope :search, lambda{ |search| where ["LOWER(name) LIKE LOWER(?)", "%#{search}%"] if search.present? }
+
   swagger_schema :Sport do
     key :required, [:id, :name]
     property :id do
