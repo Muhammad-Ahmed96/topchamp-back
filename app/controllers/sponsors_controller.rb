@@ -2,7 +2,6 @@ class SponsorsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
   before_action :authenticate_user!
-=begin
   swagger_path '/sponsors' do
     operation :get do
       key :summary, 'Get sponsor list'
@@ -102,7 +101,6 @@ class SponsorsController < ApplicationController
       end
     end
   end
-=end
   def index
     authorize Sponsor
     column = params[:column].nil? ? 'company_name' : params[:column]
@@ -121,7 +119,6 @@ class SponsorsController < ApplicationController
                  .brand_like(brand).product_like(product).franchise_brand_like(franchise_brand).business_category_like(business_category)
                  .state_like(state).city_like(city), per_page: 50, root: :data
   end
-=begin
   swagger_path '/sponsors' do
     operation :post do
       key :summary, 'Create sponsor'
@@ -256,13 +253,11 @@ class SponsorsController < ApplicationController
       end
     end
   end
-=end
   def create
     authorize Sponsor
     resource = Sponsor.create!(resource_params)
     json_response_success(t("created_success", model: Sponsor.model_name.human), true)
   end
-=begin
   swagger_path '/sponsors/:id' do
     operation :get do
       key :summary, 'Show sponsor'
@@ -289,12 +284,10 @@ class SponsorsController < ApplicationController
       end
     end
   end
-=end
   def show
     authorize Sponsor
     json_response_serializer(@sponsor, SponsorSerializer)
   end
-=begin
   swagger_path '/sponsors/:id' do
     operation :put do
       key :summary, 'Update sponsor'
@@ -429,13 +422,11 @@ class SponsorsController < ApplicationController
       end
     end
   end
-=end
   def update
     authorize Sponsor
     @sponsor.update!(resource_params)
     json_response_success(t("edited_success", model: Sponsor.model_name.human), true)
   end
-=begin
   swagger_path '/sponsors/:id' do
     operation :delete do
       key :summary, 'Delete sponsor'
@@ -460,13 +451,11 @@ class SponsorsController < ApplicationController
       end
     end
   end
-=end
   def destroy
     authorize Sponsor
     @sponsor.destroy
     json_response_success(t("deleted_success", model: Sponsor.model_name.human), true)
   end
-=begin
   swagger_path '/sponsors/:id/activate' do
     operation :put do
       key :summary, 'Activate sponsor'
@@ -491,14 +480,12 @@ class SponsorsController < ApplicationController
       end
     end
   end
-=end
   def activate
     authorize Sponsor
     @sponsor.status = :Active
     @sponsor.save
     json_response_success(t("activated_success", model: Sponsor.model_name.human), true)
   end
-=begin
   swagger_path '/sponsors/:id/inactive' do
     operation :put do
       key :summary, 'Inactive sponsor'
@@ -523,7 +510,6 @@ class SponsorsController < ApplicationController
       end
     end
   end
-=end
   def inactive
     authorize Sponsor
     @sponsor.status = :Inactive
