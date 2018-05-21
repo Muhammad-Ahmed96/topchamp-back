@@ -46,6 +46,7 @@ class Venue < ApplicationRecord
                                                                                                search.to_s.downcase == "no" ?  (VenueFacilityManagement.where id: nil) : self) if search.present?}
 
   scope :facility_management_order, lambda {|column, direction = "desc"| includes(:facility_management).order("venue_facility_managements.#{column} #{direction}") if column.present?}
+  scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
 
 
   def self.active
