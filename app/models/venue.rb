@@ -31,7 +31,7 @@ class Venue < ApplicationRecord
   validates_length_of :vehicles, :minimum => 0, :maximum => 4, :allow_blank => true
 
   #validates :restrictions, inclusion: {in: Restrictions.collection}
-  validates :facility, inclusion: {in: Facilities.collection}
+  #validates :facility, inclusion: {in: Facilities.collection}
 
 
   scope :is_status, lambda {|status| where status: status if status.present?}
