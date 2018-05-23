@@ -5,7 +5,15 @@ class ApplicationController < ActionController::API
   include Response
   delegate :t, to: I18n
   before_action :repair_nested_params
+  before_action :configure_permitted_parameters, if: :devise_controller?
 
+  protected
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name,:email, contact_information: [:cell_phone, :country_code_phone, :alternative_email, :address_line_1, :address_line_2,
+                                                                                                             :postal_code, :state, :city,:country_code_work_phone , :work_phone, :emergency_contact_full_name,
+                                                                                                             :emergency_contact_country_code_phone, :emergency_contact_phone, :is_receive_text]])
+  end
 
   private
 

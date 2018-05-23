@@ -22,12 +22,12 @@ class User < ApplicationRecord
   validates_attachment_content_type :profile, content_type: /\Aimage\/.*\z/
 
   validates :first_name, length: {maximum: 50}, presence: true
-  validates :middle_initial, length: {maximum: 1}, presence: true
+  validates :middle_initial, length: {maximum: 1}
   validates :last_name, length: {maximum: 50}, presence: true
-  validates :badge_name, length: {maximum: 50}, presence: true
-  validates :birth_date, presence: true
-  validates :gender, inclusion: {in: Genders.collection}, presence: true
-  validates :role, inclusion: {in: Roles.collection}, presence: true
+  validates :badge_name, length: {maximum: 50}
+  #validates :birth_date, presence: true
+  #validates :gender, inclusion: {in: Genders.collection}
+  #validates :role, inclusion: {in: Roles.collection}
   validates :password, presence: false
   include DeviseTokenAuth::Concerns::User
 

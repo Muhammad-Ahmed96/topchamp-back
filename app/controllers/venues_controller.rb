@@ -295,10 +295,7 @@ class VenuesController < ApplicationController
         key :required, false
         key :type, :array
         items do
-          key :type, :array
-          items do
               key :'$ref', :VenueDayInput
-            end
         end
       end
       parameter do
@@ -549,10 +546,7 @@ class VenuesController < ApplicationController
         key :required, false
         key :type, :array
         items do
-          key :type, :array
-          items do
             key :'$ref', :VenueDayInput
-          end
         end
       end
       parameter do
