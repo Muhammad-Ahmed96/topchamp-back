@@ -725,7 +725,7 @@ class VenuesController < ApplicationController
 
   def day_params
     # whitelist params
-    params.permit(days: [:day, :time] )
+    params.permit(days: [:day, :time_start, :time_end] )
   end
 
   def facility_management_params

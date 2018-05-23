@@ -7,9 +7,12 @@ class VenueDay < ApplicationRecord
     property :day do
       key :type, :string
     end
-    property :time do
+    property :time_start do
       key :type, :string
-      end
+    end
+    property :time_end do
+      key :type, :string
+    end
     property :venue_id do
       key :type, :string
       end
@@ -20,7 +23,10 @@ class VenueDay < ApplicationRecord
     property :day do
       key :type, :string
     end
-    property :time do
+    property :time_start do
+      key :type, :string
+    end
+    property :time_end do
       key :type, :string
     end
   end
