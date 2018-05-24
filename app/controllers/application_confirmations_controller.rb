@@ -60,7 +60,7 @@ class ApplicationConfirmationsController < ApplicationController
   end
   swagger_path '/application_confirmations/resend_pin' do
     operation :post do
-      key :summary, 'Confirmation a account'
+      key :summary, 'Resend confirmation a account'
       key :description, 'Confirmation'
       key :operationId, 'accountResendPin'
       key :produces, ['application/json',]
