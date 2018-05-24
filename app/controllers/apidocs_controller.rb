@@ -49,6 +49,8 @@ class ApidocsController < ApplicationController
       RegionsController,
       LanguagesController,
       FacilitiesController,
+      ApplicationConfirmationsController,
+      ApplicationRegistrationsController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
