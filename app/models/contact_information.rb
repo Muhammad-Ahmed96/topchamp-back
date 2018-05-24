@@ -102,4 +102,14 @@ class ContactInformation < ApplicationRecord
       key :format, :int64
     end
   end
+  swagger_schema :ContactInformationInputSingUp do
+    key :required, [:cell_phone, :country_code_phone]
+    property :country_code_phone do
+      key :type, :string
+    end
+    property :cell_phone do
+      key :type, :integer
+      key :format, :int64
+    end
+  end
 end

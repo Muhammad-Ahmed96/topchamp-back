@@ -16,20 +16,25 @@ class User < ApplicationRecord
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
                     styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/images/:style/missing.png"
+
+  # authenticate :resend_limit, if: :new_record?
+  #authenticate :valid_pin, unless: :new_record?
+  after_initialize :set_random_pin!, if: :new_record?
   validates_attachment :profile
   validate :check_dimensions
   validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
   validates_attachment_content_type :profile, content_type: /\Aimage\/.*\z/
 
   validates :first_name, length: {maximum: 50}, presence: true
-  validates :middle_initial, length: {maximum: 1}, presence: true
+  validates :middle_initial, length: {maximum: 1}
   validates :last_name, length: {maximum: 50}, presence: true
-  validates :badge_name, length: {maximum: 50}, presence: true
-  validates :birth_date, presence: true
-  validates :gender, inclusion: {in: Genders.collection}, presence: true
-  validates :role, inclusion: {in: Roles.collection}, presence: true
+  validates :badge_name, length: {maximum: 50}
+  #validates :birth_date, presence: true
+  #validates :gender, inclusion: {in: Genders.collection}
+  #validates :role, inclusion: {in: Roles.collection}
   validates :password, presence: false
   include DeviseTokenAuth::Concerns::User
+
 
   scope :in_status, lambda {|status| where status: status if status.present?}
   scope :in_role, lambda {|role| where role: role if role.present?}
@@ -248,6 +253,27 @@ class User < ApplicationRecord
 
     property :medical_information do
       key :'$ref', :MedicalInformationInput
+    end
+  end
+
+  def resend_limit
+    if self.profile.activations.where(created_at: (1.day.ago..Time.now)).count >= 3
+      errors.add(:base, 'You have reached the maximum allow number of reminders!')
+    end
+  end
+  def set_random_pin!
+    generated = 0
+    loop do
+      generated = rand(000000..999999).to_s.rjust(6, "0")
+      other = User.find_by_pin(generated)
+      break if other.nil?
+    end
+    self.pin = generated
+  end
+
+  def valid_pin
+    unless response_pin.present? && response_pin == pin
+      errors.add(:response_pin, 'Incorrect pin number')
     end
   end
 

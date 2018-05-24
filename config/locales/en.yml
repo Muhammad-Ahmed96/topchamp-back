@@ -83,3 +83,6 @@ en:
        inactive?: 'You cannot inactive this user'
      event_type_policy:
             index?: 'You cannot view event types'
+  confirmations:
+      invalid_pin: "Invalid PIN code, please verify."
+      not_confirm: "Unable to confirm."
