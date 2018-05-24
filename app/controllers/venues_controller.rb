@@ -381,7 +381,7 @@ class VenuesController < ApplicationController
   end
   def show
     authorize Venue
-    json_response_data(@venue)
+    json_response_serializer(@venue, VenueSerializer)
   end
   swagger_path '/venues/:id' do
     operation :put do
