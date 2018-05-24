@@ -49,7 +49,7 @@ if AgendaType.count == 0
                        {name: 'VIP Event'}, {name: 'Workshop'}])
 end
 if Region.count == 0
-  Region.create([{name: 'Atlantic', base: 'State', territoy: 'Massachusetts, Maine, New Hampshire, New York, Rhode Island, Vermont'},
+  Region.create([{name: 'Atlantic', base: 'State', territoy: 'Connecticut, Massachusetts, Maine, New Hampshire, New York, Rhode Island, Vermont'},
                  {name: 'Atlantic South', base: 'Both', territoy: 'Alabama, Florida, Georgia, Mississippi, Puerto Rico'},
                  {name: 'Canada', base: 'Country', territoy: 'Canada'},{name: 'Great Lakes', base: 'State', territoy: 'Indiana, Michigan, Ohio, Ontario'},
                  {name: 'Great Plains', base: 'State', territoy: 'Colorado, Kansas, Montana, North Dakota, Nebraska, South Dakota, Wyoming'},
