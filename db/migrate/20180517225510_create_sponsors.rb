@@ -11,7 +11,7 @@ class CreateSponsors < ActiveRecord::Migration[5.2]
       t.text :description
       t.string :contact_name
       t.string :country_code
-      t.integer :phone
+      t.integer :phone, :limit => 8
       t.string :email
       t.string :address_line_1
       t.string :address_line_2
@@ -19,7 +19,7 @@ class CreateSponsors < ActiveRecord::Migration[5.2]
       t.string :state
       t.string :city
       t.string :work_country_code
-      t.integer :work_phone
+      t.integer :work_phone, :limit => 8
       t.string :status, :length => 50, default: :Active
       t.timestamps
       t.datetime :deleted_at

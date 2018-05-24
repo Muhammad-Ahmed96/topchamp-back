@@ -4,7 +4,7 @@ class CreateVenues < ActiveRecord::Migration[5.2]
       t.string :name
       t.string :abbreviation
       t.string :country_code
-      t.integer :phone_number
+      t.integer :phone_number, :limit => 8
       t.string :link
       t.string :facility
 
@@ -25,7 +25,7 @@ class CreateVenues < ActiveRecord::Migration[5.2]
       t.date :availability_date_end
       t.string :availability_time_zone
 
-      t.string :restrictions
+      t.text :restrictions
       t.boolean :is_insurance_requirements
       t.text :insurance_requirements
       t.boolean :is_decorations

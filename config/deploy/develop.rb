@@ -15,6 +15,7 @@ set :ssh_options, {
     auth_methods: ["publickey"],
     keys: ["top_champ_develop.pem"]
 }
+set :log_level, :debug
 
 
 # role-based syntax

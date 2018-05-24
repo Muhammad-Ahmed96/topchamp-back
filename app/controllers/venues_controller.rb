@@ -340,7 +340,7 @@ class VenuesController < ApplicationController
       resource.sport_ids = params[:sports]
     end
     if !params[:facility_management].nil?
-      resource.create_facility_managements! facility_management_params
+      resource.create_facility_management! facility_management_params
     end
     if params[:pictures]
       params[:pictures].each { |image|
