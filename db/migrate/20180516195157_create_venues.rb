@@ -25,7 +25,7 @@ class CreateVenues < ActiveRecord::Migration[5.2]
       t.date :availability_date_end
       t.string :availability_time_zone
 
-      t.string :restrictions
+      t.text :restrictions
       t.boolean :is_insurance_requirements
       t.text :insurance_requirements
       t.boolean :is_decorations
