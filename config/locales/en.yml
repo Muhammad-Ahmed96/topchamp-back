@@ -83,6 +83,52 @@ en:
        inactive?: 'You cannot inactive this user'
      event_type_policy:
             index?: 'You cannot view event types'
+     venue_policy:
+           update?: 'You cannot edit this venue'
+           index?: 'You cannot view venue'
+           create?: 'You cannot create venue'
+           show?: 'You cannot show this venue'
+           destroy?: 'You cannot delete this venue'
+           activate?: 'You cannot activate this venue'
+           inactive?: 'You cannot inactive this venue'
+     region_policy:
+           update?: 'You cannot edit this region'
+           index?: 'You cannot view region'
+           create?: 'You cannot create region'
+           show?: 'You cannot show this region'
+           destroy?: 'You cannot delete this region'
+     language_policy:
+           update?: 'You cannot edit this language'
+           index?: 'You cannot view language'
+           create?: 'You cannot create language'
+           show?: 'You cannot show this language'
+           destroy?: 'You cannot delete this language'
+     sponsor_policy:
+           update?: 'You cannot edit this sponsor'
+           index?: 'You cannot view sponsor'
+           create?: 'You cannot create sponsor'
+           show?: 'You cannot show this sponsor'
+           destroy?: 'You cannot delete this sponsor'
+           activate?: 'You cannot activate this sponsor'
+           inactive?: 'You cannot inactive this sponsor'
+     sport_policy:
+           update?: 'You cannot edit this sport'
+           index?: 'You cannot view sport'
+           create?: 'You cannot create sport'
+           show?: 'You cannot show this sport'
+           destroy?: 'You cannot delete this sport'
+     attendee_type_policy:
+           update?: 'You cannot edit this attendee type'
+           index?: 'You cannot view attendee type'
+           create?: 'You cannot create attendee type'
+           show?: 'You cannot show this attendee type'
+           destroy?: 'You cannot delete this attendee type'
+     agenda_type_policy:
+           update?: 'You cannot edit this agenda type'
+           index?: 'You cannot view agenda type'
+           create?: 'You cannot create agenda type'
+           show?: 'You cannot show this agenda type'
+           destroy?: 'You cannot delete this agenda type'
   confirmations:
       invalid_pin: "Invalid PIN code, please verify."
       not_confirm: "Unable to confirm."

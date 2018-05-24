@@ -7,7 +7,7 @@ class CreateMedicalInformation < ActiveRecord::Migration[5.2]
       t.string :group_id
       t.string :primary_physician_full_name
       t.string :primary_physician_country_code_phone
-      t.integer :primary_physician_phone
+      t.integer :primary_physician_phone, :limit => 8
       t.string :dietary_restrictions
       t.string :allergies
       t.foreign_key :users, :column => :user_id, :dependent => :delete

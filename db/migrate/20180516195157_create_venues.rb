@@ -4,7 +4,7 @@ class CreateVenues < ActiveRecord::Migration[5.2]
       t.string :name
       t.string :abbreviation
       t.string :country_code
-      t.integer :phone_number
+      t.integer :phone_number, :limit => 8
       t.string :link
       t.string :facility
 
