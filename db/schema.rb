@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_23_225429) do
+ActiveRecord::Schema.define(version: 2018_05_25_164523) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -73,6 +73,11 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_event_types_on_deleted_at"
+  end
+
+  create_table "events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "languages", force: :cascade do |t|
@@ -247,7 +252,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "name"
     t.string "abbreviation"
     t.string "country_code"
-    t.integer "phone_number"
+    t.bigint "phone_number"
     t.string "link"
     t.string "facility"
     t.text "description"
@@ -263,7 +268,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.date "availability_date_start"
     t.date "availability_date_end"
     t.string "availability_time_zone"
-    t.string "restrictions"
+    t.text "restrictions"
     t.boolean "is_insurance_requirements"
     t.text "insurance_requirements"
     t.boolean "is_decorations"

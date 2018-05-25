@@ -2,6 +2,7 @@ class UsersController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile]
   before_action :authenticate_user!
+  around_action :transactions_filter, only: [:update, :create]
 # Update password
   swagger_path '/users' do
     operation :get do

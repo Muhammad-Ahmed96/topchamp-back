@@ -35,4 +35,10 @@ class ApplicationController < ActionController::API
       end
     end
   end
+
+  def transactions_filter
+    ActiveRecord::Base.transaction do
+      yield
+    end
+  end
 end
