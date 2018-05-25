@@ -26,11 +26,11 @@ class CreateVenues < ActiveRecord::Migration[5.2]
       t.string :availability_time_zone
 
       t.text :restrictions
-      t.boolean :is_insurance_requirements
+      t.boolean :is_insurance_requirements, default: false
       t.text :insurance_requirements
-      t.boolean :is_decorations
+      t.boolean :is_decorations, default: false
       t.text :decorations
-      t.boolean :is_vehicles
+      t.boolean :is_vehicles, default: false
       t.integer :vehicles
       t.string :status, :length => 50, default: :Active
       t.timestamps
