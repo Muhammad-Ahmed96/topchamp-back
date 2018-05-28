@@ -38,6 +38,10 @@ Rails.application.routes.draw do
     get 'check_reset_token/:reset_password_token', to: 'reset_token#check_reset'
     resources :application_confirmations, only: [:create]
     post 'application_confirmations/resend_pin', to: 'application_confirmations#resend_pin'
+
+    resources :events, only: [:index, :create, :show, :update, :destroy]
+    get 'events_validate_url', to: 'events#validate_url'
+    resources :visibility, only: [:index]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

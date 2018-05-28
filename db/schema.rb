@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_23_225429) do
+ActiveRecord::Schema.define(version: 2018_05_28_171323) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -53,17 +53,17 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
   create_table "contact_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "country_code_phone"
-    t.integer "cell_phone"
+    t.string "cell_phone"
     t.string "alternative_email"
     t.string "address_line_1"
     t.string "address_line_2"
     t.string "postal_code"
     t.string "state"
     t.string "city"
-    t.integer "work_phone"
+    t.string "work_phone"
     t.string "emergency_contact_full_name"
     t.string "emergency_contact_country_code_phone"
-    t.integer "emergency_contact_phone"
+    t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
   end
 
@@ -73,6 +73,45 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_event_types_on_deleted_at"
+  end
+
+  create_table "events", force: :cascade do |t|
+    t.bigint "venue_id"
+    t.bigint "event_type_id"
+    t.string "title"
+    t.string "icon_file_name"
+    t.string "icon_content_type"
+    t.integer "icon_file_size"
+    t.datetime "icon_updated_at"
+    t.text "description"
+    t.date "start_date"
+    t.date "end_date"
+    t.string "visibility"
+    t.boolean "requires_access_code", default: false
+    t.string "event_url"
+    t.boolean "is_event_sanctioned", default: false
+    t.text "sanctions"
+    t.string "organization_name"
+    t.string "organization_url"
+    t.boolean "is_determine_later_venue", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_events_on_deleted_at"
+  end
+
+  create_table "events_regions", id: false, force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "region_id", null: false
+    t.index ["event_id"], name: "index_events_regions_on_event_id"
+    t.index ["region_id"], name: "index_events_regions_on_region_id"
+  end
+
+  create_table "events_sports", id: false, force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "sport_id", null: false
+    t.index ["event_id"], name: "index_events_sports_on_event_id"
+    t.index ["sport_id"], name: "index_events_sports_on_sport_id"
   end
 
   create_table "languages", force: :cascade do |t|
@@ -91,7 +130,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "group_id"
     t.string "primary_physician_full_name"
     t.string "primary_physician_country_code_phone"
-    t.integer "primary_physician_phone"
+    t.string "primary_physician_phone"
     t.string "dietary_restrictions"
     t.string "allergies"
   end
@@ -130,7 +169,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.text "description"
     t.string "contact_name"
     t.string "country_code"
-    t.integer "phone"
+    t.string "phone"
     t.string "email"
     t.string "address_line_1"
     t.string "address_line_2"
@@ -138,7 +177,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "state"
     t.string "city"
     t.string "work_country_code"
-    t.integer "work_phone"
+    t.string "work_phone"
     t.string "status", default: "Active"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -247,7 +286,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "name"
     t.string "abbreviation"
     t.string "country_code"
-    t.bigint "phone_number"
+    t.string "phone_number"
     t.string "link"
     t.string "facility"
     t.text "description"

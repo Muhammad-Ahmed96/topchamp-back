@@ -132,3 +132,6 @@ en:
   confirmations:
       invalid_pin: "Invalid PIN code, please verify."
       not_confirm: "Unable to confirm."
+  taken_url: "URL has already been taken"
+  available_url: "URL available"
+  no_url: "No URL param"

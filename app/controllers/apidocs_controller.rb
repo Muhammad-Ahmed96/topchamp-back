@@ -51,6 +51,7 @@ class ApidocsController < ApplicationController
       FacilitiesController,
       ApplicationConfirmationsController,
       ApplicationRegistrationsController,
+      VisibilityController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
