@@ -48,6 +48,7 @@ class ApplicationConfirmationsController < ApplicationController
         @client_id, @token = @resource.create_token
         @resource.pin = nil
         @resource.status = :Active
+        @resource.role = "Member"
         @resource.save!
         update_auth_header
         json_response_serializer(@resource, UserSerializer)
