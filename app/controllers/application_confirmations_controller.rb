@@ -50,7 +50,7 @@ class ApplicationConfirmationsController < ApplicationController
         @resource.status = :Active
         @resource.save!
         update_auth_header
-        json_response_success(t("devise.confirmations.confirmed"), true)
+        json_response_serializer(@resource, UserSerializer)
       else
         json_response_error(t("confirmations.not_confirm"), 422)
       end
