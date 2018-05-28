@@ -178,6 +178,10 @@ class Venue < ApplicationRecord
       end
     end
 
+    property :availability_time_zone_obj do
+      key :'$ref', :Region
+    end
+
   end
 
   swagger_schema :VenueInput do
