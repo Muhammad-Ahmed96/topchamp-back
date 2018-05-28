@@ -1,11 +1,5 @@
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 
-  def self.my_order(column, direction = "desc")
-    if column.present?
-      order "#{column} #{direction}"
-    else
-      self
-    end
-  end
+  scope :my_order, lambda{ |column, direction = "desc"| order "#{column} #{direction}" if column.present? }
 end

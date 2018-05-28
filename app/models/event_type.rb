@@ -1,13 +1,8 @@
 class EventType < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
-  def self.search(search)
-    if search.present?
-      where ["name LIKE ?", "%#{search}%"]
-    else
-      self
-    end
-  end
+  validates :name, presence: true
+  scope :search, lambda{ |search| where ["LOWER(name) LIKE LOWER(?)", "%#{search}%"] if search.present? }
 
 
   swagger_schema :EventType do

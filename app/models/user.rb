@@ -15,37 +15,43 @@ class User < ApplicationRecord
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
-                    styles: {medium: "300x300>", thumb: "100x100>"}, default_url: "/images/:style/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/images/:style/missing.png"
+
+  # authenticate :resend_limit, if: :new_record?
+  #authenticate :valid_pin, unless: :new_record?
+  after_initialize :set_random_pin!, if: :new_record?
   validates_attachment :profile
+  validate :check_dimensions
   validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
   validates_attachment_content_type :profile, content_type: /\Aimage\/.*\z/
 
   validates :first_name, length: {maximum: 50}, presence: true
-  validates :middle_initial, length: {maximum: 1}, presence: true
+  validates :middle_initial, length: {maximum: 1}
   validates :last_name, length: {maximum: 50}, presence: true
-  validates :badge_name, length: {maximum: 50}, presence: true
-  validates :birth_date, presence: true
-  validates :gender, inclusion: {in: Genders.collection}, presence: true
-  validates :role, inclusion: {in: Roles.collection}, presence: true
+  validates :badge_name, length: {maximum: 50}
+  #validates :birth_date, presence: true
+  #validates :gender, inclusion: {in: Genders.collection}
+  #validates :role, inclusion: {in: Roles.collection}
   validates :password, presence: false
   include DeviseTokenAuth::Concerns::User
 
-  def self.in_role(role)
-    if role.present?
-      where(role: role)
-    else
-      self
-    end
 
-  end
+  scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :in_role, lambda {|role| where role: role if role.present?}
+  scope :birth_date_in, lambda {|birth_date| where birth_date: birth_date if birth_date.present?}
+  scope :search, lambda {|search| where ["LOWER(first_name) LIKE LOWER(?) OR LOWER(last_name) like LOWER(?)", "%#{search}%", "%#{search}%"] if search.present?}
+  scope :first_name_like, lambda {|search| where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :last_name_like, lambda {|search| where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :gender_like, lambda {|search| where ["LOWER(gender) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :email_like, lambda {|search| where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :last_sign_in_at_in, lambda {|search| where last_sign_in_at: search.beginning_of_day..search.end_of_day if search.present?}
+  scope :last_sign_in_at_like, lambda {|search| where("LOWER(concat(trim(to_char(last_sign_in_at, 'Month')),',',to_char(last_sign_in_at, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
+  scope :state_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :city_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
+  scope :contact_information_order, lambda {|column, direction = "desc"| includes(:contact_information).order("contact_informations.#{column} #{direction}") if column.present?}
+  scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
 
-  def self.search(search)
-    if search.present?
-      where ["first_name LIKE ? OR last_name like ?", "%#{search}%", "%#{search}%"]
-    else
-      self
-    end
-  end
 
   def self.active
     where(status: :Active)
@@ -53,13 +59,6 @@ class User < ApplicationRecord
 
   def self.inactive
     where(status: :Inactive)
-  end
-  def self.is_status(status)
-    if status.present?
-      where(status: status)
-    else
-      self
-    end
   end
 
   def sysadmin?
@@ -79,7 +78,7 @@ class User < ApplicationRecord
   end
 
   swagger_schema :UserLogin do
-    key :required, [:id, :email, :provider, :uid, :allow_password_change, :first_name, :middle_initial,
+    key :required, [:id, :email, :provider, :uid, :first_name, :middle_initial,
                     :last_name, :gender, :role, :birth_date, :image, :badge_name]
     property :id do
       key :type, :integer
@@ -93,9 +92,6 @@ class User < ApplicationRecord
     end
     property :uid do
       key :type, :string
-    end
-    property :allow_password_change do
-      key :type, :boolean
     end
     property :first_name do
       key :type, :string
@@ -118,15 +114,12 @@ class User < ApplicationRecord
     property :badge_name do
       key :type, :string
     end
-    property :image do
-      key :type, :string
-    end
   end
 
 
   swagger_schema :User do
     key :required, [:id, :email, :provider, :uid, :allow_password_change, :first_name, :middle_initial,
-                    :last_name, :gender, :role, :birth_date, :image, :badge_name, :sports, :contact_information,
+                    :last_name, :gender, :role, :birth_date, :profile, :badge_name, :sports, :contact_information,
                     :shipping_address, :association_information, :medical_information]
     property :id do
       key :type, :integer
@@ -164,6 +157,10 @@ class User < ApplicationRecord
     end
     property :last_sign_in_at do
       key :type, :string
+    end
+
+    property :is_receive_text do
+      key :type, :boolean
     end
 
     property :sports do
@@ -228,7 +225,9 @@ class User < ApplicationRecord
     property :last_sign_in_at do
       key :type, :string
     end
-
+    property :is_receive_text do
+      key :type, :boolean
+    end
     property :sports do
       key :type, :array
       items do
@@ -254,6 +253,40 @@ class User < ApplicationRecord
 
     property :medical_information do
       key :'$ref', :MedicalInformationInput
+    end
+  end
+
+  def resend_limit
+    if self.profile.activations.where(created_at: (1.day.ago..Time.now)).count >= 3
+      errors.add(:base, 'You have reached the maximum allow number of reminders!')
+    end
+  end
+  def set_random_pin!
+    generated = 0
+    loop do
+      generated = rand(000000..999999).to_s.rjust(6, "0")
+      other = User.find_by_pin(generated)
+      break if other.nil?
+    end
+    self.pin = generated
+  end
+
+  def valid_pin
+    unless response_pin.present? && response_pin == pin
+      errors.add(:response_pin, 'Incorrect pin number')
+    end
+  end
+
+  private
+
+  def check_dimensions
+    required_width = 300
+    required_height = 300
+    temp_file = profile.queued_for_write[:original]
+    unless temp_file.nil?
+      dimensions = Paperclip::Geometry.from_file(temp_file.path)
+      errors.add(:image, "Maximun width must be #{required_width}px") unless dimensions.width <= required_width
+      errors.add(:image, "Maximun height must be #{required_height}px") unless dimensions.height <= required_height
     end
   end
 

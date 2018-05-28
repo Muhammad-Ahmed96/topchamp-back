@@ -1,7 +1,8 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile]
   before_action :authenticate_user!
+  around_action :transactions_filter, only: [:update, :create]
 # Update password
   swagger_path '/users' do
     operation :get do
@@ -27,7 +28,7 @@ class UsersController < ApplicationController
       parameter do
         key :name, :column
         key :in, :query
-        key :description, 'Column to order'
+        key :description, 'Column to order special "sport_name" parameter for sports order'
         key :required, false
         key :type, :string
       end
@@ -42,6 +43,69 @@ class UsersController < ApplicationController
         key :name, :status
         key :in, :query
         key :description, 'Status filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :first_name
+        key :in, :query
+        key :description, 'First name filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :last_name
+        key :in, :query
+        key :description, 'Last name filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :gender
+        key :in, :query
+        key :description, 'Gender filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :email
+        key :in, :query
+        key :description, 'Email filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :last_sign_in_at
+        key :in, :query
+        key :description, 'Last sign filter format(Y-m-d)'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :query
+        key :description, 'State filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :query
+        key :description, 'City filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :birth_date
+        key :in, :query
+        key :description, 'Birth date format(Y-m-d)'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :sport_id
+        key :in, :query
+        key :description, 'Id of te sport filter'
         key :required, false
         key :type, :string
       end
@@ -71,11 +135,33 @@ class UsersController < ApplicationController
   def index
     authorize User
     search = params[:search].strip unless params[:search].nil?
-    role = params[:role].strip unless params[:role].nil?
     column = params[:column].nil? ? 'first_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     status = params[:status]
-    paginate User.unscoped.my_order(column, direction).in_role(role).search(search).is_status(status), per_page: 50, root: :data
+    role = params[:role]
+    first_name = params[:first_name]
+    last_name = params[:last_name]
+    gender = params[:gender]
+    email = params[:email]
+    last_sign_in_at = params[:last_sign_in_at]
+    state = params[:state]
+    city = params[:city]
+    sport_id = params[:sport_id]
+    birth_date = params[:birth_date]
+    column_contact_information = nil
+    column_sports = nil
+    if column.to_s == "state"  || column.to_s == "city"
+      column_contact_information = column
+      column = nil
+    end
+    if column.to_s == "sport_name"
+      column_sports = "name"
+      column = nil
+    end
+    paginate User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
+                 .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
+                 .email_like(email).last_sign_in_at_like(last_sign_in_at).state_like(state).city_like(city)
+                 .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction), per_page: 50, root: :data
   end
 
   swagger_path '/users' do
@@ -148,6 +234,12 @@ class UsersController < ApplicationController
           key :type, :integer
           key :format, :int64
         end
+      end
+      parameter do
+        key :name, :is_receive_text
+        key :in, :body
+        key :required, false
+        key :type, :boolean
       end
       parameter do
         key :name, :contact_information
@@ -260,7 +352,7 @@ class UsersController < ApplicationController
 
   def show
     authorize User
-    json_response_data(@resource)
+    json_response_serializer(@user, UserSerializer)
   end
 
   swagger_path '/users/:id' do
@@ -335,6 +427,12 @@ class UsersController < ApplicationController
         end
       end
       parameter do
+        key :name, :is_receive_text
+        key :in, :body
+        key :required, false
+        key :type, :boolean
+      end
+      parameter do
         key :name, :contact_information
         key :in, :body
         key :description, 'Contact information'
@@ -395,25 +493,62 @@ class UsersController < ApplicationController
   def update
     authorize User
     if !params[:sports].nil?
-      @resource.sport_ids = params[:sports]
+      @user.sport_ids = params[:sports]
     end
     if !params[:contact_information].nil?
-      @resource.create_contact_information! contact_information_params
+      @user.create_contact_information! contact_information_params
     end
     if !params[:billing_address].nil?
-      @resource.create_billing_address! billing_address_params
+      @user.create_billing_address! billing_address_params
     end
     if !params[:shipping_address].nil?
-      @resource.create_shipping_address! shipping_address_params
+      @user.create_shipping_address! shipping_address_params
     end
     if !params[:association_information].nil?
-      @resource.create_association_information! association_information_params
+      @user.create_association_information! association_information_params
     end
 
     if !params[:medical_information].nil?
-      @resource.create_medical_information! medical_information_params
+      @user.create_medical_information! medical_information_params
     end
-    @resource.update!(resource_params)
+    @user.update!(resource_params)
+    json_response_success(t("edited_success", model: User.model_name.human), true)
+  end
+
+  swagger_path '/users/:id/profile' do
+    operation :put do
+      key :summary, 'Update profile picture to a user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersUpdateProfile'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      parameter do
+        key :name, :profile
+        key :in, :body
+        key :required, false
+        key :type, :file
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def profile
+    authorize User
+    @user.update!(resource_profile_params)
     json_response_success(t("edited_success", model: User.model_name.human), true)
   end
 
@@ -444,7 +579,7 @@ class UsersController < ApplicationController
 
   def destroy
     authorize User
-    @resource.destroy
+    @user.destroy
     json_response_success(t("deleted_success", model: User.model_name.human), true)
   end
 
@@ -475,8 +610,8 @@ class UsersController < ApplicationController
 
   def activate
     authorize User
-    @resource.status = :Active
-    @resource.save
+    @user.status = :Active
+    @user.save
     json_response_success(t("activated_success", model: User.model_name.human), true)
   end
 
@@ -506,8 +641,9 @@ class UsersController < ApplicationController
   end
   def inactive
     authorize User
-    @resource.status = :Inactive
-    @resource.save
+    @user.status = :Inactive
+    @user.tokens = nil
+    @user.save
     json_response_success(t("inactivated_success", model: User.model_name.human), true)
   end
 
@@ -519,11 +655,16 @@ class UsersController < ApplicationController
                   :profile)
   end
 
+  def resource_profile_params
+    # whitelist params
+    params.permit(:profile)
+  end
+
   def contact_information_params
     # whitelist params
     params.require(:contact_information).permit(:cell_phone, :country_code_phone, :alternative_email, :address_line_1, :address_line_2,
-                                                :postal_code, :state, :city, :work_phone, :emergency_contact_full_name,
-                                                :emergency_contact_country_code_phone, :emergency_contact_phone)
+                                                :postal_code, :state, :city,:country_code_work_phone , :work_phone, :emergency_contact_full_name,
+                                                :emergency_contact_country_code_phone, :emergency_contact_phone, :is_receive_text)
   end
 
   def billing_address_params
@@ -548,6 +689,6 @@ class UsersController < ApplicationController
   end
 
   def set_resource
-    @resource = User.find(params[:id])
+    @user = User.find(params[:id])
   end
 end
