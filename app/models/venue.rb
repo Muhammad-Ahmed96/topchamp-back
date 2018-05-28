@@ -5,6 +5,7 @@ class Venue < ApplicationRecord
   has_and_belongs_to_many :sports
   has_many :pictures, class_name: 'VenuePicture', :dependent => :destroy
   has_one :facility_management, :dependent => :delete, class_name: 'VenueFacilityManagement'
+  belongs_to :availability_time_zone_obj, :foreign_key => "availability_time_zone", class_name: 'Region'
   has_many :days, :class_name => 'VenueDay'
 
 

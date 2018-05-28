@@ -7,4 +7,5 @@ class VenueSerializer < ActiveModel::Serializer
   has_many :days, serializer: VenueDaySerializer
   has_one :facility_management, serializer: VenueFacilityManagementSerializer
   has_one :pictures, serializer: VenuePictureSerializer
+  has_one :availability_time_zone_obj, serializer: RegionSerializer
 end
