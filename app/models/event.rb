@@ -18,7 +18,7 @@ class Event < ApplicationRecord
 
   has_attached_file :icon, :path => ":rails_root/public/images/event_icons/:to_param/:style/:basename.:extension",
                     :url => "/images/event_icons/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/images/:style/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
   validates_attachment :icon
   validate :check_dimensions
   validates_with AttachmentSizeValidator, attributes: :icon, less_than: 2.megabytes
