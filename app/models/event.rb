@@ -77,6 +77,24 @@ class Event < ApplicationRecord
     end
   end
 
+  def import_discount_personalizeds!(file)
+    spreadsheet = Roo::Spreadsheet.open(file.path)
+    header = spreadsheet.row(1)
+    (2..spreadsheet.last_row).each do |i|
+     #row = Hash[[header, spreadsheet.row(i)].transpose]
+      row = spreadsheet.row(i)
+      email = row[0]
+      code = row[1]
+      discount = row[2]
+      saved = self.discount_personalizeds.where(email: email).where(code: code).first
+      if saved.present?
+        saved.update!({discount: discount})
+      else
+        self.discount_personalizeds.create!({email: email, code: code, discount: discount})
+      end
+    end
+  end
+
   swagger_schema :Event do
     property :id do
       key :type, :integer

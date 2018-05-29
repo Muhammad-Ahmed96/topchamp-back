@@ -1,9 +1,9 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
-                                      :payment_method, :discounts]
+                                      :payment_method, :discounts, :import_discount_personalizeds]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts]
+  around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds]
 =begin
   swagger_path '/events' do
     operation :post do
@@ -747,6 +747,7 @@ class EventsController < ApplicationController
     end
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
+
   swagger_path '/events/:id/discounts' do
     operation :put do
       key :summary, 'Events discounts '
@@ -768,7 +769,7 @@ class EventsController < ApplicationController
         key :description, 'Discount generals'
         key :type, :array
         items do
-            key :'$ref', :EventDiscountGeneralInput
+          key :'$ref', :EventDiscountGeneralInput
         end
       end
       parameter do
@@ -797,6 +798,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def discounts
     authorize Event
     discount = @event.discount
@@ -810,6 +812,40 @@ class EventsController < ApplicationController
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
 
+  swagger_path '/events/:id/import_discount_personalizeds' do
+    operation :put do
+      key :summary, 'Events import discount personalizeds '
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsImportDiscountPersonalizeds'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :file
+        key :in, :body
+        key :description, 'CSV with information {Email|Code|Discount}'
+        key :type, :file
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def import_discount_personalizeds
+    @event.import_discount_personalizeds!(import_params[:file])
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
 
   private
 
@@ -823,6 +859,11 @@ class EventsController < ApplicationController
   def resource_icon_params
     # whitelist params
     params.permit(:icon)
+  end
+  
+  def import_params
+    # whitelist params
+    params.permit(:file)
   end
 
   def venue_params
@@ -871,6 +912,7 @@ class EventsController < ApplicationController
       ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :email)
     end
   end
+
   def day_params
     # whitelist params
     params.permit(days: [:day, :time_start, :time_end])

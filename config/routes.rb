@@ -48,6 +48,7 @@ Rails.application.routes.draw do
         put :payment_information
         put :payment_method
         put :discounts
+        put :import_discount_personalizeds
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
