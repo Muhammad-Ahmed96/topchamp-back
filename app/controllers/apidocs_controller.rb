@@ -52,6 +52,7 @@ class ApidocsController < ApplicationController
       ApplicationConfirmationsController,
       ApplicationRegistrationsController,
       VisibilityController,
+      EventsController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -63,6 +64,8 @@ class ApidocsController < ApplicationController
       Region,
       Sponsor,
       Language,
+      EventPaymentInformation,
+      EventPaymentMethod,
       self,
   ].freeze
 

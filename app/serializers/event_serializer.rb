@@ -6,4 +6,6 @@ class EventSerializer < ActiveModel::Serializer
   has_many :regions, serializer: RegionSerializer
   has_one :venue, serializer: VenueSerializer
   has_one :event_type, serializer: EventTypeSerializer
+  has_one :event_payment_information, serializer: EventPaymentInformationSerializer
+  has_one :event_payment_method, serializer: EventPaymentMethodSerializer
 end

@@ -6,6 +6,8 @@ class Event < ApplicationRecord
   has_and_belongs_to_many :regions
   belongs_to :venue
   belongs_to :event_type
+  has_one :payment_information,    class_name: 'EventPaymentInformation'
+  has_one :payment_method,   class_name: 'EventPaymentMethod'
 
 
   has_attached_file :icon, :path => ":rails_root/public/images/event_icons/:to_param/:style/:basename.:extension",

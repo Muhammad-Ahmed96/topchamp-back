@@ -33,6 +33,18 @@ class EventPolicy < ApplicationPolicy
   def create_venue?
     user.sysadmin? || user.agent? || user.director?
   end
+
+  def venue?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def payment_information?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def payment_method?
+    user.sysadmin? || user.agent? || user.director?
+  end
   class Scope < Scope
     def resolve
       scope

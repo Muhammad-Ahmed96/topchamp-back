@@ -1,6 +1,7 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
+  :payment_method]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue]
 =begin
@@ -385,36 +386,6 @@ class EventsController < ApplicationController
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
 
-  swagger_path '/events_validate_url' do
-    operation :get do
-      key :summary, 'Validate the URL'
-      key :description, 'Event Catalog'
-      key :operationId, 'eventsValidateUrl'
-      key :produces, ['application/json',]
-      key :tags, ['events']
-      parameter do
-        key :name, :url
-        key :in, :query
-        key :required, true
-        key :type, :string
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :SuccessModel
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
   swagger_path '/events/:id/create_venue' do
     operation :put do
       key :summary, 'Add venue to event'
@@ -515,17 +486,12 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def create_venue
     authorize Event
-    venue = @event.venue
-    if venue.present?
-      venue.update!(venue_params)
-    else
-      venue = Venue.create!(venue_params)
-      @event.venue_id = venue.id
-      @event.save!
-    end
-    venue = @event.venue
+    venue = Venue.create!(venue_params)
+    @event.venue_id = venue.id
+    @event.save
     if !params[:sports].nil?
       venue.sport_ids = params[:sports]
     end
@@ -543,6 +509,79 @@ class EventsController < ApplicationController
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
 
+  swagger_path '/events/:id/venue' do
+    operation :put do
+      key :summary, 'Set venue to event'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventsVenue'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :venue_id
+        key :in, :body
+        key :required, true
+        key :type, :int64
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def venue
+    authorize Event
+    if params[:venue_id].present?
+      @event.venue_id = params[:venue_id]
+      @event.save
+      json_response_success(t("edited_success", model: Event.model_name.human), true)
+    else
+      json_response_error([t("no_venue_present")], 422)
+    end
+  end
+
+  swagger_path '/events_validate_url' do
+    operation :get do
+      key :summary, 'Validate the URL'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventsValidateUrl'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :url
+        key :in, :query
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
   def validate_url
     if params[:url].present?
       event = Event.find_by_event_url(params[:url])
@@ -555,6 +594,157 @@ class EventsController < ApplicationController
       json_response_error([t("no_url")], 422)
     end
   end
+
+  swagger_path '/events/:id/activate' do
+    operation :put do
+      key :summary, 'Activate event'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsActivate'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def activate
+    authorize Event
+    @event.status = :Active
+    @event.save
+    json_response_success(t("activated_success", model: Event.model_name.human), true)
+  end
+
+  swagger_path '/events/:id/inactive' do
+    operation :put do
+      key :summary, 'Inactive events'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsInactive'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def inactive
+    authorize Event
+    @event.status = :Inactive
+    @event.save
+    json_response_success(t("inactivated_success", model: Event.model_name.human), true)
+  end
+  swagger_path '/events/:id/payment_information' do
+    operation :put do
+      key :summary, 'Payment information events'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsPaymentInformation'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :payment_information
+        key :in, :body
+        key :description, 'Payment information'
+        schema do
+          key :'$ref', :EventPaymentInformationInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def payment_information
+    authorize Event
+    information = @event.payment_information
+    if information.present?
+      information.update!(payment_information_params)
+    else
+      @event.create_payment_information!(payment_information_params)
+    end
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
+
+
+  swagger_path '/events/:id/payment_method' do
+    operation :put do
+      key :summary, 'Payment method events'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsPaymentMethod'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :payment_method
+        key :in, :body
+        key :description, 'Payment method'
+        schema do
+          key :'$ref', :EventPaymentMethodInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def payment_method
+    authorize Event
+    payment_method = @event.payment_method
+    if payment_method.present?
+      payment_method.update!(payment_method_params)
+    else
+      @event.create_payment_method!(payment_method_params)
+    end
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
+
 
   private
 
@@ -582,6 +772,16 @@ class EventsController < ApplicationController
     # whitelist params
     params.require(:facility_management).permit(:primary_contact_name, :primary_contact_email, :primary_contact_country_code, :primary_contact_phone_number,
                                                 :secondary_contact_name, :secondary_contact_email, :secondary_contact_country_code, :secondary_contact_phone_number)
+  end
+
+  def payment_information_params
+    # whitelist params
+    params.require(:payment_information).permit(:bank_name, :bank_account)
+  end
+
+  def payment_method_params
+    # whitelist params
+    params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency)
   end
 
 

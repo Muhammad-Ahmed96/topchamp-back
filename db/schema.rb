@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_28_171323) do
+ActiveRecord::Schema.define(version: 2018_05_29_170650) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -67,6 +67,23 @@ ActiveRecord::Schema.define(version: 2018_05_28_171323) do
     t.string "country_code_work_phone"
   end
 
+  create_table "event_payment_informations", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "bank_name"
+    t.string "bank_account"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_payment_methods", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.float "enrollment_fee"
+    t.float "bracket_fee"
+    t.string "currency"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "event_types", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
@@ -97,6 +114,7 @@ ActiveRecord::Schema.define(version: 2018_05_28_171323) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.string "status", default: "Active"
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 

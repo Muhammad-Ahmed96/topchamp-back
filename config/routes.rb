@@ -42,6 +42,11 @@ Rails.application.routes.draw do
     resources :events, only: [:index, :create, :show, :update, :destroy] do
       member do
         put :create_venue
+        put :venue
+        put :activate
+        put :inactive
+        put :payment_information
+        put :payment_method
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
