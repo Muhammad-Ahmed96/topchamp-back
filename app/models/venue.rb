@@ -22,13 +22,13 @@ class Venue < ApplicationRecord
   validates :postal_code, presence: true
 
 
-  validates :availability_date_start, presence: true
-  validates :availability_date_end, presence: true
+ # validates :availability_date_start, presence: true
+  #validates :availability_date_end, presence: true
   validate :availability_date_start_is_valid_date
   validate :availability_date_end_is_valid_datetime
   #validates :days, presence: true
 
-  validates :restrictions, presence: true
+  #validates :restrictions, presence: true
   validates_length_of :vehicles, :minimum => 0, :maximum => 4, :allow_blank => true
 
   #validates :restrictions, inclusion: {in: Restrictions.collection}
@@ -59,11 +59,11 @@ class Venue < ApplicationRecord
   end
 
   def availability_date_start_is_valid_date
-    errors.add(:availability_date_start, 'must be a valid datetime') if !self.availability_date_start.is_a?(Date)
+    errors.add(:availability_date_start, 'must be a valid datetime') if self.availability_date_start.present? && !self.availability_date_start.is_a?(Date)
   end
 
   def availability_date_end_is_valid_datetime
-    errors.add(:availability_date_end, 'must be a valid datetime') if !self.availability_date_end.is_a?(Date)
+    errors.add(:availability_date_end, 'must be a valid datetime') if self.availability_date_end.present? && !self.availability_date_end.is_a?(Date)
   end
 
   swagger_schema :Venue do

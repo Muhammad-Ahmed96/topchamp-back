@@ -29,6 +29,10 @@ class EventPolicy < ApplicationPolicy
   def inactive?
     user.sysadmin? || user.agent? || user.director?
   end
+
+  def create_venue?
+    user.sysadmin? || user.agent? || user.director?
+  end
   class Scope < Scope
     def resolve
       scope

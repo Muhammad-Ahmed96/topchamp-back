@@ -1,8 +1,8 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:update, :create]
+  around_action :transactions_filter, only: [:update, :create, :create_venue]
 =begin
   swagger_path '/events' do
     operation :post do
@@ -55,6 +55,7 @@ class EventsController < ApplicationController
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate Event.my_order(column, direction), per_page: 50, root: :data
   end
+
   swagger_path '/events' do
     operation :post do
       key :summary, 'Save event'
@@ -170,6 +171,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def create
     authorize Event
     event = Event.create!(resource_params)
@@ -181,6 +183,7 @@ class EventsController < ApplicationController
     end
     json_response_success(t("created_success", model: Event.model_name.human), true)
   end
+
 =begin
   swagger_path '/events/:id' do
     operation :post do
@@ -214,6 +217,7 @@ class EventsController < ApplicationController
     authorize Event
     json_response_serializer(@event, EventSerializer)
   end
+
 =begin
   swagger_path '/events/:id' do
     operation :put do
@@ -342,6 +346,7 @@ class EventsController < ApplicationController
     @event.update!(resource_params)
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
+
 =begin
   swagger_path '/events/:id' do
     operation :delete do
@@ -379,6 +384,7 @@ class EventsController < ApplicationController
     @event.update!(resource_icon_params)
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
+
   swagger_path '/events_validate_url' do
     operation :get do
       key :summary, 'Validate the URL'
@@ -409,6 +415,134 @@ class EventsController < ApplicationController
       end
     end
   end
+  swagger_path '/events/:id/create_venue' do
+    operation :put do
+      key :summary, 'Add venue to event'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventsCreateVenue'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :name
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :abbreviation
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :country_code
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :phone_number
+        key :in, :body
+        key :required, false
+        key :type, :date
+      end
+      parameter do
+        key :name, :link
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :sports
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :address_line_1
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :address_line_2
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :postal_code
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :country
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def create_venue
+    authorize Event
+    venue = @event.venue
+    if venue.present?
+      venue.update!(venue_params)
+    else
+      venue = Venue.create!(venue_params)
+      @event.venue_id = venue.id
+      @event.save!
+    end
+    venue = @event.venue
+    if !params[:sports].nil?
+      venue.sport_ids = params[:sports]
+    end
+    if !params[:facility_management].nil?
+      venue.create_facility_management! facility_management_params
+    end
+    if params[:pictures].present?
+      params[:pictures].each {|image|
+        venue.pictures.create!(picture: image)
+      }
+    end
+    if day_params[:days].present?
+      venue.days.create!(day_params[:days])
+    end
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
+
   def validate_url
     if params[:url].present?
       event = Event.find_by_event_url(params[:url])
@@ -421,7 +555,9 @@ class EventsController < ApplicationController
       json_response_error([t("no_url")], 422)
     end
   end
+
   private
+
   def resource_params
     # whitelist params
     params.permit(:venue_id, :event_type_id, :title, :icon, :description, :start_date, :end_date, :visibility,
@@ -433,6 +569,27 @@ class EventsController < ApplicationController
     # whitelist params
     params.permit(:icon)
   end
+
+  def venue_params
+    # whitelist params
+    params.permit(:name, :abbreviation, :country_code, :phone_number, :link, :facility, :description, :space, :latitude,
+                  :longitude, :address_line_1, :address_line_2, :postal_code, :city, :state, :country, :availability_date_start,
+                  :availability_date_end, :availability_time_zone, :restrictions, :is_insurance_requirements, :insurance_requirements,
+                  :is_decorations, :decorations, :is_vehicles, :vehicles)
+  end
+
+  def facility_management_params
+    # whitelist params
+    params.require(:facility_management).permit(:primary_contact_name, :primary_contact_email, :primary_contact_country_code, :primary_contact_phone_number,
+                                                :secondary_contact_name, :secondary_contact_email, :secondary_contact_country_code, :secondary_contact_phone_number)
+  end
+
+
+  def day_params
+    # whitelist params
+    params.permit(days: [:day, :time_start, :time_end])
+  end
+
   def set_resource
     @event = Event.find(params[:id])
   end

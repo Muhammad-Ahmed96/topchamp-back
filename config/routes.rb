@@ -39,7 +39,11 @@ Rails.application.routes.draw do
     resources :application_confirmations, only: [:create]
     post 'application_confirmations/resend_pin', to: 'application_confirmations#resend_pin'
 
-    resources :events, only: [:index, :create, :show, :update, :destroy]
+    resources :events, only: [:index, :create, :show, :update, :destroy] do
+      member do
+        put :create_venue
+      end
+    end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
   end
