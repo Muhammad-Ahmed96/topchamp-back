@@ -49,6 +49,22 @@ class EventPolicy < ApplicationPolicy
   def discounts?
     user.sysadmin? || user.agent? || user.director?
   end
+
+  def import_discount_personalizeds?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def tax?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def refund_policy?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def service_fee?
+    user.sysadmin? || user.agent? || user.director?
+  end
   class Scope < Scope
     def resolve
       scope

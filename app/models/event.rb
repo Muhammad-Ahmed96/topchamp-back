@@ -11,6 +11,7 @@ class Event < ApplicationRecord
   has_one :discount,   class_name: 'EventDiscount'
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
+  has_one :tax, class_name: 'EventTax'
 
   accepts_nested_attributes_for :discount_generals
   accepts_nested_attributes_for :discount_personalizeds

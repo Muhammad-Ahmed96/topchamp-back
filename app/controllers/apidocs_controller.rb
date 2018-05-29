@@ -69,6 +69,7 @@ class ApidocsController < ApplicationController
       EventDiscount,
       EventDiscountGeneral,
       EventDiscountPersonalized,
+      EventTax,
       self,
   ].freeze
 

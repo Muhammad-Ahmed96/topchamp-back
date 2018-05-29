@@ -1,5 +1,7 @@
 class EventPaymentInformation < ApplicationRecord
   include Swagger::Blocks
+
+  validates :service_fee, numericality: { less_than_or_equal_to: 100 }, :allow_nil => true
   swagger_schema :EventPaymentInformation do
     property :id do
       key :type, :integer

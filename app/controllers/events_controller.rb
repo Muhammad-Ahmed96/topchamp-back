@@ -1,7 +1,8 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
-                                      :payment_method, :discounts, :import_discount_personalizeds]
+                                      :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
+                                      :service_fee]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds]
 =begin
@@ -842,8 +843,134 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def import_discount_personalizeds
+    authorize Event
     @event.import_discount_personalizeds!(import_params[:file])
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
+
+  swagger_path '/events/:id/tax' do
+    operation :put do
+      key :summary, 'Events import discount personalizeds '
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsImportDiscountPersonalizeds'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :tax
+        key :in, :body
+        key :description, 'Taxes'
+        key :'$ref', :EventTaxInput
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def tax
+    authorize Event
+    tax = @event.tax
+    if tax.present?
+      tax.update! tax_params
+    else
+      @event.create_tax! tax_params
+    end
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
+  swagger_path '/events/:id/refund_policy' do
+    operation :put do
+      key :summary, 'Events refund policy'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsRefundPolicy'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :refund_policy
+        key :in, :body
+        key :description, 'Refund policy'
+        key :type, :string
+        key :required, true
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def refund_policy
+    authorize Event
+    information = @event.payment_information
+    if information.present?
+      information.update!(refund_policy_params)
+    else
+      @event.create_payment_information!(refund_policy_params)
+    end
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
+  swagger_path '/events/:id/service_fee' do
+    operation :put do
+      key :summary, 'Events service fee'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsServiceFee'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :service_fee
+        key :in, :body
+        key :description, 'Service fee'
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def service_fee
+    authorize Event
+    information = @event.payment_information
+    if information.present?
+      information.update!(service_fee_params)
+    else
+      @event.create_payment_information!(service_fee_params)
+    end
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
 
@@ -860,7 +987,7 @@ class EventsController < ApplicationController
     # whitelist params
     params.permit(:icon)
   end
-  
+
   def import_params
     # whitelist params
     params.permit(:file)
@@ -882,7 +1009,7 @@ class EventsController < ApplicationController
 
   def payment_information_params
     # whitelist params
-    params.require(:payment_information).permit(:bank_name, :bank_account)
+    params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee)
   end
 
   def payment_method_params
@@ -916,6 +1043,21 @@ class EventsController < ApplicationController
   def day_params
     # whitelist params
     params.permit(days: [:day, :time_start, :time_end])
+  end
+
+  def tax_params
+    # whitelist params
+    params.require(:tax).permit(:tax)
+  end
+
+  def refund_policy_params
+    # whitelist params
+    params.require(:payment_information).permit(:refund_policy)
+  end
+
+  def service_fee_params
+    # whitelist params
+    params.require(:payment_information).permit(:service_fee)
   end
 
   def set_resource

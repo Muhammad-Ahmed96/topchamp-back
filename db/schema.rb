@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_29_180047) do
+ActiveRecord::Schema.define(version: 2018_05_29_231106) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -103,6 +103,8 @@ ActiveRecord::Schema.define(version: 2018_05_29_180047) do
     t.string "bank_account"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "refund_policy"
+    t.float "service_fee"
   end
 
   create_table "event_payment_methods", force: :cascade do |t|
@@ -110,6 +112,15 @@ ActiveRecord::Schema.define(version: 2018_05_29_180047) do
     t.float "enrollment_fee"
     t.float "bracket_fee"
     t.string "currency"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_taxes", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "code"
+    t.float "tax"
+    t.boolean "is_percent", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
