@@ -1,9 +1,9 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
-  :payment_method]
+                                      :payment_method, :discounts]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:update, :create, :create_venue]
+  around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts]
 =begin
   swagger_path '/events' do
     operation :post do
@@ -658,6 +658,7 @@ class EventsController < ApplicationController
     @event.save
     json_response_success(t("inactivated_success", model: Event.model_name.human), true)
   end
+
   swagger_path '/events/:id/payment_information' do
     operation :put do
       key :summary, 'Payment information events'
@@ -690,6 +691,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def payment_information
     authorize Event
     information = @event.payment_information
@@ -734,6 +736,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def payment_method
     authorize Event
     payment_method = @event.payment_method
@@ -742,6 +745,68 @@ class EventsController < ApplicationController
     else
       @event.create_payment_method!(payment_method_params)
     end
+    json_response_success(t("edited_success", model: Event.model_name.human), true)
+  end
+  swagger_path '/events/:id/discounts' do
+    operation :put do
+      key :summary, 'Events discounts '
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsDiscounts'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :discounts
+        key :in, :body
+        key :description, 'Discounts'
+        schema do
+          key :'$ref', :EventDiscountInput
+        end
+      end
+      parameter do
+        key :name, :discount_generals
+        key :in, :body
+        key :description, 'Discount generals'
+        key :type, :array
+        items do
+            key :'$ref', :EventDiscountGeneralInput
+        end
+      end
+      parameter do
+        key :name, :discount_personalizeds
+        key :in, :body
+        key :description, 'Discount personalizeds'
+        key :type, :array
+        items do
+          key :'$ref', :EventDiscountPersonalizedInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def discounts
+    authorize Event
+    discount = @event.discount
+    if discount.present?
+      discount.update!(discounts_params)
+    else
+      @event.create_discount!(discounts_params)
+    end
+    @event.sync_discount_generals! discount_generals_params
+    @event.sync_discount_personalizeds! discount_personalizeds_params
     json_response_success(t("edited_success", model: Event.model_name.human), true)
   end
 
@@ -784,7 +849,28 @@ class EventsController < ApplicationController
     params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency)
   end
 
+  def discounts_params
+    # whitelist params
+    params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :late_registration, :late_players,
+                                      :on_site_registration, :on_site_players)
+  end
 
+  def discount_generals_params
+    # whitelist params
+    ActionController::Parameters.permit_all_parameters = true
+    params.require(:discount_generals).map do |p|
+      ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :limited)
+    end
+  end
+
+
+  def discount_personalizeds_params
+    # whitelist params
+    ActionController::Parameters.permit_all_parameters = true
+    params.require(:discount_personalizeds).map do |p|
+      ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :email)
+    end
+  end
   def day_params
     # whitelist params
     params.permit(days: [:day, :time_start, :time_end])

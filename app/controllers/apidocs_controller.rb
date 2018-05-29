@@ -66,6 +66,9 @@ class ApidocsController < ApplicationController
       Language,
       EventPaymentInformation,
       EventPaymentMethod,
+      EventDiscount,
+      EventDiscountGeneral,
+      EventDiscountPersonalized,
       self,
   ].freeze
 

@@ -8,6 +8,12 @@ class Event < ApplicationRecord
   belongs_to :event_type
   has_one :payment_information,    class_name: 'EventPaymentInformation'
   has_one :payment_method,   class_name: 'EventPaymentMethod'
+  has_one :discount,   class_name: 'EventDiscount'
+  has_many :discount_generals, class_name: 'EventDiscountGeneral'
+  has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
+
+  accepts_nested_attributes_for :discount_generals
+  accepts_nested_attributes_for :discount_personalizeds
 
 
   has_attached_file :icon, :path => ":rails_root/public/images/event_icons/:to_param/:style/:basename.:extension",
@@ -22,6 +28,54 @@ class Event < ApplicationRecord
   validates :event_url, uniqueness: true
   validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
+
+  def sync_discount_generals!(data)
+    if data.present?
+      deleteIds = []
+      discounts_general = nil
+      data.each {|discount|
+        if discount[:id].present?
+          discounts_general = self.discount_generals.where(id: discount[:id]).first
+          if discounts_general.present?
+            discounts_general.update! discount
+          else
+            discount[:id] = nil
+            discounts_general = self.discount_generals.create! discount
+          end
+        else
+          discounts_general = self.discount_generals.create! discount
+        end
+        deleteIds << discounts_general.id
+      }
+      unless discounts_general.nil?
+        self.discount_generals.where.not(id: deleteIds).destroy_all
+      end
+    end
+  end
+
+  def sync_discount_personalizeds!(data)
+    if data.present?
+      deleteIds = []
+      discount_personalized = nil
+      data.each {|discount|
+        if discount[:id].present?
+          discount_personalized = self.discount_personalizeds.where(id: discount[:id]).first
+          if discount_personalized.present?
+            discount_personalized.update! discount
+          else
+            discount[:id] = nil
+            discount_personalized = self.discount_personalizeds.create! discount
+          end
+        else
+          discount_personalized = self.discount_personalizeds.create! discount
+        end
+        deleteIds << discount_personalized.id
+      }
+      unless discount_personalized.nil?
+        self.discount_personalizeds.where.not(id: deleteIds).destroy_all
+      end
+    end
+  end
 
   swagger_schema :Event do
     property :id do

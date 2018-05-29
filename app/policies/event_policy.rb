@@ -45,6 +45,10 @@ class EventPolicy < ApplicationPolicy
   def payment_method?
     user.sysadmin? || user.agent? || user.director?
   end
+
+  def discounts?
+    user.sysadmin? || user.agent? || user.director?
+  end
   class Scope < Scope
     def resolve
       scope

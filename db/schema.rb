@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_29_170650) do
+ActiveRecord::Schema.define(version: 2018_05_29_180047) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -65,6 +65,36 @@ ActiveRecord::Schema.define(version: 2018_05_29_170650) do
     t.string "emergency_contact_country_code_phone"
     t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
+  end
+
+  create_table "event_discount_generals", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "code"
+    t.float "discount"
+    t.integer "limited"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_discount_personalizeds", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "email"
+    t.string "code"
+    t.float "discount"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_discounts", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.float "early_bird_registration"
+    t.integer "early_bird_players"
+    t.float "late_registration"
+    t.integer "late_players"
+    t.float "on_site_registration"
+    t.integer "on_site_players"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "event_payment_informations", force: :cascade do |t|

@@ -47,6 +47,7 @@ Rails.application.routes.draw do
         put :inactive
         put :payment_information
         put :payment_method
+        put :discounts
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
