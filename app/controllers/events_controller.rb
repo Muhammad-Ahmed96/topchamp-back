@@ -179,7 +179,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -513,7 +513,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -572,7 +572,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -660,7 +660,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -692,7 +692,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -732,7 +732,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -777,7 +777,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -839,7 +839,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -883,7 +883,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -906,21 +906,23 @@ class EventsController < ApplicationController
 
   swagger_path '/events/:id/tax' do
     operation :put do
-      key :summary, 'Events import discount personalizeds '
+      key :summary, 'Events Tax'
       key :description, 'Events Catalog'
-      key :operationId, 'eventsImportDiscountPersonalizeds'
+      key :operationId, 'eventsTax'
       key :produces, ['application/json',]
       key :tags, ['events']
       parameter do
         key :name, :tax
         key :in, :body
         key :description, 'Taxes'
-        key :'$ref', :EventTaxInput
+        schema do
+          key :'$ref', :EventTaxInput
+        end
       end
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -962,7 +964,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -1003,7 +1005,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -1045,7 +1047,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+           key :'$ref', :Event
         end
       end
       response 401 do

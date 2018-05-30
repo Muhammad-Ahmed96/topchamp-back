@@ -153,6 +153,9 @@ class Event < ApplicationRecord
     property :access_code do
       key :type, :string
     end
+    property :status do
+      key :type, :string
+    end
     property :sports do
       key :type, :array
       items do
@@ -160,20 +163,40 @@ class Event < ApplicationRecord
       end
     end
     property :event_type do
-      items do
-        key :'$ref', :EventType
-      end
+      key :'$ref', :EventType
     end
     property :venue do
-      items do
-        key :'$ref', :Venue
-      end
+      key :'$ref', :Venue
     end
     property :regions do
       key :type, :array
       items do
-        key :'$ref', :Regions
+        key :'$ref', :Region
       end
+    end
+
+    property :payment_information do
+      key :'$ref', :EventPaymentInformation
+    end
+
+    property :payment_method do
+      key :'$ref', :EventPaymentMethod
+    end
+    property :discount do
+      key :'$ref', :EventDiscount
+    end
+    property :discount_generals do
+      key :'$ref', :EventDiscountGeneral
+    end
+    property :discount_personalizeds do
+      key :'$ref', :EventDiscountPersonalized
+    end
+
+    property :tax do
+      key :'$ref', :EventTax
+    end
+    property :registration_rule do
+      key :'$ref', :EventRegistrationRule
     end
   end
   swagger_schema :EventInput do
