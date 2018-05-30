@@ -10,7 +10,7 @@ class Venue < ApplicationRecord
 
 
   validates :name, length: {maximum: 100}, presence: true
-  validates :abbreviation, length: {maximum: 50}, presence: true
+  validates :abbreviation, length: {maximum: 50}, :allow_nil => true
   validates :country_code, presence: true
   validates :phone_number, presence: true, numericality: {only_integer: true}, length: {is: 10}
   #validates :sports, presence: true
@@ -18,7 +18,7 @@ class Venue < ApplicationRecord
   validates :description, length: {maximum: 1000}
 
   validates :address_line_1, presence: true
-  validates :address_line_2, presence: true
+  #validates :address_line_2, presence: true
   validates :postal_code, presence: true
 
 

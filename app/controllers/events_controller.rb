@@ -176,14 +176,14 @@ class EventsController < ApplicationController
 
   def create
     authorize Event
-    event = Event.create!(resource_params)
+    @event = Event.create!(resource_params)
     if !params[:sports].nil?
-      event.sport_ids = params[:sports]
+      @event.sport_ids = params[:sports]
     end
     if !params[:regions].nil?
-      event.region_ids = params[:regions]
+      @event.region_ids = params[:regions]
     end
-    json_response_success(t("created_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
 =begin
@@ -346,7 +346,7 @@ class EventsController < ApplicationController
       @event.region_ids = params[:regions]
     end
     @event.update!(resource_params)
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
 =begin
@@ -384,7 +384,7 @@ class EventsController < ApplicationController
   def icon
     authorize Event
     @event.update!(resource_icon_params)
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/create_venue' do
@@ -507,7 +507,7 @@ class EventsController < ApplicationController
     if day_params[:days].present?
       venue.days.create!(day_params[:days])
     end
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/venue' do
@@ -546,7 +546,7 @@ class EventsController < ApplicationController
     if params[:venue_id].present?
       @event.venue_id = params[:venue_id]
       @event.save
-      json_response_success(t("edited_success", model: Event.model_name.human), true)
+      json_response_serializer(@event, EventSerializer)
     else
       json_response_error([t("no_venue_present")], 422)
     end
@@ -625,7 +625,7 @@ class EventsController < ApplicationController
     authorize Event
     @event.status = :Active
     @event.save
-    json_response_success(t("activated_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/inactive' do
@@ -657,7 +657,7 @@ class EventsController < ApplicationController
     authorize Event
     @event.status = :Inactive
     @event.save
-    json_response_success(t("inactivated_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/payment_information' do
@@ -701,7 +701,7 @@ class EventsController < ApplicationController
     else
       @event.create_payment_information!(payment_information_params)
     end
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
 
@@ -746,7 +746,7 @@ class EventsController < ApplicationController
     else
       @event.create_payment_method!(payment_method_params)
     end
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/discounts' do
@@ -810,7 +810,7 @@ class EventsController < ApplicationController
     end
     @event.sync_discount_generals! discount_generals_params
     @event.sync_discount_personalizeds! discount_personalizeds_params
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/import_discount_personalizeds' do
@@ -847,7 +847,7 @@ class EventsController < ApplicationController
   def import_discount_personalizeds
     authorize Event
     @event.import_discount_personalizeds!(import_params[:file])
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/tax' do
@@ -889,7 +889,7 @@ class EventsController < ApplicationController
     else
       @event.create_tax! tax_params
     end
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
   swagger_path '/events/:id/refund_policy' do
     operation :put do
@@ -930,7 +930,7 @@ class EventsController < ApplicationController
     else
       @event.create_payment_information!(refund_policy_params)
     end
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
   swagger_path '/events/:id/service_fee' do
     operation :put do
@@ -971,7 +971,7 @@ class EventsController < ApplicationController
     else
       @event.create_payment_information!(service_fee_params)
     end
-    json_response_success(t("edited_success", model: Event.model_name.human), true)
+    json_response_serializer(@event, EventSerializer)
   end
 
   private
