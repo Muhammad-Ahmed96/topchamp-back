@@ -51,6 +51,8 @@ class ApidocsController < ApplicationController
       FacilitiesController,
       ApplicationConfirmationsController,
       ApplicationRegistrationsController,
+      VisibilityController,
+      EventsController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -62,6 +64,12 @@ class ApidocsController < ApplicationController
       Region,
       Sponsor,
       Language,
+      EventPaymentInformation,
+      EventPaymentMethod,
+      EventDiscount,
+      EventDiscountGeneral,
+      EventDiscountPersonalized,
+      EventTax,
       self,
   ].freeze
 

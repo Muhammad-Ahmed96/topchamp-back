@@ -3,7 +3,7 @@ class VenuePicture < ApplicationRecord
   belongs_to :venue
   has_attached_file :picture, :path => ":rails_root/public/images/venue/:to_param/:style/:basename.:extension",
                     :url => "/images/venue/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/images/:style/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
   validates_attachment :picture
   validate :check_dimensions
   validates_with AttachmentSizeValidator, attributes: :picture, less_than: 2.megabytes

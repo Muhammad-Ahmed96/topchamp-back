@@ -10,7 +10,7 @@ class Venue < ApplicationRecord
 
 
   validates :name, length: {maximum: 100}, presence: true
-  validates :abbreviation, length: {maximum: 50}, presence: true
+  validates :abbreviation, length: {maximum: 50}, :allow_nil => true
   validates :country_code, presence: true
   validates :phone_number, presence: true, numericality: {only_integer: true}, length: {is: 10}
   #validates :sports, presence: true
@@ -18,17 +18,17 @@ class Venue < ApplicationRecord
   validates :description, length: {maximum: 1000}
 
   validates :address_line_1, presence: true
-  validates :address_line_2, presence: true
+  #validates :address_line_2, presence: true
   validates :postal_code, presence: true
 
 
-  validates :availability_date_start, presence: true
-  validates :availability_date_end, presence: true
+ # validates :availability_date_start, presence: true
+  #validates :availability_date_end, presence: true
   validate :availability_date_start_is_valid_date
   validate :availability_date_end_is_valid_datetime
   #validates :days, presence: true
 
-  validates :restrictions, presence: true
+  #validates :restrictions, presence: true
   validates_length_of :vehicles, :minimum => 0, :maximum => 4, :allow_blank => true
 
   #validates :restrictions, inclusion: {in: Restrictions.collection}
@@ -59,11 +59,11 @@ class Venue < ApplicationRecord
   end
 
   def availability_date_start_is_valid_date
-    errors.add(:availability_date_start, 'must be a valid datetime') if !self.availability_date_start.is_a?(Date)
+    errors.add(:availability_date_start, 'must be a valid datetime') if self.availability_date_start.present? && !self.availability_date_start.is_a?(Date)
   end
 
   def availability_date_end_is_valid_datetime
-    errors.add(:availability_date_end, 'must be a valid datetime') if !self.availability_date_end.is_a?(Date)
+    errors.add(:availability_date_end, 'must be a valid datetime') if self.availability_date_end.present? && !self.availability_date_end.is_a?(Date)
   end
 
   swagger_schema :Venue do
