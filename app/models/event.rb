@@ -12,6 +12,7 @@ class Event < ApplicationRecord
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
+  has_one :registration_rule, class_name: 'EventRegistrationRule'
 
   accepts_nested_attributes_for :discount_generals
   accepts_nested_attributes_for :discount_personalizeds
@@ -148,6 +149,10 @@ class Event < ApplicationRecord
     property :is_determine_later_venue do
       key :type, :boolean
     end
+
+    property :access_code do
+      key :type, :string
+    end
     property :sports do
       key :type, :array
       items do
@@ -219,6 +224,10 @@ class Event < ApplicationRecord
     end
     property :is_determine_later_venue do
       key :type, :boolean
+    end
+
+    property :access_code do
+      key :type, :string
     end
     property :sports do
       key :type, :array

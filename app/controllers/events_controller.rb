@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee]
+                                      :service_fee, :registration_rule, :venue]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds]
 =begin
@@ -121,6 +121,12 @@ class EventsController < ApplicationController
         key :type, :boolean
       end
       parameter do
+        key :name, :access_code
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :event_url
         key :in, :body
         key :required, false
@@ -151,10 +157,24 @@ class EventsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :is_determine_later_venue
+        key :name, :sports
         key :in, :body
         key :required, false
-        key :type, :boolean
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :regions
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
       end
       response 200 do
         key :description, ''
@@ -284,6 +304,12 @@ class EventsController < ApplicationController
         key :type, :boolean
       end
       parameter do
+        key :name, :access_code
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :event_url
         key :in, :body
         key :required, false
@@ -314,10 +340,24 @@ class EventsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :is_determine_later_venue
+        key :name, :sports
         key :in, :body
         key :required, false
-        key :type, :boolean
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :regions
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
       end
       response 200 do
         key :description, ''
@@ -523,6 +563,12 @@ class EventsController < ApplicationController
         key :required, true
         key :type, :int64
       end
+      parameter do
+        key :name, :is_determine_later_venue
+        key :in, :body
+        key :required, true
+        key :type, :boolean
+      end
       response 200 do
         key :description, ''
         schema do
@@ -543,13 +589,21 @@ class EventsController < ApplicationController
 
   def venue
     authorize Event
-    if params[:venue_id].present?
-      @event.venue_id = params[:venue_id]
+    if params[:is_determine_later_venue].present? and  (params[:is_determine_later_venue].equal?(true) or params[:is_determine_later_venue].to_s =="1"  )
+      @event.is_determine_later_venue = true
+      @event.venue_id = nil
       @event.save
       json_response_serializer(@event, EventSerializer)
     else
-      json_response_error([t("no_venue_present")], 422)
+      if params[:venue_id].present?
+        @event.venue_id = params[:venue_id]
+        @event.save
+        json_response_serializer(@event, EventSerializer)
+      else
+        json_response_error([t("no_venue_present")], 422)
+      end
     end
+
   end
 
   swagger_path '/events_validate_url' do
@@ -973,6 +1027,49 @@ class EventsController < ApplicationController
     end
     json_response_serializer(@event, EventSerializer)
   end
+=begin
+  swagger_path '/events/:id/registration_rule' do
+    operation :put do
+      key :summary, 'Events registration rule'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsRegistrationRule'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :registration_rule
+        key :in, :body
+        key :description, 'Registration rule'
+        key :required, true
+        key :'$ref', :EventRegistrationRuleInput
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+=end
+  def registration_rule
+    authorize Event
+    registration_rule = @event.registration_rule
+    if registration_rule.present?
+      registration_rule.update! registration_rule_params
+    else
+      @event.create_registration_rule! registration_rule_params
+    end
+    json_response_serializer(@event, EventSerializer)
+  end
 
   private
 
@@ -980,7 +1077,7 @@ class EventsController < ApplicationController
     # whitelist params
     params.permit(:venue_id, :event_type_id, :title, :icon, :description, :start_date, :end_date, :visibility,
                   :requires_access_code, :event_url, :is_event_sanctioned, :sanctions, :organization_name, :organization_url,
-                  :is_determine_later_venue)
+                  :is_determine_later_venue, :access_code)
   end
 
   def resource_icon_params
@@ -1058,6 +1155,13 @@ class EventsController < ApplicationController
   def service_fee_params
     # whitelist params
     params.require(:payment_information).permit(:service_fee)
+  end
+
+  def registration_rule_params
+    # whitelist params
+    params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password, :anyone_require_password,
+                                              :password, :require_director_approval, :allow_players_cancel, :link_homepage,
+                                              :link_event_website, :use_app_event_website, :link_app)
   end
 
   def set_resource

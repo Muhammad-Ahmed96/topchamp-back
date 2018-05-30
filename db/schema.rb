@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_29_231106) do
+ActiveRecord::Schema.define(version: 2018_05_30_175246) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -116,6 +116,23 @@ ActiveRecord::Schema.define(version: 2018_05_29_231106) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "event_registration_rules", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.boolean "allow_group_registrations", default: false
+    t.string "partner"
+    t.boolean "require_password", default: false
+    t.boolean "anyone_require_password", default: false
+    t.string "password"
+    t.boolean "require_director_approval", default: false
+    t.boolean "allow_players_cancel", default: false
+    t.string "link_homepage"
+    t.string "link_event_website"
+    t.boolean "use_app_event_website", default: false
+    t.string "link_app"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "event_taxes", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "code"
@@ -156,6 +173,7 @@ ActiveRecord::Schema.define(version: 2018_05_29_231106) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.string "status", default: "Active"
+    t.string "access_code"
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 

@@ -52,6 +52,7 @@ Rails.application.routes.draw do
         put :tax
         put :refund_policy
         put :service_fee
+        put :registration_rule
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
