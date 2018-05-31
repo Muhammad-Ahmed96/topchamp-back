@@ -5,8 +5,8 @@ class Event < ApplicationRecord
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions
   has_and_belongs_to_many :categories
-  belongs_to :venue
-  belongs_to :event_type
+  belongs_to :venue, optional: true
+  belongs_to :event_type, optional: true
   has_one :payment_information,    class_name: 'EventPaymentInformation'
   has_one :payment_method,   class_name: 'EventPaymentMethod'
   has_one :discount,   class_name: 'EventDiscount'
@@ -33,7 +33,7 @@ class Event < ApplicationRecord
 
   validates :title, presence: true
   validates :event_url, uniqueness: true
-  validates :event_type_id, presence: true
+  #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
 
 
