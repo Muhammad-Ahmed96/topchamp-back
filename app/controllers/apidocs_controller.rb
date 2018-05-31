@@ -33,6 +33,7 @@ class ApidocsController < ApplicationController
       MedicalInformation,
       EventType,
       AttendeeType,
+      ApplicationPasswordController,
       ApplicationSessionsController,
       VenueFacilityManagementController,
       VenuesController,
