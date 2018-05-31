@@ -48,9 +48,10 @@ class ApplicationConfirmationsController < ApplicationController
         @client_id, @token = @resource.create_token
         @resource.pin = nil
         @resource.status = :Active
+        @resource.role = "Member"
         @resource.save!
         update_auth_header
-        json_response_success(t("devise.confirmations.confirmed"), true)
+        json_response_serializer(@resource, UserSerializer)
       else
         json_response_error(t("confirmations.not_confirm"), 422)
       end

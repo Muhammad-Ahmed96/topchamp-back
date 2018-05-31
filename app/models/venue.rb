@@ -5,11 +5,12 @@ class Venue < ApplicationRecord
   has_and_belongs_to_many :sports
   has_many :pictures, class_name: 'VenuePicture', :dependent => :destroy
   has_one :facility_management, :dependent => :delete, class_name: 'VenueFacilityManagement'
+  #belongs_to :availability_time_zone_obj, :foreign_key => "availability_time_zone", class_name: 'Region'
   has_many :days, :class_name => 'VenueDay'
 
 
   validates :name, length: {maximum: 100}, presence: true
-  validates :abbreviation, length: {maximum: 50}, presence: true
+  validates :abbreviation, length: {maximum: 50}, :allow_nil => true
   validates :country_code, presence: true
   validates :phone_number, presence: true, numericality: {only_integer: true}, length: {is: 10}
   #validates :sports, presence: true
@@ -17,17 +18,17 @@ class Venue < ApplicationRecord
   validates :description, length: {maximum: 1000}
 
   validates :address_line_1, presence: true
-  validates :address_line_2, presence: true
+  #validates :address_line_2, presence: true
   validates :postal_code, presence: true
 
 
-  validates :availability_date_start, presence: true
-  validates :availability_date_end, presence: true
+ # validates :availability_date_start, presence: true
+  #validates :availability_date_end, presence: true
   validate :availability_date_start_is_valid_date
   validate :availability_date_end_is_valid_datetime
   #validates :days, presence: true
 
-  validates :restrictions, presence: true
+  #validates :restrictions, presence: true
   validates_length_of :vehicles, :minimum => 0, :maximum => 4, :allow_blank => true
 
   #validates :restrictions, inclusion: {in: Restrictions.collection}
@@ -37,7 +38,7 @@ class Venue < ApplicationRecord
   scope :is_status, lambda {|status| where status: status if status.present?}
   scope :is_facility, lambda {|facility| where facility: facility if facility.present?}
   scope :name_like, lambda {|search| where ["LOWER(name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
-  scope :phone_number_like, lambda {|search| where ["to_char(phone_number,'9999999999') LIKE ?", "%#{search}%"] if search.present?}
+  scope :phone_number_like, lambda {|search| where ["phone_number LIKE ?","%#{search}%"] if search.present?}
   scope :state_like, lambda {|search| where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :city_like, lambda {|search| where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
@@ -58,11 +59,11 @@ class Venue < ApplicationRecord
   end
 
   def availability_date_start_is_valid_date
-    errors.add(:availability_date_start, 'must be a valid datetime') if !self.availability_date_start.is_a?(Date)
+    errors.add(:availability_date_start, 'must be a valid datetime') if self.availability_date_start.present? && !self.availability_date_start.is_a?(Date)
   end
 
   def availability_date_end_is_valid_datetime
-    errors.add(:availability_date_end, 'must be a valid datetime') if !self.availability_date_end.is_a?(Date)
+    errors.add(:availability_date_end, 'must be a valid datetime') if self.availability_date_end.present? && !self.availability_date_end.is_a?(Date)
   end
 
   swagger_schema :Venue do
@@ -176,6 +177,12 @@ class Venue < ApplicationRecord
         key :'$ref', :VenuePicture
       end
     end
+
+=begin
+    property :availability_time_zone_obj do
+      key :'$ref', :Region
+    end
+=end
 
   end
 

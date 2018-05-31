@@ -13,6 +13,10 @@ class ApplicationController < ActionController::API
     devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name,:email])
   end
 
+  def blacklisted_redirect_url?
+    DeviseTokenAuth.redirect_whitelist && !DeviseTokenAuth::Url.whitelisted?(@redirect_url)
+  end
+
   private
 
   def user_not_authorized(exception)

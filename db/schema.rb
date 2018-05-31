@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_23_225429) do
+ActiveRecord::Schema.define(version: 2018_05_31_022930) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -50,21 +50,140 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "state"
   end
 
+  create_table "categories", force: :cascade do |t|
+    t.string "name"
+    t.string "type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "categories_events", id: false, force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "category_id", null: false
+    t.index ["category_id"], name: "index_categories_events_on_category_id"
+    t.index ["event_id"], name: "index_categories_events_on_event_id"
+  end
+
   create_table "contact_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "country_code_phone"
-    t.integer "cell_phone"
+    t.string "cell_phone"
     t.string "alternative_email"
     t.string "address_line_1"
     t.string "address_line_2"
     t.string "postal_code"
     t.string "state"
     t.string "city"
-    t.integer "work_phone"
+    t.string "work_phone"
     t.string "emergency_contact_full_name"
     t.string "emergency_contact_country_code_phone"
-    t.integer "emergency_contact_phone"
+    t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
+  end
+
+  create_table "event_bracket_ages", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_skill_id"
+    t.float "youngest_age"
+    t.float "oldest_age"
+    t.integer "quantity", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_bracket_skills", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_age_id"
+    t.float "lowest_skill"
+    t.float "highest_skill"
+    t.integer "quantity", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_discount_generals", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "code"
+    t.float "discount"
+    t.integer "limited"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_discount_personalizeds", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "email"
+    t.string "code"
+    t.float "discount"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_discounts", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.float "early_bird_registration"
+    t.integer "early_bird_players"
+    t.float "late_registration"
+    t.integer "late_players"
+    t.float "on_site_registration"
+    t.integer "on_site_players"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_payment_informations", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "bank_name"
+    t.string "bank_account"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "refund_policy"
+    t.float "service_fee"
+  end
+
+  create_table "event_payment_methods", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.float "enrollment_fee"
+    t.float "bracket_fee"
+    t.string "currency"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_registration_rules", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.boolean "allow_group_registrations", default: false
+    t.string "partner"
+    t.boolean "require_password", default: false
+    t.boolean "anyone_require_password", default: false
+    t.string "password"
+    t.boolean "require_director_approval", default: false
+    t.boolean "allow_players_cancel", default: false
+    t.string "link_homepage"
+    t.string "link_event_website"
+    t.boolean "use_app_event_website", default: false
+    t.string "link_app"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_rules", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "elimination_format"
+    t.string "bracket_by"
+    t.bigint "scoring_option_match_1_id"
+    t.bigint "scoring_option_match_2_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_taxes", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "code"
+    t.float "tax"
+    t.boolean "is_percent", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "event_types", force: :cascade do |t|
@@ -73,6 +192,47 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_event_types_on_deleted_at"
+  end
+
+  create_table "events", force: :cascade do |t|
+    t.bigint "venue_id"
+    t.bigint "event_type_id"
+    t.string "title"
+    t.string "icon_file_name"
+    t.string "icon_content_type"
+    t.integer "icon_file_size"
+    t.datetime "icon_updated_at"
+    t.text "description"
+    t.date "start_date"
+    t.date "end_date"
+    t.string "visibility"
+    t.boolean "requires_access_code", default: false
+    t.string "event_url"
+    t.boolean "is_event_sanctioned", default: false
+    t.text "sanctions"
+    t.string "organization_name"
+    t.string "organization_url"
+    t.boolean "is_determine_later_venue", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.string "status", default: "Active"
+    t.string "access_code"
+    t.index ["deleted_at"], name: "index_events_on_deleted_at"
+  end
+
+  create_table "events_regions", id: false, force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "region_id", null: false
+    t.index ["event_id"], name: "index_events_regions_on_event_id"
+    t.index ["region_id"], name: "index_events_regions_on_region_id"
+  end
+
+  create_table "events_sports", id: false, force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "sport_id", null: false
+    t.index ["event_id"], name: "index_events_sports_on_event_id"
+    t.index ["sport_id"], name: "index_events_sports_on_sport_id"
   end
 
   create_table "languages", force: :cascade do |t|
@@ -91,7 +251,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "group_id"
     t.string "primary_physician_full_name"
     t.string "primary_physician_country_code_phone"
-    t.integer "primary_physician_phone"
+    t.string "primary_physician_phone"
     t.string "dietary_restrictions"
     t.string "allergies"
   end
@@ -104,6 +264,17 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_regions_on_deleted_at"
+  end
+
+  create_table "scoring_options", force: :cascade do |t|
+    t.string "description"
+    t.integer "quantity_games"
+    t.integer "winner_games"
+    t.float "points"
+    t.float "duration"
+    t.integer "index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "shipping_addresses", force: :cascade do |t|
@@ -130,7 +301,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.text "description"
     t.string "contact_name"
     t.string "country_code"
-    t.integer "phone"
+    t.string "phone"
     t.string "email"
     t.string "address_line_1"
     t.string "address_line_2"
@@ -138,7 +309,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "state"
     t.string "city"
     t.string "work_country_code"
-    t.integer "work_phone"
+    t.string "work_phone"
     t.string "status", default: "Active"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -247,7 +418,7 @@ ActiveRecord::Schema.define(version: 2018_05_23_225429) do
     t.string "name"
     t.string "abbreviation"
     t.string "country_code"
-    t.bigint "phone_number"
+    t.string "phone_number"
     t.string "link"
     t.string "facility"
     t.text "description"

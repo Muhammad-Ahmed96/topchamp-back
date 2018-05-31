@@ -19,4 +19,9 @@ module Response
     data = ActiveModelSerializers::SerializableResource.new(object, serializer: serializer, adapter: :json, root: :data).to_json
     render json: data, status: status
   end
+
+  def json_response_serializer_collection(object, serializer, status = :ok)
+    data = ActiveModelSerializers::SerializableResource.new(object, each_serializer: serializer, adapter: :json, root: :data).to_json
+    render json: data, status: status
+  end
 end
