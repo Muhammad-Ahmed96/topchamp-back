@@ -52,10 +52,17 @@ Rails.application.routes.draw do
         put :tax
         put :refund_policy
         put :service_fee
+        put :registration_rule
+        put :details
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
+    resources :categories, only: [:index]
+    resources :elimination_formats, only: [:index]
+    resources :brackets, only: [:index]
+    resources :scoring_options, only: [:index]
+    resources :skill_levels, only: [:index]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

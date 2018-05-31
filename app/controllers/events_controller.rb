@@ -2,12 +2,14 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee]
+                                      :service_fee, :registration_rule, :venue, :details]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds]
+  around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
+                                             :details]
+
 =begin
   swagger_path '/events' do
-    operation :post do
+    operation :get do
       key :summary, 'List events'
       key :description, 'Event Catalog'
       key :operationId, 'eventsIndex'
@@ -23,7 +25,49 @@ class EventsController < ApplicationController
       parameter do
         key :name, :direction
         key :in, :query
-        key :description, 'Direction to order'
+        key :description, 'Direction to order special "sport_name" parameter for sports order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :title
+        key :in, :query
+        key :description, 'State filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :start_date
+        key :in, :query
+        key :description, 'Start date'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :status
+        key :in, :query
+        key :description, 'Status filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :query
+        key :description, 'State filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :query
+        key :description, 'City filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :sport_id
+        key :in, :query
+        key :description, 'Id of te sport filter'
         key :required, false
         key :type, :string
       end
@@ -55,7 +99,30 @@ class EventsController < ApplicationController
 
     column = params[:column].nil? ? 'title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
-    paginate Event.my_order(column, direction), per_page: 50, root: :data
+
+    title = params[:title]
+    start_date = params[:start_date]
+    status = params[:status]
+
+
+    state = params[:state]
+    city = params[:city]
+
+    sport_id = params[:sport_id]
+    column_sports = nil
+    if column.to_s == "sport_name"
+      column_sports = "name"
+      column = nil
+    end
+
+
+    column_venue= nil
+    if column.to_s == "state"  || column.to_s == "city"
+      column_venue = column
+      column = nil
+    end
+    paginate Event.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
+    .start_date_like(start_date).in_status(status).state_like(state).city_like(city), per_page: 50, root: :data
   end
 
   swagger_path '/events' do
@@ -121,6 +188,12 @@ class EventsController < ApplicationController
         key :type, :boolean
       end
       parameter do
+        key :name, :access_code
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :event_url
         key :in, :body
         key :required, false
@@ -151,15 +224,29 @@ class EventsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :is_determine_later_venue
+        key :name, :sports
         key :in, :body
         key :required, false
-        key :type, :boolean
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :regions
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
       end
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -284,6 +371,12 @@ class EventsController < ApplicationController
         key :type, :boolean
       end
       parameter do
+        key :name, :access_code
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :event_url
         key :in, :body
         key :required, false
@@ -314,10 +407,24 @@ class EventsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :is_determine_later_venue
+        key :name, :sports
         key :in, :body
         key :required, false
-        key :type, :boolean
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :regions
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
       end
       response 200 do
         key :description, ''
@@ -473,7 +580,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -523,10 +630,16 @@ class EventsController < ApplicationController
         key :required, true
         key :type, :int64
       end
+      parameter do
+        key :name, :is_determine_later_venue
+        key :in, :body
+        key :required, true
+        key :type, :boolean
+      end
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -543,13 +656,21 @@ class EventsController < ApplicationController
 
   def venue
     authorize Event
-    if params[:venue_id].present?
-      @event.venue_id = params[:venue_id]
+    if params[:is_determine_later_venue].present? and (params[:is_determine_later_venue].equal?(true) or params[:is_determine_later_venue].to_s == "1")
+      @event.is_determine_later_venue = true
+      @event.venue_id = nil
       @event.save
       json_response_serializer(@event, EventSerializer)
     else
-      json_response_error([t("no_venue_present")], 422)
+      if params[:venue_id].present?
+        @event.venue_id = params[:venue_id]
+        @event.save
+        json_response_serializer(@event, EventSerializer)
+      else
+        json_response_error([t("no_venue_present")], 422)
+      end
     end
+
   end
 
   swagger_path '/events_validate_url' do
@@ -606,7 +727,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -638,7 +759,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -678,7 +799,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -723,7 +844,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -785,7 +906,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -829,7 +950,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -852,21 +973,23 @@ class EventsController < ApplicationController
 
   swagger_path '/events/:id/tax' do
     operation :put do
-      key :summary, 'Events import discount personalizeds '
+      key :summary, 'Events Tax'
       key :description, 'Events Catalog'
-      key :operationId, 'eventsImportDiscountPersonalizeds'
+      key :operationId, 'eventsTax'
       key :produces, ['application/json',]
       key :tags, ['events']
       parameter do
         key :name, :tax
         key :in, :body
         key :description, 'Taxes'
-        key :'$ref', :EventTaxInput
+        schema do
+          key :'$ref', :EventTaxInput
+        end
       end
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -891,6 +1014,7 @@ class EventsController < ApplicationController
     end
     json_response_serializer(@event, EventSerializer)
   end
+
   swagger_path '/events/:id/refund_policy' do
     operation :put do
       key :summary, 'Events refund policy'
@@ -908,7 +1032,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -922,6 +1046,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def refund_policy
     authorize Event
     information = @event.payment_information
@@ -932,6 +1057,7 @@ class EventsController < ApplicationController
     end
     json_response_serializer(@event, EventSerializer)
   end
+
   swagger_path '/events/:id/service_fee' do
     operation :put do
       key :summary, 'Events service fee'
@@ -949,7 +1075,7 @@ class EventsController < ApplicationController
       response 200 do
         key :description, ''
         schema do
-          key :'$ref', :SuccessModel
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -963,6 +1089,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def service_fee
     authorize Event
     information = @event.payment_information
@@ -974,13 +1101,150 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
+=begin
+  swagger_path '/events/:id/registration_rule' do
+    operation :put do
+      key :summary, 'Events registration rule'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsRegistrationRule'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :registration_rule
+        key :in, :body
+        key :description, 'Registration rule'
+        key :required, true
+        key :'$ref', :EventRegistrationRuleInput
+      end
+      response 200 do
+        key :description, ''
+        schema do
+           key :'$ref', :Event
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+=end
+  def registration_rule
+    authorize Event
+    registration_rule = @event.registration_rule
+    if registration_rule.present?
+      registration_rule.update! registration_rule_params
+    else
+      @event.create_registration_rule! registration_rule_params
+    end
+    json_response_serializer(@event, EventSerializer)
+  end
+=begin
+  swagger_path '/events/:id/details' do
+    operation :put do
+      key :summary, 'Events details'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsDetails'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :categories
+        key :in, :body
+        key :required, false
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      parameter do
+        key :name, :elimination_format
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :bracket_by
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :scoring_option_match_1_id
+        key :in, :body
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
+        key :name, :scoring_option_match_2_id
+        key :in, :body
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
+        key :name, :bracket_ages
+        key :in, :body
+        key :description, 'Bracket ages'
+        key :type, :array
+        items do
+          key :'$ref', :EventBracketAgeInput
+        end
+      end
+      parameter do
+        key :name, :bracket_skills
+        key :in, :body
+        key :description, 'Bracket ages'
+        key :type, :array
+        items do
+          key :'$ref', :EventBracketSkillInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :Event
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+=end
+  def details
+    authorize Event
+    unless categories_params[:categories].nil?
+      @event.category_ids = categories_params[:categories]
+    end
+    rule = @event.rule
+    if rule.present?
+      rule.update! rule_params
+    else
+      @event.create_rule! rule_params
+    end
+    @event.sync_bracket_age! bracket_ages_params
+    @event.sync_bracket_skill! bracket_skills_params
+    json_response_serializer(@event, EventSerializer)
+  end
+
   private
 
   def resource_params
     # whitelist params
     params.permit(:venue_id, :event_type_id, :title, :icon, :description, :start_date, :end_date, :visibility,
                   :requires_access_code, :event_url, :is_event_sanctioned, :sanctions, :organization_name, :organization_url,
-                  :is_determine_later_venue)
+                  :is_determine_later_venue, :access_code)
   end
 
   def resource_icon_params
@@ -1029,6 +1293,7 @@ class EventsController < ApplicationController
     params.require(:discount_generals).map do |p|
       ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :limited)
     end
+   # ActionController::Parameters.permit_all_parameters = false
   end
 
 
@@ -1038,6 +1303,7 @@ class EventsController < ApplicationController
     params.require(:discount_personalizeds).map do |p|
       ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :email)
     end
+    #ActionController::Parameters.permit_all_parameters = false
   end
 
   def day_params
@@ -1058,6 +1324,46 @@ class EventsController < ApplicationController
   def service_fee_params
     # whitelist params
     params.require(:payment_information).permit(:service_fee)
+  end
+
+  def registration_rule_params
+    # whitelist params
+    params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password, :anyone_require_password,
+                                              :password, :require_director_approval, :allow_players_cancel, :link_homepage,
+                                              :link_event_website, :use_app_event_website, :link_app)
+  end
+
+  def categories_params
+    params.permit(categories: [])
+  end
+
+  def rule_params
+    params.permit(:elimination_format, :bracket_by, :scoring_option_match_1_id,
+                  :scoring_option_match_2_id)
+  end
+
+  def bracket_ages_params
+    # whitelist params
+    ActionController::Parameters.permit_all_parameters = true
+    unless params[:bracket_ages].nil?
+      params[:bracket_ages].map do |p|
+        ActionController::Parameters.new(p.to_hash).permit(:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity,
+                                                           bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
+      end
+    end
+    #ActionController::Parameters.permit_all_parameters = false
+  end
+
+  def bracket_skills_params
+    # whitelist params
+    ActionController::Parameters.permit_all_parameters = true
+    unless params[:bracket_skills].nil? and !params[:bracket_skills].kind_of?(Array)
+      params[:bracket_skills].map do |p|
+        ActionController::Parameters.new(p.to_hash).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
+                                                           bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
+      end
+    end
+    #ActionController::Parameters.permit_all_parameters = false
   end
 
   def set_resource

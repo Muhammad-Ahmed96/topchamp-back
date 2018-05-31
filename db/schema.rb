@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_29_231106) do
+ActiveRecord::Schema.define(version: 2018_05_31_022930) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -50,6 +50,20 @@ ActiveRecord::Schema.define(version: 2018_05_29_231106) do
     t.string "state"
   end
 
+  create_table "categories", force: :cascade do |t|
+    t.string "name"
+    t.string "type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "categories_events", id: false, force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "category_id", null: false
+    t.index ["category_id"], name: "index_categories_events_on_category_id"
+    t.index ["event_id"], name: "index_categories_events_on_event_id"
+  end
+
   create_table "contact_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "country_code_phone"
@@ -65,6 +79,26 @@ ActiveRecord::Schema.define(version: 2018_05_29_231106) do
     t.string "emergency_contact_country_code_phone"
     t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
+  end
+
+  create_table "event_bracket_ages", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_skill_id"
+    t.float "youngest_age"
+    t.float "oldest_age"
+    t.integer "quantity", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_bracket_skills", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_age_id"
+    t.float "lowest_skill"
+    t.float "highest_skill"
+    t.integer "quantity", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "event_discount_generals", force: :cascade do |t|
@@ -116,6 +150,33 @@ ActiveRecord::Schema.define(version: 2018_05_29_231106) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "event_registration_rules", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.boolean "allow_group_registrations", default: false
+    t.string "partner"
+    t.boolean "require_password", default: false
+    t.boolean "anyone_require_password", default: false
+    t.string "password"
+    t.boolean "require_director_approval", default: false
+    t.boolean "allow_players_cancel", default: false
+    t.string "link_homepage"
+    t.string "link_event_website"
+    t.boolean "use_app_event_website", default: false
+    t.string "link_app"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_rules", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "elimination_format"
+    t.string "bracket_by"
+    t.bigint "scoring_option_match_1_id"
+    t.bigint "scoring_option_match_2_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "event_taxes", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "code"
@@ -156,6 +217,7 @@ ActiveRecord::Schema.define(version: 2018_05_29_231106) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.string "status", default: "Active"
+    t.string "access_code"
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
@@ -202,6 +264,17 @@ ActiveRecord::Schema.define(version: 2018_05_29_231106) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_regions_on_deleted_at"
+  end
+
+  create_table "scoring_options", force: :cascade do |t|
+    t.string "description"
+    t.integer "quantity_games"
+    t.integer "winner_games"
+    t.float "points"
+    t.float "duration"
+    t.integer "index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "shipping_addresses", force: :cascade do |t|

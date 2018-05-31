@@ -4,14 +4,20 @@ class Event < ApplicationRecord
 
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions
-  belongs_to :venue
-  belongs_to :event_type
+  has_and_belongs_to_many :categories
+  belongs_to :venue, optional: true
+  belongs_to :event_type, optional: true
   has_one :payment_information,    class_name: 'EventPaymentInformation'
   has_one :payment_method,   class_name: 'EventPaymentMethod'
   has_one :discount,   class_name: 'EventDiscount'
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
+  has_one :registration_rule, class_name: 'EventRegistrationRule'
+  has_one :rule, class_name: 'EventRule'
+
+  has_many :bracket_ages, class_name: "EventBracketAge"
+  has_many :bracket_skills, class_name: "EventBracketSkill"
 
   accepts_nested_attributes_for :discount_generals
   accepts_nested_attributes_for :discount_personalizeds
@@ -27,8 +33,21 @@ class Event < ApplicationRecord
 
   validates :title, presence: true
   validates :event_url, uniqueness: true
-  validates :event_type_id, presence: true
+  #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
+
+
+  scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
+
+
+  scope :state_like, lambda {|search| joins(:venue).merge(Venue.where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :city_like, lambda {|search| joins(:venue).merge(Venue.where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :venue_order, lambda {|column, direction = "desc"| includes(:venue).order("venues.#{column} #{direction}") if column.present?}
+
+  scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
+  scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
 
   def sync_discount_generals!(data)
     if data.present?
@@ -48,7 +67,7 @@ class Event < ApplicationRecord
         end
         deleteIds << discounts_general.id
       }
-      unless discounts_general.nil?
+      unless deleteIds.nil?
         self.discount_generals.where.not(id: deleteIds).destroy_all
       end
     end
@@ -72,8 +91,63 @@ class Event < ApplicationRecord
         end
         deleteIds << discount_personalized.id
       }
-      unless discount_personalized.nil?
+      unless deleteIds.nil?
         self.discount_personalizeds.where.not(id: deleteIds).destroy_all
+      end
+    end
+  end
+
+
+  def sync_bracket_age!(data)
+    if data.present?
+      deleteIds = []
+      data.each {|bracket_age|
+        bracket = nil
+        bracket_skills = bracket_age[:bracket_skills]
+        bracket_age.delete :bracket_skills
+        if bracket_age[:id].present?
+          bracket = self.bracket_ages.where(id: bracket_age[:id]).first
+          if bracket.present?
+            bracket.update! bracket_age
+          else
+            bracket_age[:id] = nil
+            bracket = self.bracket_ages.create! bracket_age
+          end
+        else
+          bracket = self.bracket_ages.create! bracket_age
+        end
+        deleteIds << bracket.id
+        bracket.sync_bracket_skill! bracket_skills
+      }
+      unless deleteIds.nil?
+        self.bracket_ages.where.not(id: deleteIds).destroy_all
+      end
+    end
+  end
+
+  def sync_bracket_skill!(data)
+    if data.present?
+      deleteIds = []
+      data.each {|bracket_skill|
+        bracket = nil
+        bracket_ages = bracket_skill[:bracket_ages]
+        bracket_skill.delete :bracket_ages
+        if bracket_skill[:id].present?
+          bracket = self.bracket_skills.where(id: bracket_skill[:id]).first
+          if bracket.present?
+            bracket.update! bracket_skill
+          else
+            bracket_skill[:id] = nil
+            bracket = self.bracket_skills.create! bracket_skill
+          end
+        else
+          bracket = self.bracket_skills.create! bracket_skill
+        end
+        deleteIds << bracket.id
+        bracket.sync_bracket_age! bracket_ages
+      }
+      unless deleteIds.nil?
+        self.bracket_skills.where.not(id: deleteIds).destroy_all
       end
     end
   end
@@ -148,6 +222,13 @@ class Event < ApplicationRecord
     property :is_determine_later_venue do
       key :type, :boolean
     end
+
+    property :access_code do
+      key :type, :string
+    end
+    property :status do
+      key :type, :string
+    end
     property :sports do
       key :type, :array
       items do
@@ -155,19 +236,51 @@ class Event < ApplicationRecord
       end
     end
     property :event_type do
-      items do
-        key :'$ref', :EventType
-      end
+      key :'$ref', :EventType
     end
     property :venue do
-      items do
-        key :'$ref', :Venue
-      end
+      key :'$ref', :Venue
     end
     property :regions do
       key :type, :array
       items do
-        key :'$ref', :Regions
+        key :'$ref', :Region
+      end
+    end
+
+    property :payment_information do
+      key :'$ref', :EventPaymentInformation
+    end
+
+    property :payment_method do
+      key :'$ref', :EventPaymentMethod
+    end
+    property :discount do
+      key :'$ref', :EventDiscount
+    end
+    property :discount_generals do
+      key :'$ref', :EventDiscountGeneral
+    end
+    property :discount_personalizeds do
+      key :'$ref', :EventDiscountPersonalized
+    end
+
+    property :tax do
+      key :'$ref', :EventTax
+    end
+    property :registration_rule do
+      key :'$ref', :EventRegistrationRule
+    end
+    property :bracket_ages do
+      key :type, :array
+      items do
+        key :'$ref', :EventBracketAge
+      end
+    end
+    property :bracket_skills do
+      key :type, :array
+      items do
+        key :'$ref', :EventBracketSkill
       end
     end
   end
@@ -219,6 +332,10 @@ class Event < ApplicationRecord
     end
     property :is_determine_later_venue do
       key :type, :boolean
+    end
+
+    property :access_code do
+      key :type, :string
     end
     property :sports do
       key :type, :array

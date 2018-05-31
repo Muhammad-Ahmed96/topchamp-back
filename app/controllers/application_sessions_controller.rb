@@ -147,52 +147,6 @@ uid:          zzzzz'
     end
   end
 
-  # Log in process
-  swagger_path '/password' do
-    operation :post do
-      key :summary, 'Send email password reset'
-      key :description, 'Use this route to send a password reset confirmation email to users that registered by email'
-      key :operationId, 'resetPassword'
-      key :produces, ['application/json',]
-      key :tags, ['security']
-      parameter do
-        key :name, :email
-        key :in, :body
-        key :description, 'The user matching the email param will be sent instructions on how to reset their password'
-        key :required, true
-        key :type, :string
-      end
-      parameter do
-        key :name, :redirect_url
-        key :in, :body
-        key :description, 'is the url to which the user will be redirected after visiting the link contained in the email'
-        key :required, true
-        key :type, :string
-      end
-      response 200 do
-        key :description, 'Mail send successful'
-        schema do
-          key :'$ref', :SuccessModel
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response 404 do
-        key :description, 'not found'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-
   # Update password
   swagger_path '/password' do
     operation :put do
