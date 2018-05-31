@@ -4,6 +4,7 @@ class EventSerializer < ActiveModel::Serializer
              :is_determine_later_venue, :access_code
   has_many :sports, serializer: SportSerializer
   has_many :regions, serializer: RegionSerializer
+  has_many :categories, serializer: CategorySerializer
   has_one :venue, serializer: VenueSerializer
   has_one :event_type, serializer: EventTypeSerializer
   has_one :payment_information, serializer: EventPaymentInformationSerializer
@@ -14,5 +15,9 @@ class EventSerializer < ActiveModel::Serializer
   has_many :discount_personalizeds, serializer: EventDiscountPersonalizedSerializer
   has_one :tax, serializer: EventTaxSerializer
   has_one :registration_rule, serializer: EventRegistrationRuleSerializer
+  has_one :rule, serializer: EventRuleSerializer
+
+  has_many :bracket_ages, serializer: EventBracketAgeSerializer
+  has_many :bracket_skills, serializer: EventBracketSkillSerializer
 
 end

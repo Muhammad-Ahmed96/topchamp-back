@@ -69,6 +69,10 @@ class EventPolicy < ApplicationPolicy
   def registration_rule?
     user.sysadmin? || user.agent? || user.director?
   end
+
+  def details?
+    user.sysadmin? || user.agent? || user.director?
+  end
   class Scope < Scope
     def resolve
       scope

@@ -67,3 +67,16 @@ end
 if Language.count == 0
   Language.create([{name: 'English', locale: 'en'}])
 end
+
+if Category.count == 0
+  Category.create([{name: 'Men Singles'},{name: 'Men Double'},{name: 'Women Singles'}, {name: 'Women Double'}, {name: 'Mixed Double'}])
+end
+
+if ScoringOption.count == 0
+  ScoringOption.create([{description: "2 of 3 games to 11 points (Match usually takes 54 min.)", quantity_games: 3, winner_games: 2,
+                         points: 11, duration: 54, index: 0},
+                        {description: "1 of 1 game to 15 points (Match usually takes 32 min.)", quantity_games: 1, winner_games: 1,
+                         points: 15, duration: 32, index: 1},
+                        {description: "1 of 1 game to 21 points (Match usually takes 45 min.)", quantity_games: 1, winner_games: 1,
+                         points: 21, duration: 45, index: 2}])
+end

@@ -53,6 +53,11 @@ class ApidocsController < ApplicationController
       ApplicationRegistrationsController,
       VisibilityController,
       EventsController,
+      BracketsController,
+      EliminationFormatsController,
+      CategoriesController,
+      ScoringOptionsController,
+      SkillLevelsController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -73,6 +78,11 @@ class ApidocsController < ApplicationController
       EventRegistrationRule,
       Event,
       Region,
+      Category,
+      ScoringOption,
+      EventRule,
+      EventBracketAge,
+      EventBracketSkill,
       self,
   ].freeze
 
