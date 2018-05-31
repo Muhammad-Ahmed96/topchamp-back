@@ -12,7 +12,7 @@ class Sponsor < ApplicationRecord
 
   has_attached_file :logo, :path => ":rails_root/public/images/sponsor/:to_param/:style/:basename.:extension",
                     :url => "/images/sponsor/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/images/:style/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
   validates_attachment :logo
   validates_with AttachmentSizeValidator, attributes: :logo, less_than: 2.megabytes
   validates_attachment_content_type :logo, content_type: /\Aimage\/.*\z/

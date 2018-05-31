@@ -32,7 +32,7 @@
 en:
   devise_token_auth:
     sessions:
-      not_confirmed: "Log In invalid. Please activate your account"
+      not_confirmed: "Your account is inactive. Please activate your account"
       bad_credentials: "Invalid email or password. Please verify your information."
       not_supported: "Use POST /sign_in to sign in. GET is not supported."
       user_not_found: "User was not found or was not logged in."
@@ -132,3 +132,29 @@ en:
   confirmations:
       invalid_pin: "Invalid PIN code, please verify."
       not_confirm: "Unable to confirm."
+  taken_url: "URL has already been taken"
+  available_url: "URL available"
+  no_url: "No URL param"
+  no_venue_present: "Param venue_id no present"
+  classy_enum:
+    category:
+      men_singles: 'Men Singles'
+      men_doubles: 'Men Doubles'
+      women_singles: 'Women Singles'
+      women_doubles: 'Women Singles'
+      mixed_doubles: 'Mixed Doubles'
+    elimination_format:
+      single_elimination: "Single Elimination"
+      double_elimination: "Double Elimination"
+      round_robin_elimination: "Round Robin Elimination"
+      round_robin_double_split: "Round Robin-Double Split"
+      round_robin_triple_split: "Round Robin-Triple Split"
+      round_robin_quadruple_split: "Round Robin-Quadruple Split"
+      multilevel: "Multilevel"
+      extended: "Extended"
+      no_competition: "No Competition"
+    bracket:
+      age: "Age"
+      age_skill: "Age/skill"
+      Skill: "Skill"
+      skill_age: "Skill/Age"

@@ -1,0 +1,2 @@
+class CreateEventCategoriesJoinTable < ApplicationRecord
+end
