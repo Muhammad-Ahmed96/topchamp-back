@@ -33,6 +33,13 @@ class VenuesController < ApplicationController
         key :type, :string
       end
       parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
         key :name, :sport_id
         key :in, :query
         key :description, 'Sport id to filter'
@@ -108,6 +115,7 @@ class VenuesController < ApplicationController
     authorize Venue
     column = params[:column].nil? ? 'name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
 
     name = params[:name]
     sport_id = params[:sport_id]
@@ -128,10 +136,16 @@ class VenuesController < ApplicationController
       column_sports = "name"
       column = nil
     end
-    paginate Venue.my_order(column, direction).name_like(name).sport_in(sport_id).phone_number_like(phone_number)
-      .is_facility(facility).state_like(state).city_like(city).is_status(status).facility_management_in(facility_management_id)
+    venues = Venue.my_order(column, direction).name_like(name).sport_in(sport_id).phone_number_like(phone_number)
+                 .is_facility(facility).state_like(state).city_like(city).is_status(status).facility_management_in(facility_management_id)
                  .facility_management_order(column_facility_management, direction).with_facility_management(facility_management)
-                 .sports_order(column_sports, direction), per_page: 50, root: :data
+                 .sports_order(column_sports, direction)
+    if paginate.to_s == "1"
+      paginate venues, per_page: 50, root: :data
+    else
+      json_response_serializer_collection(venues.all, VenueSerializer)
+    end
+
   end
   swagger_path '/venues' do
     operation :post do
