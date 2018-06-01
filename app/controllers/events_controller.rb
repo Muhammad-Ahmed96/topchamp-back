@@ -307,7 +307,6 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
-=begin
   swagger_path '/events/:id' do
     operation :put do
       key :summary, 'Edit event'
@@ -443,7 +442,6 @@ class EventsController < ApplicationController
       end
     end
   end
-=end
   def update
     authorize Event
     if !params[:sports].nil?
@@ -1101,7 +1099,6 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
-=begin
   swagger_path '/events/:id/registration_rule' do
     operation :put do
       key :summary, 'Events registration rule'
@@ -1133,7 +1130,6 @@ class EventsController < ApplicationController
       end
     end
   end
-=end
   def registration_rule
     authorize Event
     registration_rule = @event.registration_rule
@@ -1144,7 +1140,7 @@ class EventsController < ApplicationController
     end
     json_response_serializer(@event, EventSerializer)
   end
-=begin
+
   swagger_path '/events/:id/details' do
     operation :put do
       key :summary, 'Events details'
@@ -1221,7 +1217,6 @@ class EventsController < ApplicationController
       end
     end
   end
-=end
   def details
     authorize Event
     unless categories_params[:categories].nil?
