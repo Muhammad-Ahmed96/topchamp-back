@@ -16,7 +16,7 @@ class ApidocsController < ApplicationController
         key :url, 'https://swagger.io'
       end
     end
-    key :host, 'ec2-34-215-140-55.us-west-2.compute.amazonaws.com'
+    key :host, 'ec2-34-215-140-55.us-west-2.compute.amazonaws.com:444'
     key :basePath, '/api'
     key :consumes, ['application/json']
     key :produces, ['application/json']

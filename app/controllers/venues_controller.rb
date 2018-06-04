@@ -140,10 +140,10 @@ class VenuesController < ApplicationController
                  .is_facility(facility).state_like(state).city_like(city).is_status(status).facility_management_in(facility_management_id)
                  .facility_management_order(column_facility_management, direction).with_facility_management(facility_management)
                  .sports_order(column_sports, direction)
-    if paginate.to_s == "1"
-      paginate venues, per_page: 50, root: :data
-    else
+    if paginate.to_s == "0"
       json_response_serializer_collection(venues.all, VenueSerializer)
+    else
+      paginate venues, per_page: 50, root: :data
     end
 
   end
