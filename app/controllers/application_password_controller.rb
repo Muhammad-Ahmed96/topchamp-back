@@ -63,6 +63,9 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
     @email = get_case_insensitive_field_from_resource_params(:email)
     @resource = find_resource(:uid, @email)
 
+    if @resource.nil?
+      return render_not_found_error
+    end
     unless @resource.active_for_authentication?
       return render_create_error_not_confirmed
     end
