@@ -39,7 +39,6 @@ class EventBracketSkill < ApplicationRecord
     end
   end
 
-
   swagger_schema :EventBracketSkill do
     property :id do
       key :type, :integer
@@ -49,14 +48,14 @@ class EventBracketSkill < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :event_bracket_skill_id do
+    property :event_bracket_age_id do
       key :type, :integer
       key :format, :integer
     end
-    property :youngest_age do
+    property :lowest_skill do
       key :type, :number
     end
-    property :oldest_age do
+    property :highest_skill do
       key :type, :number
     end
     property :quantity do
@@ -75,10 +74,10 @@ class EventBracketSkill < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :youngest_age do
+    property :lowest_skill do
       key :type, :number
     end
-    property :oldest_age do
+    property :highest_skill do
       key :type, :number
     end
     property :quantity do
@@ -97,10 +96,10 @@ class EventBracketSkill < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :youngest_age do
+    property :lowest_skill do
       key :type, :number
     end
-    property :oldest_age do
+    property :highest_skill do
       key :type, :number
     end
     property :quantity do

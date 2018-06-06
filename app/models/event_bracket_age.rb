@@ -47,14 +47,14 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :event_bracket_age_id do
+    property :event_bracket_skill_id do
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
@@ -73,10 +73,10 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
@@ -95,10 +95,10 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
