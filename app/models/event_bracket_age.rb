@@ -18,6 +18,15 @@ class EventBracketAge < ApplicationRecord
     if data.present?
       deleteIds = []
       data.each {|bracket_skill|
+        if bracket_skill[:id].present?
+          deleteIds << bracket_skill[:id]
+        end
+      }
+      unless deleteIds.nil?
+        self.bracket_skills.where.not(id: deleteIds).destroy_all
+      end
+      deleteIds = []
+      data.each {|bracket_skill|
         bracket = nil
         if bracket_skill[:id].present?
           bracket = self.bracket_skills.where(id: bracket_skill[:id]).first
@@ -32,9 +41,11 @@ class EventBracketAge < ApplicationRecord
         end
         deleteIds << bracket.id
       }
+=begin
       unless deleteIds.nil?
         self.bracket_skills.where.not(id: deleteIds).destroy_all
       end
+=end
     end
   end
 
@@ -47,14 +58,14 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :event_bracket_age_id do
+    property :event_bracket_skill_id do
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
@@ -73,10 +84,10 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
@@ -95,10 +106,10 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
