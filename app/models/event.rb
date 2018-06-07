@@ -4,8 +4,6 @@ require 'google/api_client/client_secrets'
 require 'json'
 require "uri"
 require "net/http"
-require 'googleauth'
-require 'googleauth/stores/file_token_store'
 
 class Event < ApplicationRecord
   include Swagger::Blocks

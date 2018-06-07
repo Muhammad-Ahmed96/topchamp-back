@@ -447,14 +447,14 @@ class EventsController < ApplicationController
 
   def update
     authorize Event
-    if !params[:sports].nil?
-      @event.sport_ids = params[:sports]
+    if !sports_params[:sports].nil?
+      @event.sport_ids = sports_params[:sports]
     end
     if !params[:regions].nil?
       @event.region_ids = params[:regions]
     end
-    unless resource_params[:visibility].present? && @event.visibility == :Public && @event.status == :Active
-      resource_params.delete :visibility
+    if (resource_params[:visibility].present? && @event.visibility == "Public" && @event.status == "Active")
+      params.delete(:visibility)
     end
     @event.update!(resource_params)
     @event.remove_public_url
@@ -1343,6 +1343,10 @@ class EventsController < ApplicationController
 
   def categories_params
     params.permit(categories: [])
+  end
+
+  def sports_params
+    params.permit(sports: [])
   end
 
   def rule_params
