@@ -73,3 +73,6 @@ gem 'faker', git: 'https://github.com/stympy/faker'
 
 
 gem 'roo'
+
+
+gem 'google-api-client', '~> 0.11'

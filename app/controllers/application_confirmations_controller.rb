@@ -39,6 +39,7 @@ class ApplicationConfirmationsController < ApplicationController
   def create
     set_resource_by_email
     unless @resource.present?
+      #return json_response_error([t("devise_token_auth.passwords.user_not_found")], 422)
       return json_response_error(t("devise_token_auth.passwords.user_not_found"), 422)
     end
     if @resource.pin == pin_params[:pin]
@@ -53,9 +54,11 @@ class ApplicationConfirmationsController < ApplicationController
         update_auth_header
         json_response_serializer(@resource, UserSerializer)
       else
+        #json_response_error([t("confirmations.not_confirm")], 422)
         json_response_error(t("confirmations.not_confirm"), 422)
       end
     else
+      #json_response_error([t("confirmations.invalid_pin")], 422)
       json_response_error(t("confirmations.invalid_pin"), 422)
     end
   end
@@ -119,5 +122,9 @@ class ApplicationConfirmationsController < ApplicationController
   end
   def set_resource_by_email
     @resource = User.find_by_uid(pin_params[:email])
+  end
+
+  def resource_errors
+    return @resource.errors
   end
 end

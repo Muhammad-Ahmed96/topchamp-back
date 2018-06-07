@@ -1,3 +1,12 @@
+require 'google/apis/webmasters_v3'
+require 'google/apis/translate_v2'
+require 'google/api_client/client_secrets'
+require 'json'
+require "uri"
+require "net/http"
+require 'googleauth'
+require 'googleauth/stores/file_token_store'
+
 class Event < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
@@ -7,9 +16,9 @@ class Event < ApplicationRecord
   has_and_belongs_to_many :categories
   belongs_to :venue, optional: true
   belongs_to :event_type, optional: true
-  has_one :payment_information,    class_name: 'EventPaymentInformation'
-  has_one :payment_method,   class_name: 'EventPaymentMethod'
-  has_one :discount,   class_name: 'EventDiscount'
+  has_one :payment_information, class_name: 'EventPaymentInformation'
+  has_one :payment_method, class_name: 'EventPaymentMethod'
+  has_one :discount, class_name: 'EventDiscount'
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
@@ -32,7 +41,7 @@ class Event < ApplicationRecord
   validates_attachment_content_type :icon, content_type: /\Aimage\/.*\z/
 
   validates :title, presence: true
-  validates :event_url, uniqueness: true
+  validates :event_url, uniqueness: true, url: true, :allow_nil => true
   #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
 
@@ -102,6 +111,15 @@ class Event < ApplicationRecord
     if data.present?
       deleteIds = []
       data.each {|bracket_age|
+        if bracket_age[:id].present?
+          deleteIds << bracket_age[:id]
+        end
+      }
+      unless deleteIds.nil?
+        self.bracket_ages.where.not(id: deleteIds).destroy_all
+      end
+      deleteIds = []
+      data.each {|bracket_age|
         bracket = nil
         bracket_skills = bracket_age[:bracket_skills]
         bracket_age.delete :bracket_skills
@@ -119,14 +137,25 @@ class Event < ApplicationRecord
         deleteIds << bracket.id
         bracket.sync_bracket_skill! bracket_skills
       }
+=begin
       unless deleteIds.nil?
         self.bracket_ages.where.not(id: deleteIds).destroy_all
       end
+=end
     end
   end
 
   def sync_bracket_skill!(data)
     if data.present?
+      deleteIds = []
+      data.each {|bracket_skill|
+        if bracket_skill[:id].present?
+          deleteIds << bracket_skill[:id]
+        end
+      }
+      unless deleteIds.nil?
+        self.bracket_skills.where.not(id: deleteIds).destroy_all
+      end
       deleteIds = []
       data.each {|bracket_skill|
         bracket = nil
@@ -146,9 +175,11 @@ class Event < ApplicationRecord
         deleteIds << bracket.id
         bracket.sync_bracket_age! bracket_ages
       }
+=begin
       unless deleteIds.nil?
         self.bracket_skills.where.not(id: deleteIds).destroy_all
       end
+=end
     end
   end
 
@@ -156,7 +187,7 @@ class Event < ApplicationRecord
     spreadsheet = Roo::Spreadsheet.open(file.path)
     header = spreadsheet.row(1)
     (2..spreadsheet.last_row).each do |i|
-     #row = Hash[[header, spreadsheet.row(i)].transpose]
+      #row = Hash[[header, spreadsheet.row(i)].transpose]
       row = spreadsheet.row(i)
       email = row[0]
       code = row[1]
@@ -168,6 +199,74 @@ class Event < ApplicationRecord
         self.discount_personalizeds.create!({email: email, code: code, discount: discount})
       end
     end
+  end
+
+  def public_url
+    if self.event_url.nil? || self.visibility.to_s == "Private"
+      return
+    end
+    if !url_valid?(self.event_url)
+      errors.add(:event_url, "Url invalid")
+    end
+#Add to google search
+    begin
+      webmaster = Google::Apis::WebmastersV3::WebmastersService.new # Alias the module
+      webmaster.key = "AIzaSyBAMhGfp9HfYai-3VKQ2mBoJi9lr9mKC8c"
+      scope = 'https://www.googleapis.com/auth/webmasters'
+      file = File.open(File.join(Rails.root, 'config', 'TopChamp-21f4c2e60b8f.json'))
+      authorizer = Google::Auth::ServiceAccountCredentials.make_creds({json_key_io:file, scope: scope})
+      webmaster.authorization = authorizer
+      response = webmaster.add_site(self.event_url)
+    rescue Google::Apis::ClientError => e
+      errors.add(e.to_json)
+    end
+#Add to bing search
+    uri = URI.parse('https://ssl.bing.com/webmaster/api.svc/json/AddSite')
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    request = Net::HTTP::Post.new(uri.path + "?apikey=b2a64559583b44c8ba69f514a58876da", initheader = {'Content-Type' => 'application/json'})
+    request.body = {siteUrl: self.event_url}.to_json
+
+    http.request(request)
+
+    response = http.request(request)
+  end
+
+  def remove_public_url
+    if self.event_url.nil? || self.visibility.to_s == "Public"
+      return
+    end
+    if !url_valid?(self.event_url)
+      errors.add(:event_url, "Url invalid")
+    end
+#Add to google search
+    begin
+      webmaster = Google::Apis::WebmastersV3::WebmastersService.new # Alias the module
+      webmaster.key = "AIzaSyBAMhGfp9HfYai-3VKQ2mBoJi9lr9mKC8c"
+      scope = 'https://www.googleapis.com/auth/webmasters'
+      file = File.open(File.join(Rails.root, 'config', 'TopChamp-21f4c2e60b8f.json'))
+      authorizer = Google::Auth::ServiceAccountCredentials.make_creds({json_key_io:file, scope: scope})
+      webmaster.authorization = authorizer
+      response = webmaster.delete_site(self.event_url)
+    rescue Google::Apis::ClientError => e
+      logger::info e.to_s
+    rescue Google::Apis::ServerError => e
+      logger::info e.to_s
+    rescue Google::Apis::AuthorizationError => e
+      logger::info e.to_s
+    end
+#Add to bing search
+    uri = URI.parse('https://ssl.bing.com/webmaster/api.svc/json/RemoveSite')
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    request = Net::HTTP::Post.new(uri.path + "?apikey=b2a64559583b44c8ba69f514a58876da", initheader = {'Content-Type' => 'application/json'})
+    request.body = {siteUrl: self.event_url}.to_json
+
+    http.request(request)
+
+    response = http.request(request)
   end
 
   swagger_schema :Event do
@@ -352,7 +451,13 @@ class Event < ApplicationRecord
       end
     end
   end
+
   private
+
+  def url_valid?(url)
+    url = URI.parse(url) rescue false
+    url.kind_of?(URI::HTTP) || url.kind_of?(URI::HTTPS)
+  end
 
   def check_dimensions
     required_width = 300

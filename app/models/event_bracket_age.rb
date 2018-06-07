@@ -18,6 +18,15 @@ class EventBracketAge < ApplicationRecord
     if data.present?
       deleteIds = []
       data.each {|bracket_skill|
+        if bracket_skill[:id].present?
+          deleteIds << bracket_skill[:id]
+        end
+      }
+      unless deleteIds.nil?
+        self.bracket_skills.where.not(id: deleteIds).destroy_all
+      end
+      deleteIds = []
+      data.each {|bracket_skill|
         bracket = nil
         if bracket_skill[:id].present?
           bracket = self.bracket_skills.where(id: bracket_skill[:id]).first
@@ -32,9 +41,11 @@ class EventBracketAge < ApplicationRecord
         end
         deleteIds << bracket.id
       }
+=begin
       unless deleteIds.nil?
         self.bracket_skills.where.not(id: deleteIds).destroy_all
       end
+=end
     end
   end
 
