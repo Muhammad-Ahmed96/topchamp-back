@@ -282,7 +282,6 @@ DEPENDENCIES
   devise_token_auth
   faker!
   google-api-client (~> 0.11)
-  googleauth
   kaminari
   listen (>= 3.0.5, < 3.2)
   pager_api
