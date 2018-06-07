@@ -140,6 +140,8 @@ class Event < ApplicationRecord
         self.bracket_ages.where.not(id: deleteIds).destroy_all
       end
 =end
+    else
+      self.bracket_ages.destroy_all
     end
   end
 
@@ -178,6 +180,8 @@ class Event < ApplicationRecord
         self.bracket_skills.where.not(id: deleteIds).destroy_all
       end
 =end
+    else
+      self.bracket_skills.destroy_all
     end
   end
 
