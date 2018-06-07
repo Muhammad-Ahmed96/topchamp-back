@@ -7,8 +7,8 @@ class EventBracketAge < ApplicationRecord
   validates :youngest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
   validates :oldest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
 
-  validates :youngest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
-  validates :oldest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
+  validates :youngest_age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
+  validates :oldest_age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
 
   validates :quantity,  numericality: { only_integer: true }, :allow_nil => true
   has_many :bracket_skills, class_name: "EventBracketSkill", :dependent => :delete_all
