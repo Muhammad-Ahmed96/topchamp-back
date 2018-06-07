@@ -10,8 +10,8 @@ class EventBracketSkill < ApplicationRecord
   validates :lowest_skill, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
   validates :highest_skill, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
 
-  validates :lowest_skill, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_bracket_age_id.present? }
-  validates :highest_skill, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_bracket_age_id.present? }
+  validates :lowest_skill, uniqueness: { scope: :event_bracket_age_id }, :if => lambda{ |object| object.event_bracket_age_id.present? }
+  validates :highest_skill, uniqueness: { scope: :event_bracket_age_id }, :if => lambda{ |object| object.event_bracket_age_id.present? }
 
 
 
