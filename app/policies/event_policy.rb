@@ -2,7 +2,7 @@ class EventPolicy < ApplicationPolicy
   attr_reader :user
 
   def index?
-    user.sysadmin? || user.agent? || user.director?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def update?
@@ -15,7 +15,7 @@ class EventPolicy < ApplicationPolicy
 
 
   def show?
-    user.sysadmin? || user.agent? || user.director?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def destroy?

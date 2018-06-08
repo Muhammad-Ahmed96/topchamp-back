@@ -264,7 +264,7 @@ class EventsController < ApplicationController
   def create
     authorize Event
     unless resource_params[:status].nil?
-      resource_params[:status] = :Inactive
+      params[:status] = :Inactive
     end
     @event = Event.create!(resource_params)
     if !params[:sports].nil?
@@ -669,7 +669,7 @@ class EventsController < ApplicationController
     else
       if params[:venue_id].present?
         @event.venue_id = params[:venue_id]
-        @event.save
+        @event.save!
         json_response_serializer(@event, EventSerializer)
       else
         json_response_error([t("no_venue_present")], 422)

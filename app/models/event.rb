@@ -42,6 +42,7 @@ class Event < ApplicationRecord
   validates :event_url, uniqueness: true, url: true, :allow_nil => true
   #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
+  validates :visibility, inclusion: {in: Visibility.collection.keys.map(&:to_s)}
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
