@@ -611,7 +611,7 @@ class UsersController < ApplicationController
   def activate
     authorize User
     @user.status = :Active
-    @user.save
+    @user.save!(:validate => false)
     json_response_success(t("activated_success", model: User.model_name.human), true)
   end
 
@@ -643,7 +643,7 @@ class UsersController < ApplicationController
     authorize User
     @user.status = :Inactive
     @user.tokens = nil
-    @user.save
+    @user.save!(:validate => false)
     json_response_success(t("inactivated_success", model: User.model_name.human), true)
   end
 

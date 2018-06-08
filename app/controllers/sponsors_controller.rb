@@ -483,7 +483,7 @@ class SponsorsController < ApplicationController
   def activate
     authorize Sponsor
     @sponsor.status = :Active
-    @sponsor.save
+    @sponsor.save!(:validate => false)
     json_response_success(t("activated_success", model: Sponsor.model_name.human), true)
   end
   swagger_path '/sponsors/:id/inactive' do
@@ -513,7 +513,7 @@ class SponsorsController < ApplicationController
   def inactive
     authorize Sponsor
     @sponsor.status = :Inactive
-    @sponsor.save
+    @sponsor.save!(:validate => false)
     json_response_success(t("inactivated_success", model: Sponsor.model_name.human), true)
   end
 
