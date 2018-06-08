@@ -264,7 +264,7 @@ class EventsController < ApplicationController
   def create
     authorize Event
     unless resource_params[:status].nil?
-      resource_params[:status] = :Inactive
+      params[:status] = :Inactive
     end
     @event = Event.create!(resource_params)
     if !params[:sports].nil?
@@ -273,12 +273,12 @@ class EventsController < ApplicationController
     if !params[:regions].nil?
       @event.region_ids = params[:regions]
     end
-    @event.public_url
+    #@event.public_url
     json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id' do
-    operation :post do
+    operation :get do
       key :summary, 'Show event'
       key :description, 'Event Catalog'
       key :operationId, 'eventsShow'
@@ -457,7 +457,7 @@ class EventsController < ApplicationController
       params.delete(:visibility)
     end
     @event.update!(resource_params)
-    @event.remove_public_url
+    #@event.remove_public_url
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -604,7 +604,7 @@ class EventsController < ApplicationController
     authorize Event
     venue = Venue.create!(venue_params)
     @event.venue_id = venue.id
-    @event.save
+    @event.save!(:validate => false)
     if !params[:sports].nil?
       venue.sport_ids = params[:sports]
     end
@@ -664,12 +664,12 @@ class EventsController < ApplicationController
     if params[:is_determine_later_venue].present? and (params[:is_determine_later_venue].equal?(true) or params[:is_determine_later_venue].to_s == "1")
       @event.is_determine_later_venue = true
       @event.venue_id = nil
-      @event.save
+      @event.save!(:validate => false)
       json_response_serializer(@event, EventSerializer)
     else
       if params[:venue_id].present?
         @event.venue_id = params[:venue_id]
-        @event.save
+        @event.save!(:validate => false)
         json_response_serializer(@event, EventSerializer)
       else
         json_response_error([t("no_venue_present")], 422)
@@ -750,7 +750,7 @@ class EventsController < ApplicationController
   def activate
     authorize Event
     @event.status = :Active
-    @event.save
+    @event.save!(:validate => false)
     @event.public_url
     json_response_serializer(@event, EventSerializer)
   end
@@ -783,7 +783,7 @@ class EventsController < ApplicationController
   def inactive
     authorize Event
     @event.status = :Inactive
-    @event.save
+    @event.save!(:validate => false)
     #@event.remove_public_url
     json_response_serializer(@event, EventSerializer)
   end

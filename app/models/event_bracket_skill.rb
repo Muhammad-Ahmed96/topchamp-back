@@ -47,6 +47,8 @@ class EventBracketSkill < ApplicationRecord
         self.bracket_ages.where.not(id: deleteIds).destroy_all
       end
 =end
+    else
+      self.bracket_ages.destroy_all
     end
   end
 

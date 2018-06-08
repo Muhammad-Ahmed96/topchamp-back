@@ -1,7 +1,7 @@
 class AgendaTypePolicy < ApplicationPolicy
   attr_reader :user
   def index?
-    user.sysadmin?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def update?
@@ -14,7 +14,7 @@ class AgendaTypePolicy < ApplicationPolicy
 
 
   def show?
-    user.sysadmin?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def destroy?
