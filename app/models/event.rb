@@ -29,6 +29,7 @@ class Event < ApplicationRecord
   accepts_nested_attributes_for :discount_generals
   accepts_nested_attributes_for :discount_personalizeds
 
+  after_initialize :save_creator!, if: :new_record?
 
   has_attached_file :icon, :path => ":rails_root/public/images/event_icons/:to_param/:style/:basename.:extension",
                     :url => "/images/event_icons/:to_param/:style/:basename.:extension",
@@ -42,7 +43,7 @@ class Event < ApplicationRecord
   validates :event_url, uniqueness: true, url: true, :allow_nil => true
   #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
-  validates :visibility, inclusion: {in: Visibility.collection.keys.map(&:to_s)}, :allow_nil => true
+  #validates :visibility, inclusion: {in: Visibility.collection.keys.map(&:to_s)}, :allow_nil => true
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
@@ -452,6 +453,13 @@ class Event < ApplicationRecord
         key :type, :integer
         key :format, :int64
       end
+    end
+  end
+
+
+  def save_creator!
+    if Current.user
+      self.creator_user_id = Current.user.id
     end
   end
 
