@@ -2,9 +2,9 @@ class Sponsor < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
   validates :company_name, presence: true
-  validates :brand, presence: true
+ # validates :brand, presence: true
   validates :product, presence: true
-  validates :franchise_brand, presence: true
+ # validates :franchise_brand, presence: true
   validates :business_category, presence: true
   validates :geography, presence: true
   validates :geography, inclusion: {in: Geography.collection}
@@ -55,9 +55,7 @@ class Sponsor < ApplicationRecord
     property :logo do
       key :type, :string
     end
-    property :brand do
-      key :type, :string
-    end
+
     property :product do
       key :type, :string
     end
@@ -112,7 +110,7 @@ class Sponsor < ApplicationRecord
   end
 
   swagger_schema :SponsorInput do
-    key :required, [:company_name, :brand, :product, :franchise_brand, :business_category, :geography, :contact_name, :country_code,
+    key :required, [:company_name, :product, :franchise_brand, :business_category, :geography, :contact_name, :country_code,
     :phone, :work_country_code, :work_phone]
     property :id do
       key :type, :integer
@@ -123,9 +121,6 @@ class Sponsor < ApplicationRecord
     end
 
     property :logo do
-      key :type, :string
-    end
-    property :brand do
       key :type, :string
     end
     property :product do

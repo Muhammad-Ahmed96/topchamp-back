@@ -6,4 +6,15 @@ namespace :app do
     execute %(tail -n0 -F #{shared_path}/log/#{logfile}.log | while read line; do echo "$(hostname): $line"; done)
   end
 
+
+  desc 'Add users ids'
+  task users_id: :environment do
+    User.where(:unique_id => nil).all.each do |user|
+      if user.unique_id.nil?
+        user.set_random_unique_id!
+        user.save!
+      end
+    end
+  end
+
 end

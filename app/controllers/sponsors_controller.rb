@@ -31,13 +31,6 @@ class SponsorsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :brand
-        key :in, :query
-        key :description, 'Brand to filter'
-        key :required, false
-        key :type, :string
-      end
-      parameter do
         key :name, :product
         key :in, :query
         key :description, 'Product to filter'
@@ -140,12 +133,6 @@ class SponsorsController < ApplicationController
         key :type, :file
       end
       parameter do
-        key :name, :brand
-        key :in, :body
-        key :required, true
-        key :type, :string
-      end
-      parameter do
         key :name, :product
         key :in, :body
         key :required, true
@@ -154,7 +141,7 @@ class SponsorsController < ApplicationController
       parameter do
         key :name, :franchise_brand
         key :in, :body
-        key :required, true
+        key :required, false
         key :type, :string
       end
       parameter do
@@ -309,12 +296,6 @@ class SponsorsController < ApplicationController
         key :type, :file
       end
       parameter do
-        key :name, :brand
-        key :in, :body
-        key :required, true
-        key :type, :string
-      end
-      parameter do
         key :name, :product
         key :in, :body
         key :required, true
@@ -323,7 +304,7 @@ class SponsorsController < ApplicationController
       parameter do
         key :name, :franchise_brand
         key :in, :body
-        key :required, true
+        key :required, false
         key :type, :string
       end
       parameter do
@@ -521,7 +502,7 @@ class SponsorsController < ApplicationController
 
   def resource_params
     # whitelist params
-    params.permit(:company_name, :logo, :brand, :product, :franchise_brand, :business_category, :geography, :description, :contact_name,
+    params.permit(:company_name, :logo, :product, :franchise_brand, :business_category, :geography, :description, :contact_name,
                   :country_code, :phone, :email, :address_line_1, :address_line_2, :postal_code, :state, :city, :work_country_code,
                   :work_phone)
   end

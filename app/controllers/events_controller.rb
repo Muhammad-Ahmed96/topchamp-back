@@ -121,7 +121,7 @@ class EventsController < ApplicationController
       column_venue = column
       column = nil
     end
-    paginate Event.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
+    paginate EventPolicy::Scope.new(current_user, Event).resolve.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
                  .start_date_like(start_date).in_status(status).state_like(state).city_like(city), per_page: 50, root: :data
   end
 
@@ -1379,6 +1379,6 @@ class EventsController < ApplicationController
   end
 
   def set_resource
-    @event = Event.find(params[:id])
+    @event = EventPolicy::Scope.new(current_user, Event).resolve.find(params[:id])
   end
 end
