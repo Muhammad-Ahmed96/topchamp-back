@@ -749,10 +749,14 @@ class EventsController < ApplicationController
 
   def activate
     authorize Event
-    @event.status = :Active
-    @event.save!(:validate => false)
-    @event.public_url
-    json_response_serializer(@event, EventSerializer)
+    if @event.valid_to_activate?
+      @event.status = :Active
+      @event.save!(:validate => false)
+      @event.public_url
+      json_response_serializer(@event, EventSerializer)
+    else
+      json_response_error([t("unable_activate")], 422)
+    end
   end
 
   swagger_path '/events/:id/inactive' do
@@ -1373,7 +1377,7 @@ class EventsController < ApplicationController
     unless params[:bracket_ages].nil?
       params[:bracket_ages].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity,
-                                                           bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
+                                                               bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
       end
     end
     #ActionController::Parameters.permit_all_parameters = false
@@ -1385,7 +1389,7 @@ class EventsController < ApplicationController
     unless params[:bracket_skills].nil? and !params[:bracket_skills].kind_of?(Array)
       params[:bracket_skills].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
-                                                           bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
+                                                               bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
       end
     end
     #ActionController::Parameters.permit_all_parameters = false

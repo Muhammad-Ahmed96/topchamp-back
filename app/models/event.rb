@@ -463,6 +463,9 @@ class Event < ApplicationRecord
     end
   end
 
+  def valid_to_activate?
+    self.title.present?
+  end
   private
 
   def url_valid?(url)
