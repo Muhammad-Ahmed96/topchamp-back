@@ -6,7 +6,7 @@ class UserPolicy < ApplicationPolicy
   end
 
   def update?
-    user.sysadmin? || user.agent?
+    (user.sysadmin? || user.agent?) || user.id == record.id
   end
 
   def create?
@@ -15,7 +15,7 @@ class UserPolicy < ApplicationPolicy
 
 
   def show?
-    user.sysadmin? || user.agent?
+    (user.sysadmin? || user.agent?) || user.id == record.id
   end
 
   def destroy?
@@ -31,7 +31,7 @@ class UserPolicy < ApplicationPolicy
   end
 
   def profile?
-    user.sysadmin? || user.agent?
+    (user.sysadmin? || user.agent?) || user.id == record.id
   end
   class Scope < Scope
     def resolve

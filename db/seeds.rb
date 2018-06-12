@@ -56,7 +56,7 @@ if Region.count == 0
                  {name: 'Italy', base: 'Country', territoy: 'Italy'},
                  {name: 'LATAM', base: 'Country', territoy: 'Mexico, Argentina, Colombia, Costa Rica, Brazil'},
                  {name: 'Mid Atlantic', base: 'State', territoy: 'District of Columbia, Delaware, Kentucky, Maryland, North Carolina, New Jersey, Pennsylvania, South Carolina, Tennessee, Virginia, West Virginia'},
-                 {name: 'Middle States', base: 'State', territoy: 'Illinois, WisconsinIowa, Missouri, Minnesota'},
+                 {name: 'Middle States', base: 'State', territoy: 'Illinois, Wisconsin, Iowa, Missouri, Minnesota'},
                  {name: 'Mid South', base: 'State', territoy: 'Arkansas, Louisiana, Oklahoma, Texas'},
                  {name: 'Mountain', base: 'State', territoy: 'Utah, Nevada'},{name: 'Netherlands', base: 'Country', territoy: 'Netherlands'},
                  {name: 'Pacific Northwest', base: 'State', territoy: 'Alaska, Idaho, Oregon, Washington, British Columbia, Alberta'},

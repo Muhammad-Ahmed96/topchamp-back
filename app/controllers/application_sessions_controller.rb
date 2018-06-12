@@ -234,4 +234,9 @@ uid:          zzzzz'
     json_response_serializer(@resource, UserSerializer)
   end
 
+
+  def resource_errors
+    return @resource.errors
+  end
+
 end

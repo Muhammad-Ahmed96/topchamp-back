@@ -7,8 +7,8 @@ class EventBracketAge < ApplicationRecord
   validates :youngest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
   validates :oldest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
 
-  validates :youngest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
-  validates :oldest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
+  validates :youngest_age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
+  validates :oldest_age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
 
   validates :quantity,  numericality: { only_integer: true }, :allow_nil => true
   has_many :bracket_skills, class_name: "EventBracketSkill", :dependent => :delete_all
@@ -16,6 +16,15 @@ class EventBracketAge < ApplicationRecord
   #
   def sync_bracket_skill!(data)
     if data.present?
+      deleteIds = []
+      data.each {|bracket_skill|
+        if bracket_skill[:id].present?
+          deleteIds << bracket_skill[:id]
+        end
+      }
+      unless deleteIds.nil?
+        self.bracket_skills.where.not(id: deleteIds).destroy_all
+      end
       deleteIds = []
       data.each {|bracket_skill|
         bracket = nil
@@ -32,9 +41,13 @@ class EventBracketAge < ApplicationRecord
         end
         deleteIds << bracket.id
       }
+=begin
       unless deleteIds.nil?
         self.bracket_skills.where.not(id: deleteIds).destroy_all
       end
+=end
+    else
+      self.bracket_skills.destroy_all
     end
   end
 
@@ -47,14 +60,14 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :event_bracket_age_id do
+    property :event_bracket_skill_id do
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
@@ -73,10 +86,10 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do
@@ -95,10 +108,10 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :lowest_skill do
+    property :youngest_age do
       key :type, :number
     end
-    property :highest_skill do
+    property :oldest_age do
       key :type, :number
     end
     property :quantity do

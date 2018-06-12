@@ -127,4 +127,8 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
   def render_create_error_not_confirmed
     render_error(401, I18n.t("devise_token_auth.sessions.not_confirmed", email: @resource.email))
   end
+
+  def resource_errors
+    return @resource.errors
+  end
 end

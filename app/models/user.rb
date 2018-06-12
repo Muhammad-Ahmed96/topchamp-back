@@ -20,6 +20,7 @@ class User < ApplicationRecord
   # authenticate :resend_limit, if: :new_record?
   #authenticate :valid_pin, unless: :new_record?
   after_initialize :set_random_pin!, if: :new_record?
+  after_initialize :set_random_membership_id!, if: :new_record?
   validates_attachment :profile
   validate :check_dimensions
   validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
@@ -162,6 +163,9 @@ class User < ApplicationRecord
     property :is_receive_text do
       key :type, :boolean
     end
+    property :membership_id do
+      key :type, :string
+    end
 
     property :sports do
       key :type, :array
@@ -269,6 +273,16 @@ class User < ApplicationRecord
       break if other.nil?
     end
     self.pin = generated
+  end
+
+  def set_random_membership_id!
+    generated = 0
+    loop do
+      generated = rand(0000000000..9999999999).to_s.rjust(10, "0")
+      other = User.find_by_membership_id(generated)
+      break if other.nil?
+    end
+    self.membership_id = generated
   end
 
   def valid_pin

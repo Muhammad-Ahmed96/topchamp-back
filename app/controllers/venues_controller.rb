@@ -688,7 +688,7 @@ class VenuesController < ApplicationController
   def activate
     authorize Venue
     @venue.status = :Active
-    @venue.save
+    @venue.save!(:validate => false)
     json_response_success(t("activated_success", model: Venue.model_name.human), true)
   end
   swagger_path '/venues/:id/inactive' do
@@ -718,7 +718,7 @@ class VenuesController < ApplicationController
   def inactive
     authorize Venue
     @venue.status = :Inactive
-    @venue.save
+    @venue.save!(:validate => false)
     json_response_success(t("inactivated_success", model: Venue.model_name.human), true)
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_31_022930) do
+ActiveRecord::Schema.define(version: 2018_06_12_174420) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -216,8 +216,10 @@ ActiveRecord::Schema.define(version: 2018_05_31_022930) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
-    t.string "status", default: "Active"
+    t.string "status", default: "Inactive"
     t.string "access_code"
+    t.bigint "creator_user_id"
+    t.bigint "invited_director_id"
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
@@ -376,6 +378,7 @@ ActiveRecord::Schema.define(version: 2018_05_31_022930) do
     t.string "status", default: "Active"
     t.boolean "is_receive_text", default: false
     t.string "pin"
+    t.string "membership_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true
