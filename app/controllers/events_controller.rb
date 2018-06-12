@@ -749,10 +749,14 @@ class EventsController < ApplicationController
 
   def activate
     authorize Event
-    @event.status = :Active
-    @event.save!(:validate => false)
-    @event.public_url
-    json_response_serializer(@event, EventSerializer)
+    if @event.valid_to_activate?
+      @event.status = :Active
+      @event.save!(:validate => false)
+      @event.public_url
+      json_response_serializer(@event, EventSerializer)
+    else
+      json_response_error([t("unable_activate")], 422)
+    end
   end
 
   swagger_path '/events/:id/inactive' do
@@ -931,13 +935,19 @@ class EventsController < ApplicationController
   def discounts
     authorize Event
     discount = @event.discount
-    if discount.present?
-      discount.update!(discounts_params)
-    else
-      @event.create_discount!(discounts_params)
+    if discounts_params.present?
+      if discount.present?
+        discount.update!(discounts_params)
+      else
+        @event.create_discount!(discounts_params)
+      end
     end
-    @event.sync_discount_generals! discount_generals_params
-    @event.sync_discount_personalizeds! discount_personalizeds_params
+    if discount_generals_params.present?
+      @event.sync_discount_generals! discount_generals_params
+    end
+    if discount_personalizeds_params.present?
+      @event.sync_discount_personalizeds! discount_personalizeds_params
+    end
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -1291,15 +1301,20 @@ class EventsController < ApplicationController
 
   def discounts_params
     # whitelist params
-    params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :late_registration, :late_players,
-                                      :on_site_registration, :on_site_players)
+    unless params[:discounts].nil?
+      params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :late_registration, :late_players,
+                                        :on_site_registration, :on_site_players)
+    end
+
   end
 
   def discount_generals_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
-    params.require(:discount_generals).map do |p|
-      ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :limited)
+    unless params[:discount_generals].nil?
+      #ActionController::Parameters.permit_all_parameters = true
+      params.require(:discount_generals).map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :code, :discount, :limited)
+      end
     end
     # ActionController::Parameters.permit_all_parameters = false
   end
@@ -1307,9 +1322,11 @@ class EventsController < ApplicationController
 
   def discount_personalizeds_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
-    params.require(:discount_personalizeds).map do |p|
-      ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :email)
+    unless params[:discount_personalizeds].nil?
+      #ActionController::Parameters.permit_all_parameters = true
+      params.require(:discount_personalizeds).map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :code, :discount, :email)
+      end
     end
     #ActionController::Parameters.permit_all_parameters = false
   end
@@ -1356,11 +1373,11 @@ class EventsController < ApplicationController
 
   def bracket_ages_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
+    #ActionController::Parameters.permit_all_parameters = true
     unless params[:bracket_ages].nil?
       params[:bracket_ages].map do |p|
-        ActionController::Parameters.new(p.to_hash).permit(:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity,
-                                                           bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity,
+                                                               bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
       end
     end
     #ActionController::Parameters.permit_all_parameters = false
@@ -1368,11 +1385,11 @@ class EventsController < ApplicationController
 
   def bracket_skills_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
+    #ActionController::Parameters.permit_all_parameters = true
     unless params[:bracket_skills].nil? and !params[:bracket_skills].kind_of?(Array)
       params[:bracket_skills].map do |p|
-        ActionController::Parameters.new(p.to_hash).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
-                                                           bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
+                                                               bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
       end
     end
     #ActionController::Parameters.permit_all_parameters = false
