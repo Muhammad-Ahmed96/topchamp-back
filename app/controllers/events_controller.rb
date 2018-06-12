@@ -5,9 +5,9 @@ class EventsController < ApplicationController
                                       :service_fee, :registration_rule, :venue, :details]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
-                                             :details]
+                                             :details, :activate]
 
-=begin
+
   swagger_path '/events' do
     operation :get do
       key :summary, 'List events'
@@ -93,7 +93,7 @@ class EventsController < ApplicationController
       end
     end
   end
-=end
+
   def index
     authorize Event
 
@@ -116,13 +116,13 @@ class EventsController < ApplicationController
     end
 
 
-    column_venue= nil
-    if column.to_s == "state"  || column.to_s == "city"
+    column_venue = nil
+    if column.to_s == "state" || column.to_s == "city"
       column_venue = column
       column = nil
     end
-    paginate Event.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
-    .start_date_like(start_date).in_status(status).state_like(state).city_like(city), per_page: 50, root: :data
+    paginate EventPolicy::Scope.new(current_user, Event).resolve.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
+                 .start_date_like(start_date).in_status(status).state_like(state).city_like(city), per_page: 50, root: :data
   end
 
   swagger_path '/events' do
@@ -263,6 +263,9 @@ class EventsController < ApplicationController
 
   def create
     authorize Event
+    unless resource_params[:status].nil?
+      params[:status] = :Inactive
+    end
     @event = Event.create!(resource_params)
     if !params[:sports].nil?
       @event.sport_ids = params[:sports]
@@ -270,12 +273,12 @@ class EventsController < ApplicationController
     if !params[:regions].nil?
       @event.region_ids = params[:regions]
     end
+    #@event.public_url
     json_response_serializer(@event, EventSerializer)
   end
 
-=begin
   swagger_path '/events/:id' do
-    operation :post do
+    operation :get do
       key :summary, 'Show event'
       key :description, 'Event Catalog'
       key :operationId, 'eventsShow'
@@ -300,7 +303,6 @@ class EventsController < ApplicationController
       end
     end
   end
-=end
 
   def show
     authorize Event
@@ -442,19 +444,27 @@ class EventsController < ApplicationController
       end
     end
   end
+<<<<<<< HEAD
+=======
+
+>>>>>>> 943c83773a08b1c5d307f5e60c093132f22179dd
   def update
     authorize Event
-    if !params[:sports].nil?
-      @event.sport_ids = params[:sports]
+    if !sports_params[:sports].nil?
+      @event.sport_ids = sports_params[:sports]
     end
     if !params[:regions].nil?
       @event.region_ids = params[:regions]
     end
+    if (resource_params[:visibility].present? && @event.visibility == "Public" && @event.status == "Active")
+      params.delete(:visibility)
+    end
     @event.update!(resource_params)
+    #@event.remove_public_url
     json_response_serializer(@event, EventSerializer)
   end
 
-=begin
+
   swagger_path '/events/:id' do
     operation :delete do
       key :summary, 'Delete event'
@@ -479,7 +489,7 @@ class EventsController < ApplicationController
       end
     end
   end
-=end
+
   def destroy
     authorize Event
     @event.destroy
@@ -597,7 +607,7 @@ class EventsController < ApplicationController
     authorize Event
     venue = Venue.create!(venue_params)
     @event.venue_id = venue.id
-    @event.save
+    @event.save!(:validate => false)
     if !params[:sports].nil?
       venue.sport_ids = params[:sports]
     end
@@ -657,12 +667,12 @@ class EventsController < ApplicationController
     if params[:is_determine_later_venue].present? and (params[:is_determine_later_venue].equal?(true) or params[:is_determine_later_venue].to_s == "1")
       @event.is_determine_later_venue = true
       @event.venue_id = nil
-      @event.save
+      @event.save!(:validate => false)
       json_response_serializer(@event, EventSerializer)
     else
       if params[:venue_id].present?
         @event.venue_id = params[:venue_id]
-        @event.save
+        @event.save!(:validate => false)
         json_response_serializer(@event, EventSerializer)
       else
         json_response_error([t("no_venue_present")], 422)
@@ -742,9 +752,14 @@ class EventsController < ApplicationController
 
   def activate
     authorize Event
-    @event.status = :Active
-    @event.save
-    json_response_serializer(@event, EventSerializer)
+    if @event.valid_to_activate?
+      @event.status = :Active
+      @event.save!(:validate => false)
+      @event.public_url
+      json_response_serializer(@event, EventSerializer)
+    else
+      json_response_error([t("unable_activate")], 422)
+    end
   end
 
   swagger_path '/events/:id/inactive' do
@@ -775,7 +790,8 @@ class EventsController < ApplicationController
   def inactive
     authorize Event
     @event.status = :Inactive
-    @event.save
+    @event.save!(:validate => false)
+    #@event.remove_public_url
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -922,13 +938,19 @@ class EventsController < ApplicationController
   def discounts
     authorize Event
     discount = @event.discount
-    if discount.present?
-      discount.update!(discounts_params)
-    else
-      @event.create_discount!(discounts_params)
+    if discounts_params.present?
+      if discount.present?
+        discount.update!(discounts_params)
+      else
+        @event.create_discount!(discounts_params)
+      end
     end
-    @event.sync_discount_generals! discount_generals_params
-    @event.sync_discount_personalizeds! discount_personalizeds_params
+    if discount_generals_params.present?
+      @event.sync_discount_generals! discount_generals_params
+    end
+    if discount_personalizeds_params.present?
+      @event.sync_discount_personalizeds! discount_personalizeds_params
+    end
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -1111,12 +1133,14 @@ class EventsController < ApplicationController
         key :in, :body
         key :description, 'Registration rule'
         key :required, true
-        key :'$ref', :EventRegistrationRuleInput
+        schema do
+          key :'$ref', :EventRegistrationRuleInput
+        end
       end
       response 200 do
         key :description, ''
         schema do
-           key :'$ref', :Event
+          key :'$ref', :Event
         end
       end
       response 401 do
@@ -1130,6 +1154,10 @@ class EventsController < ApplicationController
       end
     end
   end
+<<<<<<< HEAD
+=======
+
+>>>>>>> 943c83773a08b1c5d307f5e60c093132f22179dd
   def registration_rule
     authorize Event
     registration_rule = @event.registration_rule
@@ -1217,6 +1245,10 @@ class EventsController < ApplicationController
       end
     end
   end
+<<<<<<< HEAD
+=======
+
+>>>>>>> 943c83773a08b1c5d307f5e60c093132f22179dd
   def details
     authorize Event
     unless categories_params[:categories].nil?
@@ -1278,25 +1310,32 @@ class EventsController < ApplicationController
 
   def discounts_params
     # whitelist params
-    params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :late_registration, :late_players,
-                                      :on_site_registration, :on_site_players)
+    unless params[:discounts].nil?
+      params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :late_registration, :late_players,
+                                        :on_site_registration, :on_site_players)
+    end
+
   end
 
   def discount_generals_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
-    params.require(:discount_generals).map do |p|
-      ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :limited)
+    unless params[:discount_generals].nil?
+      #ActionController::Parameters.permit_all_parameters = true
+      params.require(:discount_generals).map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :code, :discount, :limited)
+      end
     end
-   # ActionController::Parameters.permit_all_parameters = false
+    # ActionController::Parameters.permit_all_parameters = false
   end
 
 
   def discount_personalizeds_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
-    params.require(:discount_personalizeds).map do |p|
-      ActionController::Parameters.new(p.to_hash).permit(:id, :code, :discount, :email)
+    unless params[:discount_personalizeds].nil?
+      #ActionController::Parameters.permit_all_parameters = true
+      params.require(:discount_personalizeds).map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :code, :discount, :email)
+      end
     end
     #ActionController::Parameters.permit_all_parameters = false
   end
@@ -1332,6 +1371,10 @@ class EventsController < ApplicationController
     params.permit(categories: [])
   end
 
+  def sports_params
+    params.permit(sports: [])
+  end
+
   def rule_params
     params.permit(:elimination_format, :bracket_by, :scoring_option_match_1_id,
                   :scoring_option_match_2_id)
@@ -1339,11 +1382,11 @@ class EventsController < ApplicationController
 
   def bracket_ages_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
+    #ActionController::Parameters.permit_all_parameters = true
     unless params[:bracket_ages].nil?
       params[:bracket_ages].map do |p|
-        ActionController::Parameters.new(p.to_hash).permit(:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity,
-                                                           bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity,
+                                                               bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
       end
     end
     #ActionController::Parameters.permit_all_parameters = false
@@ -1351,17 +1394,17 @@ class EventsController < ApplicationController
 
   def bracket_skills_params
     # whitelist params
-    ActionController::Parameters.permit_all_parameters = true
+    #ActionController::Parameters.permit_all_parameters = true
     unless params[:bracket_skills].nil? and !params[:bracket_skills].kind_of?(Array)
       params[:bracket_skills].map do |p|
-        ActionController::Parameters.new(p.to_hash).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
-                                                           bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
+                                                               bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
       end
     end
     #ActionController::Parameters.permit_all_parameters = false
   end
 
   def set_resource
-    @event = Event.find(params[:id])
+    @event = EventPolicy::Scope.new(current_user, Event).resolve.find(params[:id])
   end
 end

@@ -1,5 +1,6 @@
 class ApplicationRegistrationsController < ::DeviseTokenAuth::RegistrationsController
   include Swagger::Blocks
+  around_action :transactions_filter, only: [:update, :create]
   swagger_path '/' do
     operation :post do
       key :summary, 'Sing Up users'
@@ -127,6 +128,10 @@ class ApplicationRegistrationsController < ::DeviseTokenAuth::RegistrationsContr
 
   def sign_up_params
     params.permit(*params_for_resource(:sign_up))
+  end
+
+  def resource_errors
+    return @resource.errors
   end
 
   protected

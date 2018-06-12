@@ -158,3 +158,5 @@ en:
       age_skill: "Age/skill"
       Skill: "Skill"
       skill_age: "Skill/Age"
+  reset: "Reset Password"
+  unable_activate: "Unable to activate"

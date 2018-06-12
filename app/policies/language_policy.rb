@@ -1,7 +1,7 @@
 class LanguagePolicy < ApplicationPolicy
   attr_reader :user
   def index?
-    user.sysadmin? || user.agent?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def update?
@@ -14,7 +14,7 @@ class LanguagePolicy < ApplicationPolicy
 
 
   def show?
-    user.sysadmin? || user.agent?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def destroy?
