@@ -351,7 +351,7 @@ class UsersController < ApplicationController
   end
 
   def show
-    authorize User
+    authorize @user
     json_response_serializer(@user, UserSerializer)
   end
 
@@ -491,7 +491,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    authorize User
+    authorize @user
     if !params[:sports].nil?
       @user.sport_ids = params[:sports]
     end
@@ -547,7 +547,7 @@ class UsersController < ApplicationController
   end
 
   def profile
-    authorize User
+    authorize @user
     @user.update!(resource_profile_params)
     json_response_success(t("edited_success", model: User.model_name.human), true)
   end
@@ -578,7 +578,7 @@ class UsersController < ApplicationController
   end
 
   def destroy
-    authorize User
+    authorize @user
     @user.destroy
     json_response_success(t("deleted_success", model: User.model_name.human), true)
   end
