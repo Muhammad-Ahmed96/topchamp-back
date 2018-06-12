@@ -31,7 +31,7 @@ class UserPolicy < ApplicationPolicy
   end
 
   def profile?
-    (user.sysadmin? || user.agent?) || user.id == record.id
+    user.sysadmin? || user.agent? || user.id == record.id
   end
   class Scope < Scope
     def resolve
