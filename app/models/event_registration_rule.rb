@@ -25,9 +25,6 @@ class EventRegistrationRule < ApplicationRecord
     property :require_password do
       key :type, :boolean
     end
-    property :anyone_require_password do
-      key :type, :boolean
-    end
     property :password do
       key :type, :string
     end
@@ -37,17 +34,16 @@ class EventRegistrationRule < ApplicationRecord
     property :allow_players_cancel do
       key :type, :boolean
     end
+    property :use_link_home_page do
+      key :type, :boolean
+    end
     property :link_homepage do
       key :type, :string
     end
-
-    property :link_event_website do
-      key :type, :string
-    end
-    property :use_app_event_website do
+    property :use_link_event_website do
       key :type, :boolean
     end
-    property :link_app do
+    property :link_event_website do
       key :type, :string
     end
   end
@@ -66,9 +62,6 @@ class EventRegistrationRule < ApplicationRecord
     property :require_password do
       key :type, :boolean
     end
-    property :anyone_require_password do
-      key :type, :boolean
-    end
     property :password do
       key :type, :string
     end
@@ -78,17 +71,16 @@ class EventRegistrationRule < ApplicationRecord
     property :allow_players_cancel do
       key :type, :boolean
     end
+    property :use_link_home_page do
+      key :type, :boolean
+    end
     property :link_homepage do
       key :type, :string
     end
-
-    property :link_event_website do
-      key :type, :string
-    end
-    property :use_app_event_website do
+    property :use_link_event_website do
       key :type, :boolean
     end
-    property :link_app do
+    property :link_event_website do
       key :type, :string
     end
   end

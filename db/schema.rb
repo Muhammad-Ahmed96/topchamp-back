@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_12_174420) do
+ActiveRecord::Schema.define(version: 2018_06_13_215014) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -81,11 +81,20 @@ ActiveRecord::Schema.define(version: 2018_06_12_174420) do
     t.string "country_code_work_phone"
   end
 
+  create_table "elimination_formats", force: :cascade do |t|
+    t.string "name"
+    t.bigint "sport_id"
+    t.integer "index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_elimination_formats_on_deleted_at"
+  end
+
   create_table "event_bracket_ages", force: :cascade do |t|
     t.bigint "event_id"
     t.bigint "event_bracket_skill_id"
-    t.float "youngest_age"
-    t.float "oldest_age"
+    t.float "age"
     t.integer "quantity", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -155,7 +164,6 @@ ActiveRecord::Schema.define(version: 2018_06_12_174420) do
     t.boolean "allow_group_registrations", default: false
     t.string "partner"
     t.boolean "require_password", default: false
-    t.boolean "anyone_require_password", default: false
     t.string "password"
     t.boolean "require_director_approval", default: false
     t.boolean "allow_players_cancel", default: false
@@ -165,6 +173,8 @@ ActiveRecord::Schema.define(version: 2018_06_12_174420) do
     t.string "link_app"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "use_link_home_page", default: false
+    t.boolean "use_link_event_website", default: false
   end
 
   create_table "event_rules", force: :cascade do |t|
@@ -220,6 +230,14 @@ ActiveRecord::Schema.define(version: 2018_06_12_174420) do
     t.string "access_code"
     t.bigint "creator_user_id"
     t.bigint "invited_director_id"
+    t.bigint "sport_regulator_id"
+    t.bigint "elimination_format_id"
+    t.string "bracket_by"
+    t.bigint "scoring_option_match_1_id"
+    t.bigint "scoring_option_match_2_id"
+    t.string "awards_for"
+    t.string "awards_through"
+    t.string "awards_plus"
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
@@ -277,6 +295,7 @@ ActiveRecord::Schema.define(version: 2018_06_12_174420) do
     t.integer "index"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.float "win_by"
   end
 
   create_table "shipping_addresses", force: :cascade do |t|
@@ -317,6 +336,16 @@ ActiveRecord::Schema.define(version: 2018_06_12_174420) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_sponsors_on_deleted_at"
+  end
+
+  create_table "sport_regulators", force: :cascade do |t|
+    t.string "name"
+    t.bigint "sport_id"
+    t.integer "index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_sport_regulators_on_deleted_at"
   end
 
   create_table "sports", force: :cascade do |t|

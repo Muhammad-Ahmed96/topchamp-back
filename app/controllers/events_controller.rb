@@ -1171,6 +1171,12 @@ class EventsController < ApplicationController
       key :produces, ['application/json',]
       key :tags, ['events']
       parameter do
+        key :name, :sport_regulator_id
+        key :in, :body
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
         key :name, :categories
         key :in, :body
         key :required, false
@@ -1181,10 +1187,10 @@ class EventsController < ApplicationController
         end
       end
       parameter do
-        key :name, :elimination_format
+        key :name, :elimination_format_id
         key :in, :body
         key :required, false
-        key :type, :string
+        key :type, :integer
       end
       parameter do
         key :name, :bracket_by
@@ -1245,12 +1251,7 @@ class EventsController < ApplicationController
     unless categories_params[:categories].nil?
       @event.category_ids = categories_params[:categories]
     end
-    rule = @event.rule
-    if rule.present?
-      rule.update! rule_params
-    else
-      @event.create_rule! rule_params
-    end
+    @event.update! details_params
     @event.sync_bracket_age! bracket_ages_params
     @event.sync_bracket_skill! bracket_skills_params
     json_response_serializer(@event, EventSerializer)
@@ -1353,9 +1354,9 @@ class EventsController < ApplicationController
 
   def registration_rule_params
     # whitelist params
-    params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password, :anyone_require_password,
-                                              :password, :require_director_approval, :allow_players_cancel, :link_homepage,
-                                              :link_event_website, :use_app_event_website, :link_app)
+    params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
+                                              :password, :require_director_approval, :allow_players_cancel,:use_link_home_page,
+                                              :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app)
   end
 
   def categories_params
@@ -1366,9 +1367,9 @@ class EventsController < ApplicationController
     params.permit(sports: [])
   end
 
-  def rule_params
-    params.permit(:elimination_format, :bracket_by, :scoring_option_match_1_id,
-                  :scoring_option_match_2_id)
+  def details_params
+    params.permit(:elimination_format_id, :bracket_by, :scoring_option_match_1_id,
+                  :scoring_option_match_2_id, :sport_regulator_id, :awards_for, :awards_through, :awards_plus)
   end
 
   def bracket_ages_params
@@ -1376,7 +1377,7 @@ class EventsController < ApplicationController
     #ActionController::Parameters.permit_all_parameters = true
     unless params[:bracket_ages].nil?
       params[:bracket_ages].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity,
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_skill_id, :age, :quantity,
                                                                bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
       end
     end
@@ -1389,7 +1390,7 @@ class EventsController < ApplicationController
     unless params[:bracket_skills].nil? and !params[:bracket_skills].kind_of?(Array)
       params[:bracket_skills].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
-                                                               bracket_ages: [:id, :event_bracket_skill_id, :youngest_age, :oldest_age, :quantity])
+                                                               bracket_ages: [:id, :event_bracket_skill_id, :age, :quantity])
       end
     end
     #ActionController::Parameters.permit_all_parameters = false

@@ -72,6 +72,7 @@ en:
   activated_success: "%{model} activated successfully."
   inactivated_success: "%{model} inactivated  successfully."
   pundit:
+     nil_class: 'nil class'
      default: 'You cannot perform this action.'
      user_policy:
        update?: 'You cannot edit this user'
@@ -129,6 +130,33 @@ en:
            create?: 'You cannot create agenda type'
            show?: 'You cannot show this agenda type'
            destroy?: 'You cannot delete this agenda type'
+     event_policy:
+           update?: 'You cannot edit this event'
+           index?: 'You cannot view event'
+           create?: 'You cannot create event'
+           show?: 'You cannot show this event'
+           destroy?: 'You cannot delete this event'
+           activate?: 'You cannot activate this event'
+           inactive?: 'You cannot inactive this event'
+           create_venue?: 'You cannot edit this event'
+           venue?: 'You cannot edit this event'
+           payment_information?: 'You cannot edit this event'
+           payment_method?: 'You cannot edit this event'
+           discounts?: 'You cannot edit this event'
+           import_discount_personalizeds?: 'You cannot edit this event'
+           tax?: 'You cannot edit this event'
+           refund_policy?: 'You cannot edit this event'
+           service_fee?: 'You cannot edit this event'
+           registration_rule?: 'You cannot edit this event'
+           details?: 'You cannot edit this event'
+     sport_regulator_policy:
+            update?: 'You cannot edit this sport regulator'
+            index?: 'You cannot view sport regulators'
+            create?: 'You cannot create sport regulator'
+            show?: 'You cannot show this sport regulator'
+            destroy?: 'You cannot delete this sport regulator'
+            activate?: 'You cannot activate this sport regulator'
+            inactive?: 'You cannot inactive this sport regulator'
   confirmations:
       invalid_pin: "Invalid PIN code, please verify."
       not_confirm: "Unable to confirm."

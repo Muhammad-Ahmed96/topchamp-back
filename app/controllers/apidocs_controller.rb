@@ -42,6 +42,7 @@ class ApidocsController < ApplicationController
       SportsController,
       StatusController,
       EventTypesController,
+      SportRegulatorsController,
       AttendeeTypeController,
       UsersController,
       SponsorsController,
@@ -84,6 +85,8 @@ class ApidocsController < ApplicationController
       EventRule,
       EventBracketAge,
       EventBracketSkill,
+      SportRegulator,
+      EliminationFormat,
       self,
   ].freeze
 

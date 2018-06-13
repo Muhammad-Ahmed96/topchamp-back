@@ -21,11 +21,19 @@ class Event < ApplicationRecord
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
   has_one :registration_rule, class_name: 'EventRegistrationRule'
-  has_one :rule, class_name: 'EventRule'
+  #has_one :rule, class_name: 'EventRule'
+  belongs_to :sport_regulator, optional: true
+  belongs_to :elimination_format, optional: true
 
   has_many :bracket_ages, class_name: "EventBracketAge"
   has_many :bracket_skills, class_name: "EventBracketSkill"
 
+
+  belongs_to :scoring_option_match_1, foreign_key:"scoring_option_match_1_id" , class_name: "ScoringOption", optional: true
+  belongs_to :scoring_option_match_2, foreign_key:"scoring_option_match_2_id" , class_name: "ScoringOption", optional: true
+
+
+  validates :bracket_by, inclusion: {in: Bracket.collection.keys.map(&:to_s)}, :allow_nil => true
   accepts_nested_attributes_for :discount_generals
   accepts_nested_attributes_for :discount_personalizeds
 
@@ -386,6 +394,60 @@ class Event < ApplicationRecord
         key :'$ref', :EventBracketSkill
       end
     end
+    property :sport_regulator_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :elimination_format_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :bracket_by do
+      key :type, :string
+    end
+    property :scoring_option_match_1_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :scoring_option_match_2_id do
+      key :type, :integer
+      key :format, :int64
+    end
+
+    property :sport_regulator do
+      key :type, :array
+      items do
+        key :'$ref', :SportRegulator
+      end
+    end
+    property :elimination_format do
+      key :type, :array
+      items do
+        key :'$ref', :EliminationFormat
+      end
+    end
+    property :scoring_option_match_1 do
+      key :type, :array
+      items do
+        key :'$ref', :ScoringOption
+      end
+    end
+    property :scoring_option_match_1 do
+      key :type, :array
+      items do
+        key :'$ref', :ScoringOption
+      end
+    end
+
+    property :awards_for do
+      key :type, :string
+    end
+    property :awards_through do
+      key :type, :string
+    end
+    property :awards_plus do
+      key :type, :string
+    end
   end
   swagger_schema :EventInput do
     key :required, [:event_type_id, :title, :description]
@@ -464,7 +526,7 @@ class Event < ApplicationRecord
   end
 
   def valid_to_activate?
-    self.title.present?
+    self.title.present? && self.start_date.present?
   end
   private
 
