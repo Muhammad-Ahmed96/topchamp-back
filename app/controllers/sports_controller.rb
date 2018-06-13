@@ -29,6 +29,13 @@ class SportsController < ApplicationController
         key :required, false
         key :type, :string
       end
+      parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
       response 200 do
         key :description, ''
         schema do
@@ -56,8 +63,14 @@ class SportsController < ApplicationController
     #json_response_data(Sport.all, :created)
     column = params[:column].nil? ? 'name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
     search = params[:search].strip unless params[:search].nil?
-    paginate Sport.my_order(column, direction).search(search), per_page: 50
+    sports = Sport.my_order(column, direction).search(search)
+    if paginate.to_s == "0"
+      json_response_serializer_collection(sports.all, VenueSerializer)
+    else
+      paginate sports, per_page: 50, root: :data
+    end
   end
 
   def create
