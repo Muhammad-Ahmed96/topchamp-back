@@ -67,7 +67,7 @@ class SportsController < ApplicationController
     search = params[:search].strip unless params[:search].nil?
     sports = Sport.my_order(column, direction).search(search)
     if paginate.to_s == "0"
-      json_response_serializer_collection(sports.all, VenueSerializer)
+      json_response_serializer_collection(sports.all, SportSerializer)
     else
       paginate sports, per_page: 50, root: :data
     end
