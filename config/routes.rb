@@ -54,6 +54,7 @@ Rails.application.routes.draw do
         put :service_fee
         put :registration_rule
         put :details
+        put :agendas
       end
     end
     get 'events_validate_url', to: 'events#validate_url'

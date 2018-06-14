@@ -21,6 +21,7 @@ class Event < ApplicationRecord
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
   has_one :registration_rule, class_name: 'EventRegistrationRule'
+  has_many :agendas, class_name:'EventAgenda'
   #has_one :rule, class_name: 'EventRule'
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
@@ -110,6 +111,31 @@ class Event < ApplicationRecord
       }
       unless deleteIds.nil?
         self.discount_personalizeds.where.not(id: deleteIds).destroy_all
+      end
+    end
+  end
+
+
+  def sync_agendas!(data)
+    if data.present?
+      deleteIds = []
+      event_agenda = nil
+      data.each {|agenda|
+        if agenda[:id].present?
+          event_agenda = self.agendas.where(id: agenda[:id]).first
+          if event_agenda.present?
+            event_agenda.update! agenda
+          else
+            agenda[:id] = nil
+            event_agenda = self.agendas.create! agenda
+          end
+        else
+          event_agenda = self.agendas.create! agenda
+        end
+        deleteIds << event_agenda.id
+      }
+      unless deleteIds.nil?
+        self.agendas.where.not(id: deleteIds).destroy_all
       end
     end
   end
@@ -447,6 +473,12 @@ class Event < ApplicationRecord
     end
     property :awards_plus do
       key :type, :string
+    end
+    property :agendas do
+      key :type, :array
+      items do
+        key :'$ref', :EventAgenda
+      end
     end
   end
   swagger_schema :EventInput do

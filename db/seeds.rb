@@ -45,7 +45,7 @@ if AttendeeType.count == 0
 end
 
 if AgendaType.count == 0
-  AgendaType.create([{name: 'Class'}, {name: 'Competition'}, {name: 'Social'}, {name: 'Sport'},
+  AgendaType.create([{name: 'Class'}, {name: 'Competition', enabled:true}, {name: 'Social'}, {name: 'Sport'},
                        {name: 'VIP Event'}, {name: 'Workshop'}])
 end
 if Region.count == 0

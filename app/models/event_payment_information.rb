@@ -26,5 +26,24 @@ class EventPaymentInformation < ApplicationRecord
     property :bank_account do
       key :type, :string
     end
+    property :service_fee do
+      key :type, :string
+    end
+    property :refund_policy do
+      key :type, :string
+    end
+  end
+
+
+  swagger_schema :EventPaymentInformationServiceFee do
+    property :service_fee do
+      key :type, :string
+    end
+  end
+
+  swagger_schema :EventPaymentInformationRefundPolicy do
+    property :refund_policy do
+      key :type, :string
+    end
   end
 end

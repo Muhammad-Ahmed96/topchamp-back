@@ -2,10 +2,10 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details]
+                                      :service_fee, :registration_rule, :venue, :details, :agendas]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
-                                             :details, :activate]
+                                             :details, :activate, :agendas]
 
 
   swagger_path '/events' do
@@ -872,11 +872,13 @@ class EventsController < ApplicationController
 
   def payment_method
     authorize Event
-    payment_method = @event.payment_method
-    if payment_method.present?
-      payment_method.update!(payment_method_params)
-    else
-      @event.create_payment_method!(payment_method_params)
+    if payment_method_params.present?
+      payment_method = @event.payment_method
+      if payment_method.present?
+        payment_method.update!(payment_method_params)
+      else
+        @event.create_payment_method!(payment_method_params)
+      end
     end
     json_response_serializer(@event, EventSerializer)
   end
@@ -934,12 +936,14 @@ class EventsController < ApplicationController
 
   def discounts
     authorize Event
-    discount = @event.discount
     if discounts_params.present?
-      if discount.present?
-        discount.update!(discounts_params)
-      else
-        @event.create_discount!(discounts_params)
+      discount = @event.discount
+      if discounts_params.present?
+        if discount.present?
+          discount.update!(discounts_params)
+        else
+          @event.create_discount!(discounts_params)
+        end
       end
     end
     if discount_generals_params.present?
@@ -1023,11 +1027,13 @@ class EventsController < ApplicationController
 
   def tax
     authorize Event
-    tax = @event.tax
-    if tax.present?
-      tax.update! tax_params
-    else
-      @event.create_tax! tax_params
+    if tax_params.present?
+      tax = @event.tax
+      if tax.present?
+        tax.update! tax_params
+      else
+        @event.create_tax! tax_params
+      end
     end
     json_response_serializer(@event, EventSerializer)
   end
@@ -1040,11 +1046,12 @@ class EventsController < ApplicationController
       key :produces, ['application/json',]
       key :tags, ['events']
       parameter do
-        key :name, :refund_policy
+        key :name, :payment_information
         key :in, :body
-        key :description, 'Refund policy'
-        key :type, :string
-        key :required, true
+        key :description, 'Taxes'
+        schema do
+          key :'$ref', :EventPaymentInformationRefundPolicy
+        end
       end
       response 200 do
         key :description, ''
@@ -1066,11 +1073,13 @@ class EventsController < ApplicationController
 
   def refund_policy
     authorize Event
-    information = @event.payment_information
-    if information.present?
-      information.update!(refund_policy_params)
-    else
-      @event.create_payment_information!(refund_policy_params)
+    if refund_policy_params.present?
+      information = @event.payment_information
+      if information.present?
+        information.update!(refund_policy_params)
+      else
+        @event.create_payment_information!(refund_policy_params)
+      end
     end
     json_response_serializer(@event, EventSerializer)
   end
@@ -1083,11 +1092,12 @@ class EventsController < ApplicationController
       key :produces, ['application/json',]
       key :tags, ['events']
       parameter do
-        key :name, :service_fee
+        key :name, :payment_information
         key :in, :body
-        key :description, 'Service fee'
-        key :required, true
-        key :type, :string
+        key :description, 'Taxes'
+        schema do
+          key :'$ref', :EventPaymentInformationServiceFee
+        end
       end
       response 200 do
         key :description, ''
@@ -1109,11 +1119,13 @@ class EventsController < ApplicationController
 
   def service_fee
     authorize Event
-    information = @event.payment_information
-    if information.present?
-      information.update!(service_fee_params)
-    else
-      @event.create_payment_information!(service_fee_params)
+    if service_fee_params.present?
+      information = @event.payment_information
+      if information.present?
+        information.update!(service_fee_params)
+      else
+        @event.create_payment_information!(service_fee_params)
+      end
     end
     json_response_serializer(@event, EventSerializer)
   end
@@ -1154,11 +1166,13 @@ class EventsController < ApplicationController
 
   def registration_rule
     authorize Event
-    registration_rule = @event.registration_rule
-    if registration_rule.present?
-      registration_rule.update! registration_rule_params
-    else
-      @event.create_registration_rule! registration_rule_params
+    if registration_rule_params.present?
+      registration_rule = @event.registration_rule
+      if registration_rule.present?
+        registration_rule.update! registration_rule_params
+      else
+        @event.create_registration_rule! registration_rule_params
+      end
     end
     json_response_serializer(@event, EventSerializer)
   end
@@ -1257,6 +1271,47 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
+  swagger_path '/events/:id/agendas' do
+    operation :put do
+      key :summary, 'Events agendas '
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsAgendas'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :agendas
+        key :in, :body
+        key :description, 'Agendas'
+        schema do
+          key :'$ref', :EventAgendaInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :Event
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def agendas
+    authorize Event
+    if agenda_params.present?
+      @event.sync_agendas! agenda_params
+    end
+    json_response_serializer(@event, EventSerializer)
+  end
+
   private
 
   def resource_params
@@ -1286,18 +1341,24 @@ class EventsController < ApplicationController
 
   def facility_management_params
     # whitelist params
-    params.require(:facility_management).permit(:primary_contact_name, :primary_contact_email, :primary_contact_country_code, :primary_contact_phone_number,
-                                                :secondary_contact_name, :secondary_contact_email, :secondary_contact_country_code, :secondary_contact_phone_number)
+    unless params[:facility_management].nil?
+      params.require(:facility_management).permit(:primary_contact_name, :primary_contact_email, :primary_contact_country_code, :primary_contact_phone_number,
+                                                  :secondary_contact_name, :secondary_contact_email, :secondary_contact_country_code, :secondary_contact_phone_number)
+    end
   end
 
   def payment_information_params
     # whitelist params
-    params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee)
+    unless params[:payment_information].nil?
+      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee)
+    end
   end
 
   def payment_method_params
     # whitelist params
-    params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency)
+    unless params[:payment_method].nil?
+      params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency)
+    end
   end
 
   def discounts_params
@@ -1339,24 +1400,32 @@ class EventsController < ApplicationController
 
   def tax_params
     # whitelist params
-    params.require(:tax).permit(:tax)
+    unless params[:tax].nil?
+      params.require(:tax).permit(:tax, :code)
+    end
   end
 
   def refund_policy_params
     # whitelist params
-    params.require(:payment_information).permit(:refund_policy)
+    unless params[:payment_information].nil?
+      params.permit(:payment_information => [:refund_policy])
+    end
   end
 
   def service_fee_params
     # whitelist params
-    params.require(:payment_information).permit(:service_fee)
+    unless params[:payment_information].nil?
+      params.require(:payment_information).permit(:service_fee)
+    end
   end
 
   def registration_rule_params
     # whitelist params
-    params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
-                                              :password, :require_director_approval, :allow_players_cancel,:use_link_home_page,
-                                              :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app)
+    unless params[:registration_rule].nil?
+      params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
+                                                :password, :require_director_approval, :allow_players_cancel, :use_link_home_page,
+                                                :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app)
+    end
   end
 
   def categories_params
@@ -1394,6 +1463,15 @@ class EventsController < ApplicationController
       end
     end
     #ActionController::Parameters.permit_all_parameters = false
+  end
+
+  def agenda_params
+    unless params[:agendas].nil? and !params[:agendas].kind_of?(Array)
+      params[:agendas].map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :start_date, :end_date, :start_time,
+                                                               :end_time)
+      end
+    end
   end
 
   def set_resource
