@@ -73,10 +73,23 @@ if Category.count == 0
 end
 
 if ScoringOption.count == 0
-  ScoringOption.create([{description: "2 of 3 games to 11 points (Match usually takes 54 min.)", quantity_games: 3, winner_games: 2,
-                         points: 11, duration: 54, index: 0},
-                        {description: "1 of 1 game to 15 points (Match usually takes 32 min.)", quantity_games: 1, winner_games: 1,
-                         points: 15, duration: 32, index: 1},
-                        {description: "1 of 1 game to 21 points (Match usually takes 45 min.)", quantity_games: 1, winner_games: 1,
-                         points: 21, duration: 45, index: 2}])
+  ScoringOption.create([{description: "2 of 3 games to 11 points win by 2 points (Match usually takes 54 min.)", quantity_games: 3, winner_games: 2,
+                         points: 11, win_by: 2, duration: 54, index: 0},
+                        {description: "1 of 1 game to 15 points win by 2 points (Match usually takes 32 min.)", quantity_games: 1, winner_games: 1,
+                         points: 15, win_by: 2, duration: 32, index: 1},
+                        {description: "1 of 1 game to 15 points win by 1 point (Match usually takes 32 min.)", quantity_games: 1, winner_games: 1,
+                         points: 15, win_by: 1, duration: 32, index: 2},
+                        {description: "1 of 1 game to 21 points win by 2 points (Match usually takes 45 min.)", quantity_games: 1, winner_games: 1,
+                         points: 21, win_by: 2, duration: 45, index: 3},
+                        {description: "1 of 1 game to 21 points win by 1 point (Match usually takes 45 min.)", quantity_games: 1, winner_games: 1,
+                         points: 21, win_by: 1, duration: 45, index: 4}])
+end
+
+if SportRegulator.count == 0
+  SportRegulator.create([{name: 'International Federation of Pickleball / USA Pickleball Association rules', index: 0},{name: 'National Senior Games Association rules', index: 1}])
+end
+
+if EliminationFormat.count == 0
+  EliminationFormat.create!([{name: 'Single Elimination', index: 0},{name: 'Double Elimination', index: 1}, {name: 'Double Elimination', index: 2}, {name: 'Round Robin Elimination', index: 3},
+                            {name: 'Pool Play Elimination', index: 4}])
 end

@@ -71,7 +71,7 @@ class EventPolicy < ApplicationPolicy
   end
 
   def details?
-    user.sysadmin? || user.agent? || user.director?
+    user.director?
   end
   class Scope < Scope
     def resolve

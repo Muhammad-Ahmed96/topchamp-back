@@ -1,13 +1,13 @@
-class SportsController < ApplicationController
+class SportRegulatorsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy]
-  swagger_path '/sports' do
+  before_action :authenticate_user!
+  swagger_path '/sport_regulators' do
     operation :get do
-      key :summary, 'Get sports list'
-      key :description, 'Sports Catalog'
-      key :operationId, 'sportsIndex'
+      key :summary, 'Get sport regulators list'
+      key :description, 'Sport regulators Catalog'
+      key :operationId, 'sportRegulatorsIndex'
       key :produces, ['application/json',]
-      key :tags, ['sports']
+      key :tags, ['sport_regulators']
       parameter do
         key :name, :column
         key :in, :query
@@ -42,7 +42,7 @@ class SportsController < ApplicationController
           key :'$ref', :PaginateModel
           property :data do
             items do
-              key :'$ref', :Sport
+              key :'$ref', :SportRegulator
             end
           end
         end
@@ -59,51 +59,17 @@ class SportsController < ApplicationController
     end
   end
   def index
-    authorize Sport
+    authorize SportRegulator
     #json_response_data(Sport.all, :created)
-    column = params[:column].nil? ? 'name' : params[:column]
+    column = params[:column].nil? ? 'index' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     search = params[:search].strip unless params[:search].nil?
-    sports = Sport.my_order(column, direction).search(search)
+    sportRegulator = SportRegulator.my_order(column, direction).search(search)
     if paginate.to_s == "0"
-      json_response_serializer_collection(sports.all, SportSerializer)
+      json_response_serializer_collection(sportRegulator.all, SportSerializer)
     else
-      paginate sports, per_page: 50, root: :data
+      paginate sportRegulator, per_page: 50, root: :data
     end
-  end
-
-  def create
-    authorize Sport
-    resource = Sport.create!(resource_params)
-    json_response_data(resource, :created)
-  end
-
-  def show
-    authorize Sport
-    json_response_data(@resource)
-  end
-
-  def update
-    authorize Sport
-    @resource.update!(resource_params)
-    json_response_data(@resource, :updated)
-  end
-
-  def destroy
-    authorize Sport
-    @resource.destroy
-    json_response_success(t(:deleted), true)
-  end
-
-  private
-
-  def resource_params
-    # whitelist params
-    params.permit(:name)
-  end
-
-  def set_resource
-    @resource = Sport.find(params[:id])
   end
 end
