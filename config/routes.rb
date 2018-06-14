@@ -40,6 +40,10 @@ Rails.application.routes.draw do
     post 'application_confirmations/resend_pin', to: 'application_confirmations#resend_pin'
 
     resources :events, only: [:index, :create, :show, :update, :destroy] do
+      collection do
+        get :coming_soon
+        get :upcoming
+      end
       member do
         put :create_venue
         put :venue
@@ -54,6 +58,7 @@ Rails.application.routes.draw do
         put :service_fee
         put :registration_rule
         put :details
+        put :agendas
       end
     end
     get 'events_validate_url', to: 'events#validate_url'

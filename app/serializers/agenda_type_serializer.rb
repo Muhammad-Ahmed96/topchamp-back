@@ -1,3 +1,3 @@
 class AgendaTypeSerializer < ActiveModel::Serializer
-  attributes :id, :name
+  attributes :id, :name, :enabled
 end

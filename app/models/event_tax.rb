@@ -11,12 +11,20 @@ class EventTax < ApplicationRecord
       key :format, :int64
     end
     property :tax do
-      key :type, :float
+      key :type, :number
+      key :format, :float
+    end
+    property :code do
+      key :type, :string
     end
   end
   swagger_schema :EventTaxInput do
     property :tax do
-      key :type, :float
+      key :type, :number
+      key :format, :float
+    end
+    property :code do
+      key :type, :string
     end
   end
 end

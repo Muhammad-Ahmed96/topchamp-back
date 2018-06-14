@@ -87,6 +87,7 @@ class ApidocsController < ApplicationController
       EventBracketSkill,
       SportRegulator,
       EliminationFormat,
+      EventAgenda,
       self,
   ].freeze
 

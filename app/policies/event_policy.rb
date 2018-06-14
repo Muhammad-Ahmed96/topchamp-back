@@ -71,7 +71,19 @@ class EventPolicy < ApplicationPolicy
   end
 
   def details?
-    user.director?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def agendas?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def coming_soon?
+    true
+  end
+
+  def upcoming?
+    true
   end
   class Scope < Scope
     def resolve

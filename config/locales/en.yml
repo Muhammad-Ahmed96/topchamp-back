@@ -149,6 +149,7 @@ en:
            service_fee?: 'You cannot edit this event'
            registration_rule?: 'You cannot edit this event'
            details?: 'You cannot edit this event'
+           coming_soon?: 'You cannot view events'
      sport_regulator_policy:
             update?: 'You cannot edit this sport regulator'
             index?: 'You cannot view sport regulators'

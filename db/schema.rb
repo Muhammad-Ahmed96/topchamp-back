@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_13_215014) do
+ActiveRecord::Schema.define(version: 2018_06_13_230347) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -20,6 +20,7 @@ ActiveRecord::Schema.define(version: 2018_06_13_215014) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.boolean "enabled", default: false
     t.index ["deleted_at"], name: "index_agenda_types_on_deleted_at"
   end
 
@@ -89,6 +90,17 @@ ActiveRecord::Schema.define(version: 2018_06_13_215014) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_elimination_formats_on_deleted_at"
+  end
+
+  create_table "event_agendas", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "agenda_type_id"
+    t.date "start_date"
+    t.date "end_date"
+    t.string "start_time"
+    t.string "end_time"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "event_bracket_ages", force: :cascade do |t|
