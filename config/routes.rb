@@ -40,6 +40,9 @@ Rails.application.routes.draw do
     post 'application_confirmations/resend_pin', to: 'application_confirmations#resend_pin'
 
     resources :events, only: [:index, :create, :show, :update, :destroy] do
+      collection do
+        get :coming_soon
+      end
       member do
         put :create_venue
         put :venue
