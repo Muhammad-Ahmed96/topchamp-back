@@ -269,9 +269,9 @@ class EventsController < ApplicationController
 
   swagger_path '/events/upcoming' do
     operation :get do
-      key :summary, 'Coming soon events'
+      key :summary, 'Upcoming events'
       key :description, 'Event Catalog'
-      key :operationId, 'eventsComingSoon'
+      key :operationId, 'eventsUpcoming'
       key :produces, ['application/json',]
       key :tags, ['events']
       parameter do
