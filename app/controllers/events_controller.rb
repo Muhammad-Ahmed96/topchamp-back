@@ -1242,6 +1242,24 @@ class EventsController < ApplicationController
           key :'$ref', :EventBracketSkillInput
         end
       end
+      parameter do
+        key :name, :awards_for
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :awards_through
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :awards_plus
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, ''
         schema do
