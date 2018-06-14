@@ -1696,7 +1696,7 @@ class EventsController < ApplicationController
   def refund_policy_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.permit(:payment_information => [:refund_policy])
+      params.require(:payment_information).permit(:refund_policy)
     end
   end
 
