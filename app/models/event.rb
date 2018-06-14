@@ -68,6 +68,9 @@ class Event < ApplicationRecord
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
 
+  scope :coming_soon, -> { where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is null')}
+  scope :upcoming, -> { where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}
+
   def sync_discount_generals!(data)
     if data.present?
       deleteIds = []

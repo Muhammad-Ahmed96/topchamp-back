@@ -42,6 +42,7 @@ Rails.application.routes.draw do
     resources :events, only: [:index, :create, :show, :update, :destroy] do
       collection do
         get :coming_soon
+        get :upcoming
       end
       member do
         put :create_venue

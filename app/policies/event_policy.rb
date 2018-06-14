@@ -81,6 +81,10 @@ class EventPolicy < ApplicationPolicy
   def coming_soon?
     true
   end
+
+  def upcoming?
+    true
+  end
   class Scope < Scope
     def resolve
       if user.sysadmin? || user.agent?  || user.member?
