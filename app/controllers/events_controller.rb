@@ -1660,7 +1660,7 @@ class EventsController < ApplicationController
 
   def discount_generals_params
     # whitelist params
-    unless params[:discount_generals].nil?
+    unless params[:discount_generals].nil? or params[:discount_generals].empty?
       #ActionController::Parameters.permit_all_parameters = true
       params.require(:discount_generals).map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :code, :discount, :limited)
@@ -1672,7 +1672,7 @@ class EventsController < ApplicationController
 
   def discount_personalizeds_params
     # whitelist params
-    unless params[:discount_personalizeds].nil?
+    unless params[:discount_personalizeds].nil? or params[:discount_personalizeds].empty?
       #ActionController::Parameters.permit_all_parameters = true
       params.require(:discount_personalizeds).map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :code, :discount, :email)
@@ -1696,7 +1696,7 @@ class EventsController < ApplicationController
   def refund_policy_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.permit(:payment_information => [:refund_policy])
+      params.require(:payment_information).permit(:refund_policy)
     end
   end
 
