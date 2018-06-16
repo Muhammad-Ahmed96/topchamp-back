@@ -75,25 +75,25 @@ class SportsController < ApplicationController
 
   def create
     authorize Sport
-    resource = Sport.create!(resource_params)
-    json_response_data(resource, :created)
+    @sport = Sport.create!(resource_params)
+    json_response_success(t("created_success", model: Sport.model_name.human), true)
   end
 
   def show
     authorize Sport
-    json_response_data(@resource)
+    json_response_serializer(@sport, SportSerializer)
   end
 
   def update
     authorize Sport
-    @resource.update!(resource_params)
-    json_response_data(@resource, :updated)
+    @sport.update!(resource_params)
+    json_response_success(t("edited_success", model: Sport.model_name.human), true)
   end
 
   def destroy
     authorize Sport
-    @resource.destroy
-    json_response_success(t(:deleted), true)
+    @sport.destroy
+    json_response_success(t("deleted_success", model: Sport.model_name.human), true)
   end
 
   private
@@ -104,6 +104,6 @@ class SportsController < ApplicationController
   end
 
   def set_resource
-    @resource = Sport.find(params[:id])
+    @sport = Sport.find(params[:id])
   end
 end

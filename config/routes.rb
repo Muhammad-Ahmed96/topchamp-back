@@ -34,6 +34,7 @@ Rails.application.routes.draw do
     end
     resources :agenda_types, only: [:index]
     resources :regions, only: [:index]
+    resources :invitation_status, only: [:index]
     resources :languages, only: [:index]
     get 'check_reset_token/:reset_password_token', to: 'reset_token#check_reset'
     resources :application_confirmations, only: [:create]
@@ -69,6 +70,17 @@ Rails.application.routes.draw do
     resources :scoring_options, only: [:index]
     resources :skill_levels, only: [:index]
     resources :sport_regulators, only: [:index]
+
+    resources :invitations, only: [:index, :show, :update, :destroy] do
+      collection do
+        post :event
+        post :date
+        post :sing_up
+      end
+      member do
+        get :resend_mail
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]
