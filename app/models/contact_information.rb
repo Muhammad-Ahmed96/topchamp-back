@@ -1,7 +1,7 @@
 class ContactInformation < ApplicationRecord
   include Swagger::Blocks
   belongs_to :user
-  validates :cell_phone, presence: true, numericality: { only_integer: true },  length: { is: 10 }
+  #validates :cell_phone, presence: true, numericality: { only_integer: true },  length: { is: 10 }
 
   swagger_schema :ContactInformation do
     key :required, [:id, :user_id, :cell_phone]
