@@ -60,6 +60,7 @@ Rails.application.routes.draw do
         put :registration_rule
         put :details
         put :agendas
+        get :categories
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
