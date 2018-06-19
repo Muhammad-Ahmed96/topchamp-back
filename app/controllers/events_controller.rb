@@ -1570,7 +1570,8 @@ class EventsController < ApplicationController
         key :name, :agendas
         key :in, :body
         key :description, 'Agendas'
-        schema do
+        key :type, :array
+        items do
           key :'$ref', :EventAgendaInput
         end
       end
