@@ -56,11 +56,11 @@ class EventEnrollsController < ApplicationController
 
        # if my_enroll.nil?
           if age.present? && skill.present?
-            if skill.event_bracket_age_id.equal?(age.id)
+            if skill.event_bracket_age_id == age.id
               if skill.available_for_enroll
                 data = data.merge(:status => :enroll)
               end
-            elsif age.event_bracket_skill_id.equal?(skill.id)
+            elsif age.event_bracket_skill_id == skill.id
               if age.available_for_enroll
                 data = data.merge(:status => :enroll)
               end
@@ -85,8 +85,10 @@ class EventEnrollsController < ApplicationController
         #Save data
         if my_enroll.present?
           my_enroll.update! data
+          #Player attendee
         else
-          @event.enrolls.create!(data)
+          my_enroll = @event.enrolls.create!(data)
+          my_enroll.attendee_type_ids = 7
         end
 
       }

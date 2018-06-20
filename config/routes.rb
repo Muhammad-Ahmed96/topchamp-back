@@ -81,7 +81,8 @@ Rails.application.routes.draw do
         post :sing_up
       end
       member do
-        get :resend_mail
+        post :resend_mail
+        post :enroll
       end
     end
   end

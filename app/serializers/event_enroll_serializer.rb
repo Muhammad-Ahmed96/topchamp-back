@@ -6,4 +6,5 @@ class EventEnrollSerializer < ActiveModel::Serializer
   belongs_to :category, serializer:CategorySerializer
   belongs_to :bracket_skill, serializer:EventBracketSkillSerializer
   belongs_to :bracket_age, serializer:EventBracketAgeSerializer
+  has_many :attendee_types, serializer: AttendeeTypeSerializer
 end

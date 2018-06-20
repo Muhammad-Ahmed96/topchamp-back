@@ -1,8 +1,58 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail]
+  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail, :enroll]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:event, :date, :sing_up]
+  around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll]
+  swagger_path '/invitations' do
+    operation :get do
+      key :summary, 'Get invitations list'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsIndex'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :column
+        key :in, :query
+        key :description, 'Column to order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :direction
+        key :in, :query
+        key :description, 'Direction to order, (ASC or DESC)'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :PaginateModel
+          property :data do
+            items do
+              key :'$ref', :Sport
+            end
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
 
   def index
     column = params[:column].nil? ? 'email' : params[:column]
@@ -47,6 +97,40 @@ class InvitationsController < ApplicationController
     end
   end
 
+  swagger_path '/invitations/event' do
+    operation :post do
+      key :summary, 'Invitations to event'
+      key :description, 'Invitations Catalog'
+      key :operationId, 'invitationsEventCreate'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :invitations
+        key :in, :body
+        key :description, 'Invitations'
+        key :type, :array
+        items do
+          key :'$ref', :InvitationInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
   def event
     authorize Invitation
     if is_array_save?
@@ -57,12 +141,80 @@ class InvitationsController < ApplicationController
 
   end
 
+  swagger_path '/invitations/date' do
+    operation :post do
+      key :summary, 'Invitations to date'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsDateCreate'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :invitations
+        key :in, :body
+        key :description, 'Invitations'
+        key :type, :array
+        items do
+          key :'$ref', :InvitationInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
   def date
     authorize Invitation
     if is_array_save?
       save_array :date
     else
       save :date
+    end
+  end
+
+  swagger_path '/invitations/sing_up' do
+    operation :post do
+      key :summary, 'Invitations to sing up'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsSingUpCreate'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :invitations
+        key :in, :body
+        key :description, 'Invitations'
+        key :type, :array
+        items do
+          key :'$ref', :InvitationInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
     end
   end
 
@@ -78,6 +230,31 @@ class InvitationsController < ApplicationController
   def show
     authorize Invitation
     json_response_serializer(@invitation, InvitationSerializer)
+  end
+
+  swagger_path '/invitations/:id/resend_mail' do
+    operation :post do
+      key :summary, 'Invitations resend mail'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsResendMailCreate'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
   end
 
   def resend_mail
@@ -103,11 +280,53 @@ class InvitationsController < ApplicationController
     Invitation.import_invitations_xls!(import_params[:file], import_params[:event_id], :event)
     json_response_serializer(@event, EventSerializer)
   end
+  swagger_path '/invitations/:id/enroll' do
+    operation :post do
+      key :summary, 'Invitations enroll'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsEnrollCreate'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def enroll
+    if !@invitation.status == "role"
+      event = @invitation.event
+      my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
+      data = {:user_id => @invitation.user_id, status: :enroll}
+      #Save data
+      if my_enroll.present?
+        my_enroll.update! data
+        #Player attendee
+      else
+        my_enroll = event.enrolls.create!(data)
+      end
+      my_enroll.attendee_type_ids = @invitation.attendee_type_ids
+      @invitation.status = :role
+      @invitation.save!
+    end
+    json_response_success(t("edited_success", model: Invitation.model_name.human), true)
+  end
 
   private
 
   def save(type)
-    @invitation = Invitation.get_invitation(resource_params,  @resource.id, type)
+    @invitation = Invitation.get_invitation(resource_params, @resource.id, type)
     @invitation.send_mail
     json_response_success(t("created_success", model: Invitation.model_name.human), true)
   end
@@ -116,7 +335,7 @@ class InvitationsController < ApplicationController
     if is_array_save?
       @invitations = []
       array_params[:invitations].each {|invitation|
-        @invitations <<  Invitation.get_invitation(invitation,  @resource.id, type)
+        @invitations << Invitation.get_invitation(invitation, @resource.id, type)
       }
       @invitations.each {|invitation| invitation.send_mail}
       json_response_success(t("created_success", model: Invitation.model_name.human), true)
@@ -127,11 +346,11 @@ class InvitationsController < ApplicationController
 
   def resource_params
     # whitelist params
-    params.permit(:event_id, :attendee_type_id, :email)
+    params.permit(:event_id, :email, :url, attendee_types: [])
   end
 
   def array_params
-    params.permit(invitations: [:event_id, :attendee_type_id, :email])
+    params.permit(invitations: [:event_id, :email, :url, attendee_types: []])
   end
 
   def import_params

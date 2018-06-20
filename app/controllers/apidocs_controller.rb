@@ -53,6 +53,7 @@ class ApidocsController < ApplicationController
       FacilitiesController,
       ApplicationConfirmationsController,
       ApplicationRegistrationsController,
+      InvitationsController,
       VisibilityController,
       EventsController,
       BracketsController,
@@ -90,6 +91,7 @@ class ApidocsController < ApplicationController
       EliminationFormat,
       EventAgenda,
       EventEnroll,
+      Invitation,
       self,
   ].freeze
 

@@ -2,12 +2,15 @@ class Invitation < ApplicationRecord
   include Swagger::Blocks
   before_create :generate_token
 
+  has_and_belongs_to_many :attendee_types
   belongs_to :event, optional: true
   belongs_to :user, optional: true
-  belongs_to :attendee_type, optional: true
+  #belongs_to :attendee_type, optional: true
   belongs_to :sender, foreign_key: "sender_id", class_name: "User", optional: true
   validates :attendee_type_id, :presence => true
+  validates :url, :presence => true
   validates :email, :presence => true, email: true
+  accepts_nested_attributes_for :attendee_types
 
   scope :in_status, lambda {|status| where status: status if status.present?}
   scope :email_like, lambda {|search| Invitation.where ["LOWER(invitations.email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
@@ -39,17 +42,23 @@ class Invitation < ApplicationRecord
   def self.get_invitation(params, senderId, type)
     @user = User.find_by_uid params[:email]
     userId = @user.present? ? @user.id : nil
+    attendee_types = params[:attendee_types]
+    if attendee_types.kind_of?(Array)
+      attendee_types = attendee_types.map(&:to_i)
+    end
+    params.delete :attendee_types
     data = params.merge(:user_id => userId, :sender_id => senderId, :invitation_type => type)
     invitation = Invitation.where(:email => data[:email]).where(:invitation_type => type)
                      .where(:event_id => data[:event_id]).first
     if invitation.present?
-      if (invitation.attendee_type_id.to_s != data[:attendee_type_id].to_s)
+      if invitation.attendee_type_ids.present? and invitation.attendee_type_ids != attendee_types
         data = data.merge(:send_at => nil)
       end
       invitation.update! data
     else
       invitation = Invitation.create!(data)
     end
+    invitation.attendee_type_ids = attendee_types
     invitation
   end
 
@@ -86,6 +95,15 @@ class Invitation < ApplicationRecord
     property :status do
       key :type, :string
     end
+    property :url do
+      key :type, :string
+    end
+    property :attendee_types do
+      key :type, :array
+      items do
+        key :'$ref', :AttendeeType
+      end
+    end
   end
 
   swagger_schema :InvitationInput do
@@ -98,6 +116,9 @@ class Invitation < ApplicationRecord
       key :format, :int64
     end
     property :email do
+      key :type, :string
+    end
+    property :url do
       key :type, :string
     end
   end
