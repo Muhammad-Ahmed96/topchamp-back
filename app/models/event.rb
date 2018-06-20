@@ -20,6 +20,7 @@ class Event < ApplicationRecord
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
+  has_many :enrolls, class_name: 'EventEnroll'
   has_one :registration_rule, class_name: 'EventRegistrationRule'
   has_many :agendas, class_name:'EventAgenda'
   #has_one :rule, class_name: 'EventRule'

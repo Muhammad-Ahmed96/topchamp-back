@@ -51,6 +51,16 @@ class EventBracketAge < ApplicationRecord
     end
   end
 
+
+  def available_for_enroll
+    count  = EventEnroll.where(:event_bracket_age_id => self.id).count
+    self.quantity > count
+  end
+
+  def contains_skill?(id)
+    self.event_bracket_skill_id.where(:event_bracket_age_id => id).count > 0
+  end
+
   swagger_schema :EventBracketAge do
     property :id do
       key :type, :integer
@@ -69,6 +79,9 @@ class EventBracketAge < ApplicationRecord
     end
     property :quantity do
       key :type, :number
+    end
+    property :available_for_enroll do
+      key :type, :boolean
     end
     property :bracket_skills do
       key :type, :array
