@@ -576,7 +576,8 @@ class EventsController < ApplicationController
 
   def show
     authorize Event
-    json_response_serializer(@event, EventSerializer)
+    @event = Event.find(params[:id])
+    json_response_serializer( @event , EventSerializer)
   end
 
   swagger_path '/events/:id' do

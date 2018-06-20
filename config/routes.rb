@@ -62,7 +62,7 @@ Rails.application.routes.draw do
         put :agendas
         get :categories
       end
-      resources :event_enrolls,only: [:create], :path => :enrolls do
+      resources :event_enrolls,only: [:create, :index], :path => :enrolls do
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
