@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_13_230347) do
+ActiveRecord::Schema.define(version: 2018_06_19_202634) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -101,6 +101,7 @@ ActiveRecord::Schema.define(version: 2018_06_13_230347) do
     t.string "end_time"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "category_id"
   end
 
   create_table "event_bracket_ages", force: :cascade do |t|
@@ -150,6 +151,19 @@ ActiveRecord::Schema.define(version: 2018_06_13_230347) do
     t.integer "on_site_players"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "event_enrolls", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "event_id"
+    t.bigint "category_id"
+    t.bigint "event_bracket_age_id"
+    t.bigint "event_bracket_skill_id"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_enrolls_on_deleted_at"
   end
 
   create_table "event_payment_informations", force: :cascade do |t|
@@ -265,6 +279,22 @@ ActiveRecord::Schema.define(version: 2018_06_13_230347) do
     t.bigint "sport_id", null: false
     t.index ["event_id"], name: "index_events_sports_on_event_id"
     t.index ["sport_id"], name: "index_events_sports_on_sport_id"
+  end
+
+  create_table "invitations", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "user_id"
+    t.bigint "sender_id"
+    t.bigint "attendee_type_id"
+    t.string "token"
+    t.string "email"
+    t.datetime "send_at"
+    t.string "status", default: "pending_invitation"
+    t.string "invitation_type", default: "event"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_invitations_on_deleted_at"
   end
 
   create_table "languages", force: :cascade do |t|

@@ -12,6 +12,7 @@ class User < ApplicationRecord
   has_one :shipping_address, :dependent => :destroy
   has_one :association_information, :dependent => :destroy
   has_one :medical_information, :dependent => :destroy
+  has_many :enrolls, :class_name => "EventEnroll"
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",

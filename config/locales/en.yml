@@ -71,6 +71,7 @@ en:
   deleted_success: "%{model} deleted successfully."
   activated_success: "%{model} activated successfully."
   inactivated_success: "%{model} inactivated  successfully."
+  mail_send: "%{model} send."
   pundit:
      nil_class: 'nil class'
      default: 'You cannot perform this action.'
@@ -187,5 +188,9 @@ en:
       age_skill: "Age/skill"
       Skill: "Skill"
       skill_age: "Skill/Age"
+    invitation_tatus:
+      pending_invitation: "Pending Invitation"
+      role: "Role"
   reset: "Reset Password"
   unable_activate: "Unable to activate"
+  to: "to"

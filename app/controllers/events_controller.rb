@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas]
+                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
@@ -576,7 +576,8 @@ class EventsController < ApplicationController
 
   def show
     authorize Event
-    json_response_serializer(@event, EventSerializer)
+    @event = Event.find(params[:id])
+    json_response_serializer( @event , EventSerializer)
   end
 
   swagger_path '/events/:id' do
@@ -1570,7 +1571,8 @@ class EventsController < ApplicationController
         key :name, :agendas
         key :in, :body
         key :description, 'Agendas'
-        schema do
+        key :type, :array
+        items do
           key :'$ref', :EventAgendaInput
         end
       end
@@ -1598,6 +1600,38 @@ class EventsController < ApplicationController
       @event.sync_agendas! agenda_params
     end
     json_response_serializer(@event, EventSerializer)
+  end
+  swagger_path '/events/:id/categories' do
+    operation :get do
+      key :summary, 'Events categories List '
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsCategoriesList'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :name, :categories
+        key :description, 'categories'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :Category
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def categories
+    authorize Event
+    json_response(@event.categories)
   end
 
   private
@@ -1756,7 +1790,7 @@ class EventsController < ApplicationController
   def agenda_params
     unless params[:agendas].nil? and !params[:agendas].kind_of?(Array)
       params[:agendas].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :start_date, :end_date, :start_time,
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :category_id, :start_date, :end_date, :start_time,
                                                                :end_time)
       end
     end
