@@ -60,6 +60,7 @@ class ApidocsController < ApplicationController
       CategoriesController,
       ScoringOptionsController,
       SkillLevelsController,
+      EventEnrollsController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -88,6 +89,7 @@ class ApidocsController < ApplicationController
       SportRegulator,
       EliminationFormat,
       EventAgenda,
+      EventEnroll,
       self,
   ].freeze
 

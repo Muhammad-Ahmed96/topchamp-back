@@ -93,7 +93,9 @@
                     <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                       <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                         <%= t(:hello).capitalize %>
-                        <strong style="color: #142954;"><%= @resource.first_name%>&ensp;<%= @resource.last_name%></strong>
+                        <% if @invitation.user.present? %>
+                          <strong style="color: #142954;"><%= @invitation.user.first_name %>&ensp;<%= @invitation.user.last_name %></strong>
+                        <% end %>
                       </div>
                     </td>
                   </tr>
@@ -150,11 +152,11 @@
                     <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                       <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                         You are invited to participate in
-                        <strong>{{Event Name}}</strong>
+                        <strong><%=@invitation.event.title unless  @invitation.event.nil? %></strong>
                         happening in
-                        <strong>{{Event City, State}}</strong>
+                        <strong><% if @invitation.event.present?%><%= @invitation.event.venue.city unless @invitation.event.venue.nil? %>, <%= @invitation.event.venue.state unless @invitation.event.venue.nil?%><% end %></strong>
                         on
-                        <strong>{{Event Date(s)}}</strong>.
+                        <strong><% if @invitation.event.present?%><%= @invitation.event.start_date.strftime("%B %d, %Y") unless @invitation.event.start_date.nil?%>&ensp;<%= t("to") + " " + @invitation.event.end_date.strftime("%B %d, %Y") unless @invitation.event.end_date.nil?%><% end %></strong>.
                         Spots are limited, so please register now.
                       </div>
                     </td>
@@ -212,7 +214,7 @@
                     <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                       <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                         Thanks, <br/>
-                        <strong>{{Director First and Last Name}}</strong>
+                        <strong><% if @invitation.sender.present? %><%= @invitation.sender.first_name%>&ensp;<%= @invitation.sender.last_name%><% end %></strong>
                       </div>
                     </td>
                   </tr>

@@ -1,5 +1,6 @@
 class InvitationMailer < ApplicationMailer
   def event(invitation)
+    @invitation = invitation
     attachments.inline['top-logo.png'] = File.read('app/assets/images/top-logo.png')
     title = invitation.event.present? ? invitation.event.title : "TopChamp"
     mail(to: invitation.email, subject: "You are invited to #{title}!")
@@ -8,6 +9,7 @@ class InvitationMailer < ApplicationMailer
   end
 
   def date(invitation)
+    @invitation = invitation
     attachments.inline['top-logo.png'] = File.read('app/assets/images/top-logo.png')
     title = invitation.event.present? ? invitation.event.title : "TopChamp"
     mail(to: invitation.email, subject: "Save The Date for #{title}!")
@@ -16,6 +18,7 @@ class InvitationMailer < ApplicationMailer
   end
 
   def sing_up(invitation)
+    @invitation = invitation
     attachments.inline['top-logo.png'] = File.read('app/assets/images/top-logo.png')
     title = invitation.event.present? ? invitation.event.title : "TopChamp"
     mail(to: invitation.email, subject: "You are invited to #{title}!")

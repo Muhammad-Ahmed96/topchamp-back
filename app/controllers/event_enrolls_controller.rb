@@ -7,7 +7,43 @@ class EventEnrollsController < ApplicationController
   def index
     json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
   end
-
+  swagger_path '/event/:id/enrolls' do
+    operation :post do
+      key :summary, 'Enroll to event'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventEnrollCreate'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :enrolls
+        key :in, :body
+        key :description, 'Enrolls'
+        key :type, :array
+        items do
+          key :'$ref', :EventEnrollInput
+        end
+      end
+      response 200 do
+        key :name, :categories
+        key :description, 'enrolls'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :EventEnroll
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def create
     if enroll_collection_params.present?
       enroll_collection_params.each {|enroll|

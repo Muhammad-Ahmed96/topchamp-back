@@ -55,57 +55,10 @@ class EventEnroll < ApplicationRecord
     end
   end
 
-  swagger_schema :EventEnroll do
-    property :id do
-      key :type, :integer
-      key :format, :integer
-    end
-    property :user_id do
-      key :type, :integer
-      key :format, :integer
-    end
-    property :event_id do
-      key :type, :integer
-      key :format, :integer
-    end
-    property :category_id do
-      key :type, :integer
-      key :format, :integer
-    end
-    property :event_bracket_age_id do
-      key :type, :integer
-      key :format, :integer
-    end
-    property :event_bracket_skill_id do
-      key :type, :integer
-      key :format, :integer
-    end
-    property :status do
-      key :type, :string
-    end
-    property :user do
-      key :'$ref', :User
-    end
-    property :event do
-      key :'$ref', :Event
-    end
-    property :category do
-      key :'$ref', :Category
-    end
-    property :bracket_skill do
-      key :'$ref', :EventBracketSkill
-    end
-    property :bracket_age do
-      key :'$ref', :EventBracketAge
-    end
-  end
+
 
   swagger_schema :EventEnrollInput do
     property :event_id do
-      key :type, :integer
-      key :format, :integer
-    end
-    property :category_id do
       key :type, :integer
       key :format, :integer
     end
