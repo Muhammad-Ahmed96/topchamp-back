@@ -4,6 +4,9 @@ Rails.application.routes.draw do
                                                                registrations: 'application_registrations'}
   scope :api, defaults: {format: :json} do
     resources :users, only: [:index, :create, :show, :update, :destroy] do
+      collection do
+        get :current_enrolls
+      end
       member do
         put :activate
         put :inactive

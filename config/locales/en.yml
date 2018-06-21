@@ -198,3 +198,13 @@ en:
   to: "to"
   not_permitted: "not permitted"
   success: "success"
+  activerecord:
+    attributes:
+      user:
+        current_password: "Password"
+    errors:
+      models:
+        user:
+          attributes:
+            current_password:
+              invalid: "Invalid password. Please verify your information."
