@@ -54,6 +54,7 @@ class ApidocsController < ApplicationController
       ApplicationConfirmationsController,
       ApplicationRegistrationsController,
       InvitationsController,
+      InvitationStatusController,
       VisibilityController,
       EventsController,
       BracketsController,
