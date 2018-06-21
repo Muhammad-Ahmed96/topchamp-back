@@ -66,7 +66,7 @@ class EventEnroll < ApplicationRecord
 
 
   swagger_schema :EventEnrollInput do
-    property :event_id do
+    property :category_id do
       key :type, :integer
       key :format, :integer
     end
