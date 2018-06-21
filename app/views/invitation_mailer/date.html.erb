@@ -156,7 +156,7 @@
                         <strong><% if @invitation.event.present?%><%= @invitation.event.venue.city unless @invitation.event.venue.nil? %>, <%= @invitation.event.venue.state unless @invitation.event.venue.nil?%><% end %></strong>
                         on
                         <strong><% if @invitation.event.present?%><%= @invitation.event.start_date.strftime("%B %d, %Y") unless @invitation.event.start_date.nil?%>&ensp;<%= t("to") + " " + @invitation.event.end_date.strftime("%B %d, %Y") unless @invitation.event.end_date.nil?%><% end %></strong>.<br/><br/>
-                        Registration opens <strong>{{Registration Date/Time}}</strong>.
+<!--                        Registration opens <strong>{{Registration Date/Time}}</strong>.-->
                       </div>
                     </td>
                   </tr>
