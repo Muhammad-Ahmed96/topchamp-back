@@ -111,9 +111,13 @@ class Invitation < ApplicationRecord
       key :type, :integer
       key :format, :int64
     end
-    property :attendee_type_id do
-      key :type, :integer
-      key :format, :int64
+    property :attendee_types do
+      key :type, :array
+      items do
+        key :type, :integer
+        key :format, :int64
+      end
+
     end
     property :email do
       key :type, :string
