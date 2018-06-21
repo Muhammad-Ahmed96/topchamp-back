@@ -63,6 +63,10 @@ Rails.application.routes.draw do
         get :categories
       end
       resources :event_enrolls,only: [:create, :index], :path => :enrolls do
+        collection do
+          post :user_cancel
+          post :change_attendees
+        end
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
@@ -81,7 +85,8 @@ Rails.application.routes.draw do
         post :sing_up
       end
       member do
-        get :resend_mail
+        post :resend_mail
+        post :enroll
       end
     end
   end

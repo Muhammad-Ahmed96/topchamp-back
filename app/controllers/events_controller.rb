@@ -78,6 +78,13 @@ class EventsController < ApplicationController
         key :required, false
         key :type, :integer
       end
+      parameter do
+        key :name, :visibility
+        key :in, :query
+        key :description, 'Visibility filter'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, ''
         schema do
@@ -111,6 +118,7 @@ class EventsController < ApplicationController
     title = params[:title]
     start_date = params[:start_date]
     status = params[:status]
+    visibility = params[:visibility]
 
 
     state = params[:state]
@@ -130,7 +138,7 @@ class EventsController < ApplicationController
       column = nil
     end
     events = EventPolicy::Scope.new(current_user, Event).resolve.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
-                 .start_date_like(start_date).in_status(status).state_like(state).city_like(city)
+                 .start_date_like(start_date).in_status(status).state_like(state).city_like(city).in_visibility(visibility)
 
     if paginate.to_s == "0"
       json_response_serializer_collection(events.all, EventSerializer)
@@ -1746,7 +1754,8 @@ class EventsController < ApplicationController
     unless params[:registration_rule].nil?
       params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
                                                 :password, :require_director_approval, :allow_players_cancel, :use_link_home_page,
-                                                :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app)
+                                                :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app,
+                                                :allow_attendees_change)
     end
   end
 

@@ -89,6 +89,13 @@ class EventPolicy < ApplicationPolicy
   def categories?
     true
   end
+
+  def user_cancel?
+    record.registration_rule.allow_players_cancel
+  end
+  def change_attendees?
+    record.registration_rule.allow_attendees_change
+  end
   class Scope < Scope
     def resolve
       if user.sysadmin? || user.agent?  || user.member?

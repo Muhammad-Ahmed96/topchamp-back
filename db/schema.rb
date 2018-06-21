@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_19_202634) do
+ActiveRecord::Schema.define(version: 2018_06_21_042321) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -40,6 +40,20 @@ ActiveRecord::Schema.define(version: 2018_06_19_202634) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_attendee_types_on_deleted_at"
+  end
+
+  create_table "attendee_types_event_enrolls", id: false, force: :cascade do |t|
+    t.bigint "attendee_type_id", null: false
+    t.bigint "event_enroll_id", null: false
+    t.index ["attendee_type_id"], name: "index_attendee_types_event_enrolls_on_attendee_type_id"
+    t.index ["event_enroll_id"], name: "index_attendee_types_event_enrolls_on_event_enroll_id"
+  end
+
+  create_table "attendee_types_invitations", id: false, force: :cascade do |t|
+    t.bigint "attendee_type_id", null: false
+    t.bigint "invitation_id", null: false
+    t.index ["attendee_type_id"], name: "index_attendee_types_invitations_on_attendee_type_id"
+    t.index ["invitation_id"], name: "index_attendee_types_invitations_on_invitation_id"
   end
 
   create_table "billing_addresses", force: :cascade do |t|
@@ -201,6 +215,7 @@ ActiveRecord::Schema.define(version: 2018_06_19_202634) do
     t.datetime "updated_at", null: false
     t.boolean "use_link_home_page", default: false
     t.boolean "use_link_event_website", default: false
+    t.boolean "allow_attendees_change", default: false
   end
 
   create_table "event_rules", force: :cascade do |t|
@@ -294,6 +309,7 @@ ActiveRecord::Schema.define(version: 2018_06_19_202634) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.string "url"
     t.index ["deleted_at"], name: "index_invitations_on_deleted_at"
   end
 

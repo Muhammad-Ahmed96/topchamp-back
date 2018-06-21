@@ -1,13 +1,15 @@
 class EventEnroll < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
+
+  has_and_belongs_to_many :attendee_types, :dependent => :destroy
   belongs_to :user
   belongs_to :event
-  belongs_to :category
+  belongs_to :category, :optional => true
   belongs_to :bracket_skill, :class_name => "EventBracketSkill", :optional => true
   belongs_to :bracket_age, :class_name => "EventBracketAge", :optional => true
 
-  validates_presence_of :user_id, :event_id, :category_id
+  validates_presence_of :user_id, :event_id
 
 
   swagger_schema :EventEnroll do
@@ -52,6 +54,12 @@ class EventEnroll < ApplicationRecord
     end
     property :bracket_age do
       key :'$ref', :EventBracketAge
+    end
+    property :attendee_types do
+      key :type, :array
+      items do
+        key :'$ref', :AttendeeType
+      end
     end
   end
 
