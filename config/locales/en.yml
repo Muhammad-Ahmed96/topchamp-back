@@ -151,6 +151,8 @@ en:
            registration_rule?: 'You cannot edit this event'
            details?: 'You cannot edit this event'
            coming_soon?: 'You cannot view events'
+           user_cancel?: 'You cannot cancel registration'
+           change_attendees?: 'You cannot change registration'
      sport_regulator_policy:
             update?: 'You cannot edit this sport regulator'
             index?: 'You cannot view sport regulators'
@@ -194,3 +196,5 @@ en:
   reset: "Reset Password"
   unable_activate: "Unable to activate"
   to: "to"
+  not_permitted: "not permitted"
+  success: "success"

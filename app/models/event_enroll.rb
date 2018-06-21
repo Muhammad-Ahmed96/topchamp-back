@@ -2,7 +2,7 @@ class EventEnroll < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
 
-  has_and_belongs_to_many :attendee_types
+  has_and_belongs_to_many :attendee_types, :dependent => :destroy
   belongs_to :user
   belongs_to :event
   belongs_to :category, :optional => true

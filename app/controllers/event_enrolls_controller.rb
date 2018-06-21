@@ -1,12 +1,13 @@
 class EventEnrollsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:create, :index]
+  before_action :set_resource, only: [:create, :index, :user_cancel, :change_attendees]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:create]
+  around_action :transactions_filter, only: [:create, :user_cancel, :change_attendees]
 
   def index
     json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
   end
+
   swagger_path '/event/:id/enrolls' do
     operation :post do
       key :summary, 'Enroll to event'
@@ -44,6 +45,7 @@ class EventEnrollsController < ApplicationController
       end
     end
   end
+
   def create
     if enroll_collection_params.present?
       enroll_collection_params.each {|enroll|
@@ -54,28 +56,28 @@ class EventEnrollsController < ApplicationController
         age = EventBracketAge.where(:event_id => @event.id).where(:id => data[:event_bracket_age_id]).first
         skill = EventBracketSkill.where(:event_id => @event.id).where(:id => data[:event_bracket_skill_id]).first
 
-       # if my_enroll.nil?
-          if age.present? && skill.present?
-            if skill.event_bracket_age_id == age.id
-              if skill.available_for_enroll
-                data = data.merge(:status => :enroll)
-              end
-            elsif age.event_bracket_skill_id == skill.id
-              if age.available_for_enroll
-                data = data.merge(:status => :enroll)
-              end
-            end
-          elsif age.present?
-            if age.available_for_enroll
-              data = data.merge(:status => :enroll)
-            end
-          elsif skill.present?
+        # if my_enroll.nil?
+        if age.present? && skill.present?
+          if skill.event_bracket_age_id == age.id
             if skill.available_for_enroll
               data = data.merge(:status => :enroll)
             end
-          elsif my_enroll.nil?
-            data = data.merge(:status => :wait_list)
+          elsif age.event_bracket_skill_id == skill.id
+            if age.available_for_enroll
+              data = data.merge(:status => :enroll)
+            end
           end
+        elsif age.present?
+          if age.available_for_enroll
+            data = data.merge(:status => :enroll)
+          end
+        elsif skill.present?
+          if skill.available_for_enroll
+            data = data.merge(:status => :enroll)
+          end
+        elsif my_enroll.nil?
+          data = data.merge(:status => :wait_list)
+        end
         #end
 
         if my_enroll.nil? and data[:status].nil?
@@ -97,6 +99,69 @@ class EventEnrollsController < ApplicationController
     end
     json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
   end
+  swagger_path '/event/:id/enrolls/user_cancel' do
+    operation :post do
+      key :summary, 'Cancel registration to event'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventCancelRegistrationCreate'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def user_cancel
+    authorize(@event)
+    user_id = @resource.id
+    @event.enrolls.where(:user_id => user_id).destroy_all
+    json_response_success(t("success"), true)
+  end
+  swagger_path '/event/:id/enrolls/change_attendees' do
+    operation :post do
+      key :summary, 'Change attendees to event'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventChangeAttendeesUser'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def change_attendees
+    authorize(@event)
+    user_id = @resource.id
+    enroll = @event.enrolls.where(:user_id => user_id).first
+    if enroll.present?
+      enroll.attendee_type_ids = change_attendees_params[:attendee_type_ids]
+    end
+    json_response_success(t("success"), true)
+  end
 
 
   private
@@ -111,6 +176,10 @@ class EventEnrollsController < ApplicationController
         ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_age_id, :event_bracket_skill_id)
       end
     end
+  end
+
+  def change_attendees_params
+    params.permit(attendee_type_ids: [])
   end
 
   def set_resource
