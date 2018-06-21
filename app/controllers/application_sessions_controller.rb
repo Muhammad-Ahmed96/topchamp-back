@@ -69,12 +69,19 @@ uid:          zzzzz'
 
       @resource = find_resource(field, q_value)
     end
-
     if @resource && valid_params?(field, q_value) && (!@resource.respond_to?(:active_for_authentication?) || @resource.active_for_authentication?)
       if @resource.status.to_s == "Inactive"
         return json_response_error(["Account inactive"], 401)
       end
-      valid_password = @resource.valid_password?(resource_params[:password])
+      if resource_params[:password].present?
+        valid_password = @resource.valid_password?(resource_params[:password])
+      elsif resource_params[:birthdate].present?
+        valid_password = @resource.valid_birthdate?(resource_params[:birthdate])
+      elsif resource_params[:mobile].present?
+        valid_password = @resource.valid_mobile?(resource_params[:mobile])
+      else
+        valid_password = true
+      end
       if (@resource.respond_to?(:valid_for_authentication?) && !@resource.valid_for_authentication? { valid_password }) || !valid_password
         return render_create_error_bad_credentials
       end
@@ -156,6 +163,12 @@ uid:          zzzzz'
 
   def resource_errors
     return @resource.errors
+  end
+
+  protected
+
+  def valid_params?(key, val)
+    key && val
   end
 
 end
