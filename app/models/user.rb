@@ -190,6 +190,13 @@ class User < ApplicationRecord
     property :medical_information do
       key :'$ref', :MedicalInformation
     end
+
+    property :enrolls do
+      key :type, :array
+      items do
+        key :'$ref', :EventEnroll
+      end
+    end
   end
 
 
