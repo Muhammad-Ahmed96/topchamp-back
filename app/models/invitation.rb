@@ -7,7 +7,7 @@ class Invitation < ApplicationRecord
   belongs_to :user, optional: true
   #belongs_to :attendee_type, optional: true
   belongs_to :sender, foreign_key: "sender_id", class_name: "User", optional: true
-  validates :attendee_type_id, :presence => true
+  #validates :attendee_type_id, :presence => true
   validates :url, :presence => true
   validates :email, :presence => true, email: true
   accepts_nested_attributes_for :attendee_types
