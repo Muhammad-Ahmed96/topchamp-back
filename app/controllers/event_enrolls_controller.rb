@@ -8,7 +8,7 @@ class EventEnrollsController < ApplicationController
     json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
   end
 
-  swagger_path '/event/:id/enrolls' do
+  swagger_path '/events/:id/enrolls' do
     operation :post do
       key :summary, 'Enroll to event'
       key :description, 'Event Catalog'
@@ -99,7 +99,7 @@ class EventEnrollsController < ApplicationController
     end
     json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
   end
-  swagger_path '/event/:id/enrolls/user_cancel' do
+  swagger_path '/events/:id/enrolls/user_cancel' do
     operation :post do
       key :summary, 'Cancel registration to event'
       key :description, 'Event Catalog'
@@ -129,7 +129,7 @@ class EventEnrollsController < ApplicationController
     @event.enrolls.where(:user_id => user_id).destroy_all
     json_response_success(t("success"), true)
   end
-  swagger_path '/event/:id/enrolls/change_attendees' do
+  swagger_path '/events/:id/enrolls/change_attendees' do
     operation :post do
       key :summary, 'Change attendees to event'
       key :description, 'Event Catalog'
