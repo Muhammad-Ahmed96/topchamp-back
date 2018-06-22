@@ -14,7 +14,7 @@ class Invitation < ApplicationRecord
 
   scope :in_status, lambda {|status| where status: status if status.present?}
   scope :email_like, lambda {|search| Invitation.where ["LOWER(invitations.email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
-  scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(events.title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :last_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :phone_like, lambda {|search| joins(user: :contact_information).merge(ContactInformation.where ["LOWER(concat(country_code_phone, cell_phone)) LIKE LOWER(?)", "%#{search}%"]) if search.present?}

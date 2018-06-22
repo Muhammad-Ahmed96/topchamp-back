@@ -7,4 +7,5 @@ class UserSerializer < ActiveModel::Serializer
   has_one :shipping_address
   has_one :association_information
   has_one :medical_information
+  has_many :enrolls, serializer: EventEnrollSerializer
 end

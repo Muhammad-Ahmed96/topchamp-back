@@ -649,7 +649,7 @@ class UsersController < ApplicationController
   end
 
   swagger_path '/users/current_enrolls' do
-    operation :put do
+    operation :get do
       key :summary, 'Enrolls of user'
       key :description, 'User Catalog'
       key :operationId, 'usersCurrentEnroll'
