@@ -12,6 +12,7 @@ class User < ApplicationRecord
   has_one :shipping_address, :dependent => :destroy
   has_one :association_information, :dependent => :destroy
   has_one :medical_information, :dependent => :destroy
+  has_many :enrolls, :class_name => "EventEnroll"
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
@@ -189,6 +190,13 @@ class User < ApplicationRecord
     property :medical_information do
       key :'$ref', :MedicalInformation
     end
+
+    property :enrolls do
+      key :type, :array
+      items do
+        key :'$ref', :EventEnroll
+      end
+    end
   end
 
 
@@ -265,6 +273,7 @@ class User < ApplicationRecord
       errors.add(:base, 'You have reached the maximum allow number of reminders!')
     end
   end
+
   def set_random_pin!
     generated = 0
     loop do
@@ -288,6 +297,19 @@ class User < ApplicationRecord
   def valid_pin
     unless response_pin.present? && response_pin == pin
       errors.add(:response_pin, 'Incorrect pin number')
+    end
+  end
+
+
+  def valid_birthdate?(value)
+    self.birth_date.to_s == value
+  end
+
+  def valid_mobile?(value)
+    if self.contact_information.present?
+      self.contact_information.cell_phone.to_s == value || (self.contact_information.country_code_phone + self.contact_information.cell_phone.to_s) == value
+    else
+      false
     end
   end
 

@@ -9,9 +9,9 @@ namespace :app do
 
   desc 'Add users ids'
   task users_id: :environment do
-    User.where(:unique_id => nil).all.each do |user|
-      if user.unique_id.nil?
-        user.set_random_unique_id!
+    User.where(:membership_id => nil).all.each do |user|
+      if user.membership_id.nil?
+        user.set_random_membership_id!
         user.save!
       end
     end

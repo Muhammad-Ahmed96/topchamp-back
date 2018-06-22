@@ -14,6 +14,10 @@ class EventBracketSkill < ApplicationRecord
   validates :highest_skill, uniqueness: { scope: :event_bracket_age_id }, :if => lambda{ |object| object.event_bracket_age_id.present? }
 
 
+  def available_for_enroll
+    count  = EventEnroll.where(:event_bracket_skill_id => self.id).count
+    self.quantity > count
+  end
 
   def sync_bracket_age!(data)
     if data.present?
@@ -73,6 +77,9 @@ class EventBracketSkill < ApplicationRecord
     end
     property :quantity do
       key :type, :number
+    end
+    property :available_for_enroll do
+      key :type, :boolean
     end
     property :bracket_ages do
       key :type, :array

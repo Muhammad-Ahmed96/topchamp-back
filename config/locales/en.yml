@@ -71,7 +71,9 @@ en:
   deleted_success: "%{model} deleted successfully."
   activated_success: "%{model} activated successfully."
   inactivated_success: "%{model} inactivated  successfully."
+  mail_send: "%{model} send."
   pundit:
+     nil_class: 'nil class'
      default: 'You cannot perform this action.'
      user_policy:
        update?: 'You cannot edit this user'
@@ -129,6 +131,36 @@ en:
            create?: 'You cannot create agenda type'
            show?: 'You cannot show this agenda type'
            destroy?: 'You cannot delete this agenda type'
+     event_policy:
+           update?: 'You cannot edit this event'
+           index?: 'You cannot view event'
+           create?: 'You cannot create event'
+           show?: 'You cannot show this event'
+           destroy?: 'You cannot delete this event'
+           activate?: 'You cannot activate this event'
+           inactive?: 'You cannot inactive this event'
+           create_venue?: 'You cannot edit this event'
+           venue?: 'You cannot edit this event'
+           payment_information?: 'You cannot edit this event'
+           payment_method?: 'You cannot edit this event'
+           discounts?: 'You cannot edit this event'
+           import_discount_personalizeds?: 'You cannot edit this event'
+           tax?: 'You cannot edit this event'
+           refund_policy?: 'You cannot edit this event'
+           service_fee?: 'You cannot edit this event'
+           registration_rule?: 'You cannot edit this event'
+           details?: 'You cannot edit this event'
+           coming_soon?: 'You cannot view events'
+           user_cancel?: 'You cannot cancel registration'
+           change_attendees?: 'You cannot change registration'
+     sport_regulator_policy:
+            update?: 'You cannot edit this sport regulator'
+            index?: 'You cannot view sport regulators'
+            create?: 'You cannot create sport regulator'
+            show?: 'You cannot show this sport regulator'
+            destroy?: 'You cannot delete this sport regulator'
+            activate?: 'You cannot activate this sport regulator'
+            inactive?: 'You cannot inactive this sport regulator'
   confirmations:
       invalid_pin: "Invalid PIN code, please verify."
       not_confirm: "Unable to confirm."
@@ -158,5 +190,21 @@ en:
       age_skill: "Age/skill"
       Skill: "Skill"
       skill_age: "Skill/Age"
+    invitation_tatus:
+      pending_invitation: "Pending Invitation"
+      role: "Role"
   reset: "Reset Password"
   unable_activate: "Unable to activate"
+  to: "to"
+  not_permitted: "not permitted"
+  success: "success"
+  activerecord:
+    attributes:
+      user:
+        current_password: "Password"
+    errors:
+      models:
+        user:
+          attributes:
+            current_password:
+              invalid: "Invalid password. Please verify your information."
