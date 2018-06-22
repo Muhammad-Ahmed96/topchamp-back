@@ -20,12 +20,22 @@ class Event < ApplicationRecord
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
+  has_many :enrolls, class_name: 'EventEnroll'
   has_one :registration_rule, class_name: 'EventRegistrationRule'
-  has_one :rule, class_name: 'EventRule'
+  has_many :agendas, class_name:'EventAgenda'
+  #has_one :rule, class_name: 'EventRule'
+  belongs_to :sport_regulator, optional: true
+  belongs_to :elimination_format, optional: true
 
   has_many :bracket_ages, class_name: "EventBracketAge"
   has_many :bracket_skills, class_name: "EventBracketSkill"
 
+
+  belongs_to :scoring_option_match_1, foreign_key:"scoring_option_match_1_id" , class_name: "ScoringOption", optional: true
+  belongs_to :scoring_option_match_2, foreign_key:"scoring_option_match_2_id" , class_name: "ScoringOption", optional: true
+
+
+  validates :bracket_by, inclusion: {in: Bracket.collection.keys.map(&:to_s)}, :allow_nil => true
   accepts_nested_attributes_for :discount_generals
   accepts_nested_attributes_for :discount_personalizeds
 
@@ -47,6 +57,7 @@ class Event < ApplicationRecord
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :in_visibility, lambda {|data| where visibility: data if data.present?}
   scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
 
@@ -57,6 +68,9 @@ class Event < ApplicationRecord
 
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
+
+  scope :coming_soon, -> { where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is null')}
+  scope :upcoming, -> { where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}
 
   def sync_discount_generals!(data)
     if data.present?
@@ -102,6 +116,31 @@ class Event < ApplicationRecord
       }
       unless deleteIds.nil?
         self.discount_personalizeds.where.not(id: deleteIds).destroy_all
+      end
+    end
+  end
+
+
+  def sync_agendas!(data)
+    if data.present?
+      deleteIds = []
+      event_agenda = nil
+      data.each {|agenda|
+        if agenda[:id].present?
+          event_agenda = self.agendas.where(id: agenda[:id]).first
+          if event_agenda.present?
+            event_agenda.update! agenda
+          else
+            agenda[:id] = nil
+            event_agenda = self.agendas.create! agenda
+          end
+        else
+          event_agenda = self.agendas.create! agenda
+        end
+        deleteIds << event_agenda.id
+      }
+      unless deleteIds.nil?
+        self.agendas.where.not(id: deleteIds).destroy_all
       end
     end
   end
@@ -273,6 +312,35 @@ class Event < ApplicationRecord
     response = http.request(request)
   end
 
+
+  def enroll_status(age, skill)
+    status = nil
+    # if my_enroll.nil?
+    if age.present? && skill.present?
+      if skill.event_bracket_age_id.equal?(age.id)
+        if skill.available_for_enroll
+          status = :enroll
+        end
+      elsif age.event_bracket_skill_id.equal?(skill.id)
+        if age.available_for_enroll
+          status = :enroll
+        end
+      end
+    elsif age.present?
+      if age.available_for_enroll
+        status = :enroll
+      end
+    elsif skill.present?
+      if skill.available_for_enroll
+        status = :enroll
+      end
+    elsif my_enroll.nil?
+      status = :wait_list
+    end
+    #end
+    status
+  end
+
   swagger_schema :Event do
     property :id do
       key :type, :integer
@@ -386,6 +454,73 @@ class Event < ApplicationRecord
         key :'$ref', :EventBracketSkill
       end
     end
+    property :sport_regulator_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :elimination_format_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :bracket_by do
+      key :type, :string
+    end
+    property :scoring_option_match_1_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :scoring_option_match_2_id do
+      key :type, :integer
+      key :format, :int64
+    end
+
+    property :sport_regulator do
+      key :type, :array
+      items do
+        key :'$ref', :SportRegulator
+      end
+    end
+    property :elimination_format do
+      key :type, :array
+      items do
+        key :'$ref', :EliminationFormat
+      end
+    end
+    property :scoring_option_match_1 do
+      key :type, :array
+      items do
+        key :'$ref', :ScoringOption
+      end
+    end
+    property :scoring_option_match_1 do
+      key :type, :array
+      items do
+        key :'$ref', :ScoringOption
+      end
+    end
+
+    property :awards_for do
+      key :type, :string
+    end
+    property :awards_through do
+      key :type, :string
+    end
+    property :awards_plus do
+      key :type, :string
+    end
+    property :agendas do
+      key :type, :array
+      items do
+        key :'$ref', :EventAgenda
+      end
+    end
+
+    property :enrolls do
+      key :type, :array
+      items do
+        key :'$ref', :EventEnroll
+      end
+    end
   end
   swagger_schema :EventInput do
     key :required, [:event_type_id, :title, :description]
@@ -464,7 +599,7 @@ class Event < ApplicationRecord
   end
 
   def valid_to_activate?
-    self.title.present?
+    self.title.present? && self.start_date.present?
   end
   private
 

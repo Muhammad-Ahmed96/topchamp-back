@@ -11,15 +11,15 @@ class Venue < ApplicationRecord
 
   validates :name, length: {maximum: 100}, presence: true
   validates :abbreviation, length: {maximum: 50}, :allow_nil => true
-  validates :country_code, presence: true
-  validates :phone_number, presence: true, numericality: {only_integer: true}, length: {is: 10}
+  #validates :country_code, presence: true
+  validates :phone_number, numericality: {only_integer: true}, length: {is: 10}, :allow_nil => true
   #validates :sports, presence: true
 
-  validates :description, length: {maximum: 1000}
+  validates :description, length: {maximum: 1000},  :allow_nil => true
 
-  validates :address_line_1, presence: true
+  #validates :address_line_1, presence: true
   #validates :address_line_2, presence: true
-  validates :postal_code, presence: true
+  #validates :postal_code, presence: true
 
 
  # validates :availability_date_start, presence: true

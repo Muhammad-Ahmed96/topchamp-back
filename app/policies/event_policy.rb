@@ -73,6 +73,29 @@ class EventPolicy < ApplicationPolicy
   def details?
     user.sysadmin? || user.agent? || user.director?
   end
+
+  def agendas?
+    user.sysadmin? || user.agent? || user.director?
+  end
+
+  def coming_soon?
+    true
+  end
+
+  def upcoming?
+    true
+  end
+
+  def categories?
+    true
+  end
+
+  def user_cancel?
+    record.registration_rule.allow_players_cancel
+  end
+  def change_attendees?
+    record.registration_rule.allow_attendees_change
+  end
   class Scope < Scope
     def resolve
       if user.sysadmin? || user.agent?  || user.member?

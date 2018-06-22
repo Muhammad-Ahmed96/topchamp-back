@@ -1,14 +1,14 @@
 class EventBracketAge < ApplicationRecord
   include Swagger::Blocks
-  validates_presence_of :oldest_age, :youngest_age
-  validates :youngest_age, :inclusion => 8..100, numericality:{less_than_or_equal_to: :oldest_age}
-  validates :oldest_age, :inclusion => 8..100, numericality:{greater_than_or_equal_to: :youngest_age}
+  validates_presence_of :age
+  validates :age, :inclusion => 8..100
+ # validates :oldest_age, :inclusion => 8..100, numericality:{greater_than_or_equal_to: :age}
 
-  validates :youngest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
-  validates :oldest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
+  validates :age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
+  #validates :oldest_age, uniqueness: { scope: :event_id }, :if => lambda{ |object| object.event_id.present? }
 
-  validates :youngest_age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
-  validates :oldest_age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
+  validates :age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
+  #validates :oldest_age, uniqueness: { scope: :event_bracket_skill_id }, :if => lambda{ |object| object.event_bracket_skill_id.present? }
 
   validates :quantity,  numericality: { only_integer: true }, :allow_nil => true
   has_many :bracket_skills, class_name: "EventBracketSkill", :dependent => :delete_all
@@ -51,6 +51,16 @@ class EventBracketAge < ApplicationRecord
     end
   end
 
+
+  def available_for_enroll
+    count  = EventEnroll.where(:event_bracket_age_id => self.id).count
+    self.quantity > count
+  end
+
+  def contains_skill?(id)
+    self.event_bracket_skill_id.where(:event_bracket_age_id => id).count > 0
+  end
+
   swagger_schema :EventBracketAge do
     property :id do
       key :type, :integer
@@ -64,14 +74,14 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :youngest_age do
-      key :type, :number
-    end
-    property :oldest_age do
+    property :age do
       key :type, :number
     end
     property :quantity do
       key :type, :number
+    end
+    property :available_for_enroll do
+      key :type, :boolean
     end
     property :bracket_skills do
       key :type, :array
@@ -86,10 +96,7 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :youngest_age do
-      key :type, :number
-    end
-    property :oldest_age do
+    property :age do
       key :type, :number
     end
     property :quantity do
@@ -108,10 +115,7 @@ class EventBracketAge < ApplicationRecord
       key :type, :integer
       key :format, :integer
     end
-    property :youngest_age do
-      key :type, :number
-    end
-    property :oldest_age do
+    property :age do
       key :type, :number
     end
     property :quantity do

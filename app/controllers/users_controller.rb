@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :current_enroll]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create]
 # Update password
@@ -150,7 +150,7 @@ class UsersController < ApplicationController
     birth_date = params[:birth_date]
     column_contact_information = nil
     column_sports = nil
-    if column.to_s == "state"  || column.to_s == "city"
+    if column.to_s == "state" || column.to_s == "city"
       column_contact_information = column
       column = nil
     end
@@ -639,12 +639,53 @@ class UsersController < ApplicationController
       end
     end
   end
+
   def inactive
     authorize User
     @user.status = :Inactive
     @user.tokens = nil
     @user.save!(:validate => false)
     json_response_success(t("inactivated_success", model: User.model_name.human), true)
+  end
+
+  swagger_path '/users/current_enrolls' do
+    operation :get do
+      key :summary, 'Enrolls of user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersCurrentEnroll'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      response 200 do
+        key :name, :data
+        key :description, 'enrolls'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :Event
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def current_enrolls
+    ids = []
+    if @resource.enrolls.present?
+      @resource.enrolls.each {|enroll|
+        ids << enroll.event.id
+      }
+    end
+    events = Event.where(:id => ids).all
+    json_response_serializer_collection(events, SingleEventSerializer)
   end
 
   private
@@ -663,7 +704,7 @@ class UsersController < ApplicationController
   def contact_information_params
     # whitelist params
     params.require(:contact_information).permit(:cell_phone, :country_code_phone, :alternative_email, :address_line_1, :address_line_2,
-                                                :postal_code, :state, :city,:country_code_work_phone , :work_phone, :emergency_contact_full_name,
+                                                :postal_code, :state, :city, :country_code_work_phone, :work_phone, :emergency_contact_full_name,
                                                 :emergency_contact_country_code_phone, :emergency_contact_phone, :is_receive_text)
   end
 

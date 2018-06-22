@@ -4,6 +4,9 @@ Rails.application.routes.draw do
                                                                registrations: 'application_registrations'}
   scope :api, defaults: {format: :json} do
     resources :users, only: [:index, :create, :show, :update, :destroy] do
+      collection do
+        get :current_enrolls
+      end
       member do
         put :activate
         put :inactive
@@ -34,12 +37,17 @@ Rails.application.routes.draw do
     end
     resources :agenda_types, only: [:index]
     resources :regions, only: [:index]
+    resources :invitation_status, only: [:index]
     resources :languages, only: [:index]
     get 'check_reset_token/:reset_password_token', to: 'reset_token#check_reset'
     resources :application_confirmations, only: [:create]
     post 'application_confirmations/resend_pin', to: 'application_confirmations#resend_pin'
 
     resources :events, only: [:index, :create, :show, :update, :destroy] do
+      collection do
+        get :coming_soon
+        get :upcoming
+      end
       member do
         put :create_venue
         put :venue
@@ -54,6 +62,14 @@ Rails.application.routes.draw do
         put :service_fee
         put :registration_rule
         put :details
+        put :agendas
+        get :categories
+      end
+      resources :event_enrolls,only: [:create, :index], :path => :enrolls do
+        collection do
+          post :user_cancel
+          post :change_attendees
+        end
       end
     end
     get 'events_validate_url', to: 'events#validate_url'
@@ -63,6 +79,19 @@ Rails.application.routes.draw do
     resources :brackets, only: [:index]
     resources :scoring_options, only: [:index]
     resources :skill_levels, only: [:index]
+    resources :sport_regulators, only: [:index]
+
+    resources :invitations, only: [:index, :show, :update, :destroy] do
+      collection do
+        post :event
+        post :date
+        post :sing_up
+      end
+      member do
+        post :resend_mail
+        post :enroll
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]
