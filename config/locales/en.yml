@@ -197,6 +197,7 @@ en:
   unable_activate: "Unable to activate"
   to: "to"
   not_permitted: "not permitted"
+  insufficient_space: "insufficient space"
   success: "success"
   activerecord:
     attributes:
