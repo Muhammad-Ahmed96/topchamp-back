@@ -323,6 +323,34 @@ class InvitationsController < ApplicationController
     json_response_success(t("edited_success", model: Invitation.model_name.human), true)
   end
 
+  swagger_path '/invitations/download_template.xlsx' do
+    operation :get do
+      key :summary, 'Invitations download template'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsDownloadTemplate'
+      key :produces, ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',]
+      key :tags, ['invitations']
+      response 200 do
+        key :description, 'template'
+        key :type, 'file'
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def download_template
+    send_file("#{Rails.root}/app/assets/template/invitations_template.xlsx",
+              filename: "invitations_template.xlsx",
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  end
+
   private
 
   def save(type)
