@@ -723,10 +723,6 @@ class EventsController < ApplicationController
       end
     end
   end
-<<<<<<< HEAD
-=======
-
->>>>>>> 943c83773a08b1c5d307f5e60c093132f22179dd
   def update
     authorize Event
     if !sports_params[:sports].nil?
@@ -1445,10 +1441,6 @@ class EventsController < ApplicationController
       end
     end
   end
-<<<<<<< HEAD
-=======
-
->>>>>>> 943c83773a08b1c5d307f5e60c093132f22179dd
   def registration_rule
     authorize Event
     if registration_rule_params.present?
@@ -1562,10 +1554,6 @@ class EventsController < ApplicationController
       end
     end
   end
-<<<<<<< HEAD
-=======
-
->>>>>>> 943c83773a08b1c5d307f5e60c093132f22179dd
   def details
     authorize Event
     unless categories_params[:categories].nil?
