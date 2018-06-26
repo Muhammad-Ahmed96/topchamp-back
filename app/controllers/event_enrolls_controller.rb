@@ -84,6 +84,12 @@ class EventEnrollsController < ApplicationController
           data = data.merge(:status => :wait_list)
         end
 
+=begin
+        if data[:status].equal? :wait_list
+          return response_no_space_error
+        end
+=end
+
         #Save data
         if my_enroll.present?
           my_enroll.update! data
@@ -184,5 +190,9 @@ class EventEnrollsController < ApplicationController
 
   def set_resource
     @event = Event.find(params[:event_id])
+  end
+
+  def response_no_space_error
+    json_response_error([t("insufficient_space")], 422)
   end
 end

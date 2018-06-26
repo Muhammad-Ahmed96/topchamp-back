@@ -6,11 +6,11 @@ class VenuePolicy < ApplicationPolicy
   end
 
   def update?
-    user.sysadmin? || user.agent? || user.director?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def create?
-    user.sysadmin? || user.agent? || user.director?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
 
@@ -19,15 +19,15 @@ class VenuePolicy < ApplicationPolicy
   end
 
   def destroy?
-    user.sysadmin? || user.agent? || user.director?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def activate?
-    user.sysadmin? || user.agent? || user.director?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
   def inactive?
-    user.sysadmin? || user.agent? || user.director?
+    user.sysadmin? || user.agent? || user.director? || user.member?
   end
   class Scope < Scope
     def resolve
