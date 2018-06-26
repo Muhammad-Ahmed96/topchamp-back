@@ -98,9 +98,9 @@ class EventPolicy < ApplicationPolicy
   end
   class Scope < Scope
     def resolve
-      if user.sysadmin? || user.agent?  || user.member?
+      if user.sysadmin? || user.agent?
         scope.all
-      elsif user.director?
+      elsif user.director? || user.member?
         scope.where(creator_user_id: user.id).or(scope.where(invited_director_id: user.id))
       else
         scope
