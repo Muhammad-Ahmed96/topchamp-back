@@ -83,6 +83,7 @@ en:
        destroy?: 'You cannot delete this user'
        activate?: 'You cannot activate this user'
        inactive?: 'You cannot inactive this user'
+       profile?: 'You cannot edit this user'
      event_type_policy:
             index?: 'You cannot view event types'
      venue_policy:
@@ -197,6 +198,7 @@ en:
   unable_activate: "Unable to activate"
   to: "to"
   not_permitted: "not permitted"
+  insufficient_space: "insufficient space"
   success: "success"
   activerecord:
     attributes:
