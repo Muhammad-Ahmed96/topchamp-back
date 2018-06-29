@@ -96,7 +96,7 @@ class ParticipantsController < ApplicationController
   end
 
   def index
-    column = params[:column].nil? ? 'title' : params[:column]
+    column = params[:column].nil? ? 'event_title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     first_name = params[:first_name]
