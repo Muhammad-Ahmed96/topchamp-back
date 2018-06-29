@@ -60,28 +60,28 @@ class EventEnrollsController < ApplicationController
         if age.present? && skill.present?
           if skill.event_bracket_age_id == age.id
             if skill.available_for_enroll
-              data = data.merge(:status => :enroll)
+              data = data.merge(:enroll_status => :enroll)
             end
           elsif age.event_bracket_skill_id == skill.id
             if age.available_for_enroll
-              data = data.merge(:status => :enroll)
+              data = data.merge(:enroll_status => :enroll)
             end
           end
         elsif age.present?
           if age.available_for_enroll
-            data = data.merge(:status => :enroll)
+            data = data.merge(:enroll_status => :enroll)
           end
         elsif skill.present?
           if skill.available_for_enroll
-            data = data.merge(:status => :enroll)
+            data = data.merge(:enroll_status => :enroll)
           end
         elsif my_enroll.nil?
-          data = data.merge(:status => :wait_list)
+          data = data.merge(:enroll_status => :wait_list)
         end
         #end
 
-        if my_enroll.nil? and data[:status].nil?
-          data = data.merge(:status => :wait_list)
+        if my_enroll.nil? and data[:enroll_status].nil?
+          data = data.merge(:enroll_status => :wait_list)
         end
 
 =begin

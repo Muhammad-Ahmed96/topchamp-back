@@ -53,7 +53,7 @@ class EventBracketAge < ApplicationRecord
 
 
   def available_for_enroll
-    count  = EventEnroll.where(:event_bracket_age_id => self.id).count
+    count  = EventEnroll.where(:event_bracket_age_id => self.id).where(:enroll_status => :enroll).count
     self.quantity > count
   end
 

@@ -307,10 +307,12 @@ class InvitationsController < ApplicationController
   end
 
   def enroll
-    if !@invitation.status == "role"
+    logger::info "jojooj"
+    logger::info @invitation.status.to_s
+    if @invitation.status != "role"
       event = @invitation.event
       my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
-      data = {:user_id => @invitation.user_id, status: :enroll}
+      data = {:user_id => @invitation.user_id, enroll_status: :enroll}
       #Save data
       if my_enroll.present?
         my_enroll.update! data

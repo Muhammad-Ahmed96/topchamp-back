@@ -22,7 +22,7 @@ class Event < ApplicationRecord
   has_one :tax, class_name: 'EventTax'
   has_many :enrolls, class_name: 'EventEnroll'
   has_one :registration_rule, class_name: 'EventRegistrationRule'
-  has_many :agendas, class_name:'EventAgenda'
+  has_many :agendas, class_name: 'EventAgenda'
   #has_one :rule, class_name: 'EventRule'
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
@@ -31,8 +31,8 @@ class Event < ApplicationRecord
   has_many :bracket_skills, class_name: "EventBracketSkill"
 
 
-  belongs_to :scoring_option_match_1, foreign_key:"scoring_option_match_1_id" , class_name: "ScoringOption", optional: true
-  belongs_to :scoring_option_match_2, foreign_key:"scoring_option_match_2_id" , class_name: "ScoringOption", optional: true
+  belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
+  belongs_to :scoring_option_match_2, foreign_key: "scoring_option_match_2_id", class_name: "ScoringOption", optional: true
 
 
   validates :bracket_by, inclusion: {in: Bracket.collection.keys.map(&:to_s)}, :allow_nil => true
@@ -69,8 +69,8 @@ class Event < ApplicationRecord
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
 
-  scope :coming_soon, -> { where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is null')}
-  scope :upcoming, -> { where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}
+  scope :coming_soon, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is null')}
+  scope :upcoming, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}
 
   def sync_discount_generals!(data)
     if data.present?
@@ -257,7 +257,7 @@ class Event < ApplicationRecord
       webmaster.key = "AIzaSyBAMhGfp9HfYai-3VKQ2mBoJi9lr9mKC8c"
       scope = 'https://www.googleapis.com/auth/webmasters'
       file = File.open(File.join(Rails.root, 'config', 'TopChamp-21f4c2e60b8f.json'))
-      authorizer = Google::Auth::ServiceAccountCredentials.make_creds({json_key_io:file, scope: scope})
+      authorizer = Google::Auth::ServiceAccountCredentials.make_creds({json_key_io: file, scope: scope})
       webmaster.authorization = authorizer
       response = webmaster.add_site(self.event_url)
     rescue Google::Apis::ClientError => e
@@ -289,7 +289,7 @@ class Event < ApplicationRecord
       webmaster.key = "AIzaSyBAMhGfp9HfYai-3VKQ2mBoJi9lr9mKC8c"
       scope = 'https://www.googleapis.com/auth/webmasters'
       file = File.open(File.join(Rails.root, 'config', 'TopChamp-21f4c2e60b8f.json'))
-      authorizer = Google::Auth::ServiceAccountCredentials.make_creds({json_key_io:file, scope: scope})
+      authorizer = Google::Auth::ServiceAccountCredentials.make_creds({json_key_io: file, scope: scope})
       webmaster.authorization = authorizer
       response = webmaster.delete_site(self.event_url)
     rescue Google::Apis::ClientError => e
@@ -592,6 +592,68 @@ class Event < ApplicationRecord
   end
 
 
+  swagger_schema :EventSingle do
+    property :id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :venue_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :event_type_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :title do
+      key :type, :string
+    end
+    property :icon do
+      key :type, :string
+    end
+    property :description do
+      key :type, :string
+    end
+    property :start_date do
+      key :type, :date
+    end
+    property :end_date do
+      key :type, :date
+    end
+    property :visibility do
+      key :type, :string
+    end
+    property :requires_access_code do
+      key :type, :boolean
+    end
+    property :event_url do
+      key :type, :string
+    end
+    property :is_event_sanctioned do
+      key :type, :boolean
+    end
+    property :sanctions do
+      key :type, :string
+    end
+    property :organization_name do
+      key :type, :string
+    end
+    property :organization_url do
+      key :type, :string
+    end
+    property :is_determine_later_venue do
+      key :type, :boolean
+    end
+
+    property :access_code do
+      key :type, :string
+    end
+    property :status do
+      key :type, :string
+    end
+  end
+
+
   def save_creator!
     if Current.user
       self.creator_user_id = Current.user.id
@@ -601,6 +663,7 @@ class Event < ApplicationRecord
   def valid_to_activate?
     self.title.present? && self.start_date.present?
   end
+
   private
 
   def url_valid?(url)
