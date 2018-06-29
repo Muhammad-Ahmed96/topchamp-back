@@ -19,10 +19,14 @@ class Participant < User
   def status
     self.enroll.status
   end
-
+  def user_id
+    self.enroll.user_id
+  end
   def id
     self.event_enroll_id
   end
+
+
 
 
   swagger_schema :Participant do
