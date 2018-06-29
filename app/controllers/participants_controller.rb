@@ -108,8 +108,8 @@ class ParticipantsController < ApplicationController
     attendee_type_id = params[:attendee_type_id]
 
     event_title_column = nil
-    if column.to_s == "title"
-      event_title_column = column
+    if column.to_s == "event_title"
+      event_title_column = "title"
       column = nil
     end
     attendee_type_column = nil
