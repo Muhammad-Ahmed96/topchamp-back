@@ -61,6 +61,12 @@ class ParticipantsController < ApplicationController
         key :type, :string
       end
       parameter do
+        key :name, :event_title
+        key :in, :query
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :attendee_type_id
         key :in, :query
         key :required, false
@@ -88,8 +94,9 @@ class ParticipantsController < ApplicationController
       end
     end
   end
+
   def index
-    column = params[:column].nil? ? 'title' : params[:column]
+    column = params[:column].nil? ? 'event_title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     first_name = params[:first_name]
@@ -97,11 +104,12 @@ class ParticipantsController < ApplicationController
     email = params[:email]
     status = params[:status]
     event_id = params[:event_id]
+    event_title = params[:event_title]
     attendee_type_id = params[:attendee_type_id]
 
     event_title_column = nil
-    if column.to_s == "title"
-      event_title_column = column
+    if column.to_s == "event_title"
+      event_title_column = "title"
       column = nil
     end
     attendee_type_column = nil
@@ -119,6 +127,7 @@ class ParticipantsController < ApplicationController
     participants = Participant.my_order(column, direction).first_name_like(first_name).last_name_like(last_name).email_like(email)
                        .status_in(status).event_in(event_id).attendee_type_in(attendee_type_id).event_order(event_title_column, direction)
                        .attendee_type_order(attendee_type_column, direction).status_order(status_column, direction)
+                       .event_like(event_title)
     if paginate.to_s == "0"
       json_response_serializer_collection(participants.all, ParticipantSerializer)
     else
@@ -191,12 +200,14 @@ class ParticipantsController < ApplicationController
       end
     end
   end
+
   def update_attendee_types
     if attendee_types_params[:attendee_types].present? and attendee_types_params[:attendee_types].kind_of?(Array)
       @participant.enroll.attendee_type_ids = attendee_types_params[:attendee_types]
     end
     json_response_serializer(@participant, ParticipantSerializer)
   end
+
   swagger_path '/participants/:id/activate' do
     operation :put do
       key :summary, 'Activate participant'
@@ -221,12 +232,14 @@ class ParticipantsController < ApplicationController
       end
     end
   end
+
   def activate
     enroll = @participant.enroll
     enroll.status = :Active
     enroll.save!(:validate => false)
     json_response_success(t("activated_success", model: Participant.model_name.human), true)
   end
+
   swagger_path '/participants/:id/inactive' do
     operation :put do
       key :summary, 'Inactive participant'
@@ -251,6 +264,7 @@ class ParticipantsController < ApplicationController
       end
     end
   end
+
   def inactive
     enroll = @participant.enroll
     enroll.status = :Inactive
@@ -259,9 +273,11 @@ class ParticipantsController < ApplicationController
   end
 
   private
+
   def attendee_types_params
     params.permit(attendee_types: [])
   end
+
   def set_resource
     @participant = Participant.joins(:enrolls).merge(EventEnroll.where id: params[:id]).first!
   end

@@ -7,6 +7,7 @@ class Participant < User
   has_one :event, through: :enroll
 
   scope :event_in, lambda {|search| joins(enrolls: [:event]).merge(Event.where id: search) if search.present?}
+  scope :event_like, lambda {|search| joins(enrolls: [:event]).merge(Event.where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :status_in, lambda {|search| joins(:enrolls).merge(EventEnroll.where status: search) if search.present?}
   scope :attendee_type_in, lambda {|search| joins(enrolls: [:attendee_types]).merge(AttendeeType.where id: search) if search.present?}
 
@@ -18,10 +19,14 @@ class Participant < User
   def status
     self.enroll.status
   end
-
+  def user_id
+    self.enroll.user_id
+  end
   def id
     self.event_enroll_id
   end
+
+
 
 
   swagger_schema :Participant do
