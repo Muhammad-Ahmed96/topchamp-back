@@ -1,5 +1,5 @@
 class EventEnrollSerializer < ActiveModel::Serializer
-  attributes :id, :user_id, :event_id, :category_id, :event_bracket_age_id, :event_bracket_skill_id, :status
+  attributes :id, :user_id, :event_id, :category_id, :event_bracket_age_id, :event_bracket_skill_id, :status, :enroll_status
 
   belongs_to :user, serializer:UserSerializer
   belongs_to :event, serializer:SingleEventSerializer

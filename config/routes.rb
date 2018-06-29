@@ -93,6 +93,13 @@ Rails.application.routes.draw do
         post :enroll
       end
     end
+    resources :participants, only: [:index, :show] do
+      member do
+        put :update_attendee_types
+        put :activate
+        put :inactive
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

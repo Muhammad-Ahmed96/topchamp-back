@@ -280,6 +280,7 @@ class InvitationsController < ApplicationController
     Invitation.import_invitations_xls!(import_params[:file], import_params[:event_id], :event)
     json_response_serializer(@event, EventSerializer)
   end
+
   swagger_path '/invitations/:id/enroll' do
     operation :post do
       key :summary, 'Invitations enroll'
@@ -304,11 +305,14 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def enroll
-    if !@invitation.status == "role"
+    logger::info "jojooj"
+    logger::info @invitation.status.to_s
+    if @invitation.status != "role"
       event = @invitation.event
       my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
-      data = {:user_id => @invitation.user_id, status: :enroll}
+      data = {:user_id => @invitation.user_id, enroll_status: :enroll}
       #Save data
       if my_enroll.present?
         my_enroll.update! data
@@ -345,6 +349,7 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def download_template
     send_file("#{Rails.root}/app/assets/template/invitations_template.xlsx",
               filename: "invitations_template.xlsx",
@@ -355,8 +360,13 @@ class InvitationsController < ApplicationController
 
   def save(type)
     @invitation = Invitation.get_invitation(resource_params, @resource.id, type)
-    @invitation.send_mail
-    json_response_success(t("created_success", model: Invitation.model_name.human), true)
+    event = @invitation.event
+    if event.registration_rule.allow_group_registrations or (event.present? and event.creator_user_id == @resource.id)
+      @invitation.send_mail
+      json_response_success(t("created_success", model: Invitation.model_name.human), true)
+    else
+      return render_not_permit_error
+    end
   end
 
   def save_array(type)
@@ -365,7 +375,14 @@ class InvitationsController < ApplicationController
       array_params[:invitations].each {|invitation|
         @invitations << Invitation.get_invitation(invitation, @resource.id, type)
       }
-      @invitations.each {|invitation| invitation.send_mail}
+      @invitations.each {|invitation|
+        event = invitation.event
+        if event.registration_rule.allow_group_registrations or (event.present? and event.creator_user_id == @resource.id)
+          invitation.send_mail
+        else
+          return render_not_permit_error
+        end
+      }
       json_response_success(t("created_success", model: Invitation.model_name.human), true)
     else
       json_response_success("no data", 200)
@@ -391,5 +408,9 @@ class InvitationsController < ApplicationController
 
   def is_array_save?
     array_params[:invitations].present? and array_params[:invitations].kind_of?(Array)
+  end
+
+  def render_not_permit_error
+    json_response_error([t("not_permitted")], 422)
   end
 end
