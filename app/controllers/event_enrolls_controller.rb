@@ -51,6 +51,12 @@ class EventEnrollsController < ApplicationController
       enroll_collection_params.each {|enroll|
         data = enroll.merge(:user_id => @resource.id)
         my_enroll = @event.enrolls.where(:user_id => data[:user_id]).where(:category_id => data[:category_id]).first
+        player = Player.where(:user_id =>data[:user_id]).where(:event_id => @event.id).first
+
+        if player.nil?
+          player = Player.create!(:user_id => data[:user_id], :event_id => @event.id, :status => :Active )
+        end
+
 
         #Get status
         age = EventBracketAge.where(:event_id => @event.id).where(:id => data[:event_bracket_age_id]).first
@@ -98,6 +104,8 @@ class EventEnrollsController < ApplicationController
           my_enroll = @event.enrolls.create!(data)
           my_enroll.attendee_type_ids = 7
         end
+
+        player.event_enroll_ids = [my_enroll.id]
 
       }
     else

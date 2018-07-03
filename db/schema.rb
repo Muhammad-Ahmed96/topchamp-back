@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_28_224433) do
+ActiveRecord::Schema.define(version: 2018_07_03_143800) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -181,6 +181,13 @@ ActiveRecord::Schema.define(version: 2018_06_28_224433) do
     t.index ["deleted_at"], name: "index_event_enrolls_on_deleted_at"
   end
 
+  create_table "event_enrolls_players", id: false, force: :cascade do |t|
+    t.bigint "player_id", null: false
+    t.bigint "event_enroll_id", null: false
+    t.index ["event_enroll_id"], name: "index_event_enrolls_players_on_event_enroll_id"
+    t.index ["player_id"], name: "index_event_enrolls_players_on_player_id"
+  end
+
   create_table "event_payment_informations", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "bank_name"
@@ -333,6 +340,15 @@ ActiveRecord::Schema.define(version: 2018_06_28_224433) do
     t.string "primary_physician_phone"
     t.string "dietary_restrictions"
     t.string "allergies"
+  end
+
+  create_table "players", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "event_id"
+    t.float "skill_level"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "regions", force: :cascade do |t|

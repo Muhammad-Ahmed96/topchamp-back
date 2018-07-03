@@ -30,27 +30,27 @@ class Participant < User
 
 
   swagger_schema :Participant do
-    property :id do
-      key :type, :integer
-      key :format, :int64
-    end
-    property :first_name do
-      key :type, :string
-    end
-
-    property :last_name do
-      key :type, :string
-    end
-
-    property :email do
-      key :type, :string
-    end
-    property :status do
-      key :type, :string
-    end
-
-    property :event do
-      key :'$ref', :EventSingle
-    end
+  property :id do
+    key :type, :integer
+    key :format, :int64
   end
+  property :first_name do
+    key :type, :string
+  end
+
+  property :last_name do
+    key :type, :string
+  end
+
+  property :email do
+    key :type, :string
+  end
+  property :status do
+    key :type, :string
+  end
+
+  property :event do
+    key :'$ref', :EventSingle
+  end
+end
 end

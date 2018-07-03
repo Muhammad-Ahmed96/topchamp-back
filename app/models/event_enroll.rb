@@ -7,8 +7,8 @@ class EventEnroll < ApplicationRecord
   belongs_to :participant, :optional => true
   belongs_to :event
   belongs_to :category, :optional => true
-  belongs_to :bracket_skill, :class_name => "EventBracketSkill", :optional => true
-  belongs_to :bracket_age, :class_name => "EventBracketAge", :optional => true
+  belongs_to :bracket_skill, :foreign_key => "event_bracket_skill_id", :class_name => "EventBracketSkill", :optional => true
+  belongs_to :bracket_age, :foreign_key => "event_bracket_age_id",:class_name => "EventBracketAge", :optional => true
 
   validates_presence_of :user_id, :event_id
 

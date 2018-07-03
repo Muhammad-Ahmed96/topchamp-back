@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'players/Index'
   mount_devise_token_auth_for 'User', at: 'api', controllers: {sessions: 'application_sessions',
                                                                passwords: 'application_password',
                                                                registrations: 'application_registrations'}
@@ -99,6 +100,8 @@ Rails.application.routes.draw do
         put :activate
         put :inactive
       end
+    end
+    resources :players, only: [:index] do
     end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
