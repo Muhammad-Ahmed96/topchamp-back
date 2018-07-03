@@ -24,6 +24,13 @@ class SponsorsController < ApplicationController
         key :type, :string
       end
       parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
         key :name, :company_name
         key :in, :query
         key :description, 'Company name to filter'
@@ -98,7 +105,7 @@ class SponsorsController < ApplicationController
     authorize Sponsor
     column = params[:column].nil? ? 'company_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
-
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
     company_name = params[:company_name]
     brand = params[:brand]
     product = params[:product]
@@ -108,9 +115,15 @@ class SponsorsController < ApplicationController
     city = params[:city]
     status = params[:status]
     geography = params[:geography]
-    paginate Sponsor.my_order(column, direction).in_status(status).in_geography(geography).company_name_like(company_name)
+    sponsors =  Sponsor.my_order(column, direction).in_status(status).in_geography(geography).company_name_like(company_name)
                  .brand_like(brand).product_like(product).franchise_brand_like(franchise_brand).business_category_like(business_category)
-                 .state_like(state).city_like(city), per_page: 50, root: :data
+                 .state_like(state).city_like(city)
+
+    if paginate.to_s == "0"
+      json_response_serializer_collection(sponsors.all, Sponsor)
+    else
+      paginate sponsors, per_page: 50, root: :data
+    end
   end
   swagger_path '/sponsors' do
     operation :post do
@@ -502,7 +515,7 @@ class SponsorsController < ApplicationController
 
   def resource_params
     # whitelist params
-    params.permit(:company_name, :logo, :product, :franchise_brand, :business_category, :geography, :description, :contact_name,
+    params.permit(:company_name, :logo, :product, :franchise_brand, :business_category_id, :geography, :description, :contact_name,
                   :country_code, :phone, :email, :address_line_1, :address_line_2, :postal_code, :state, :city, :work_country_code,
                   :work_phone)
   end

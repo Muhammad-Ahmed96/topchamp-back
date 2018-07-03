@@ -377,7 +377,7 @@ class InvitationsController < ApplicationController
       }
       @invitations.each {|invitation|
         event = invitation.event
-        if event.registration_rule.allow_group_registrations or (event.present? and event.creator_user_id == @resource.id)
+        if invitation.invitation_type == "sing_up" or (event.present? and (event.registration_rule.nil? or event.registration_rule.allow_group_registrations) or  event.creator_user_id == @resource.id)
           invitation.send_mail
         else
           return render_not_permit_error

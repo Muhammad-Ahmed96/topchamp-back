@@ -73,8 +73,9 @@ class Event < ApplicationRecord
   scope :upcoming, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}
 
   def sync_discount_generals!(data)
+    deleteIds = []
     if data.present?
-      deleteIds = []
+
       discounts_general = nil
       data.each {|discount|
         if discount[:id].present?
@@ -90,15 +91,13 @@ class Event < ApplicationRecord
         end
         deleteIds << discounts_general.id
       }
-      unless deleteIds.nil?
-        self.discount_generals.where.not(id: deleteIds).destroy_all
-      end
     end
+      self.discount_generals.where.not(id: deleteIds).destroy_all
   end
 
   def sync_discount_personalizeds!(data)
+    deleteIds = []
     if data.present?
-      deleteIds = []
       discount_personalized = nil
       data.each {|discount|
         if discount[:id].present?
@@ -114,10 +113,8 @@ class Event < ApplicationRecord
         end
         deleteIds << discount_personalized.id
       }
-      unless deleteIds.nil?
-        self.discount_personalizeds.where.not(id: deleteIds).destroy_all
-      end
     end
+    self.discount_personalizeds.where.not(id: deleteIds).destroy_all
   end
 
 
@@ -313,31 +310,37 @@ class Event < ApplicationRecord
   end
 
 
-  def enroll_status(age, skill)
-    status = nil
-    # if my_enroll.nil?
-    if age.present? && skill.present?
-      if skill.event_bracket_age_id.equal?(age.id)
+  def enroll_status(enroll, age_id, skill_id)
+    age = self.bracket_ages.where(:id => age_id).first
+    skill = self.bracket_skills.where(:id => skill_id).first
+    status = enroll.present? ? enroll.enroll_status : nil
+    if age.present? && skill.present? && status.nil?
+      if skill.event_bracket_age_id == age.id
         if skill.available_for_enroll
-          status = :enroll
+          status =  :enroll
         end
-      elsif age.event_bracket_skill_id.equal?(skill.id)
+      elsif age.event_bracket_skill_id == skill.id
         if age.available_for_enroll
-          status = :enroll
+          status =  :enroll
         end
       end
     elsif age.present?
       if age.available_for_enroll
-        status = :enroll
+        status =  :enroll
       end
     elsif skill.present?
       if skill.available_for_enroll
-        status = :enroll
+        status =  :enroll
       end
-    elsif my_enroll.nil?
+    elsif enroll.nil?
       status = :wait_list
     end
     #end
+
+    if enroll.nil? and status.nil?
+      status = :wait_list
+    end
+
     status
   end
 
