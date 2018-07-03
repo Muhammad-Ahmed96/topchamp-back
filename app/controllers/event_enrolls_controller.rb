@@ -57,7 +57,9 @@ class EventEnrollsController < ApplicationController
           player = Player.create!(:user_id => data[:user_id], :event_id => @event.id, :status => :Active )
         end
 
-
+        enroll_status = @event.enroll_status(my_enroll, data[:event_bracket_age_id], data[:event_bracket_skill_id])
+        data = data.merge(:enroll_status => enroll_status)
+=begin
         #Get status
         age = EventBracketAge.where(:event_id => @event.id).where(:id => data[:event_bracket_age_id]).first
         skill = EventBracketSkill.where(:event_id => @event.id).where(:id => data[:event_bracket_skill_id]).first
@@ -89,6 +91,7 @@ class EventEnrollsController < ApplicationController
         if my_enroll.nil? and data[:enroll_status].nil?
           data = data.merge(:enroll_status => :wait_list)
         end
+=end
 
 =begin
         if data[:status].equal? :wait_list
@@ -105,7 +108,7 @@ class EventEnrollsController < ApplicationController
           my_enroll.attendee_type_ids = 7
         end
 
-        player.event_enroll_ids = [my_enroll.id]
+        player.enroll_ids = [my_enroll.id]
 
       }
     else

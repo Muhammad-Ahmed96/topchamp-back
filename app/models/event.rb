@@ -310,31 +310,37 @@ class Event < ApplicationRecord
   end
 
 
-  def enroll_status(age, skill)
-    status = nil
-    # if my_enroll.nil?
-    if age.present? && skill.present?
-      if skill.event_bracket_age_id.equal?(age.id)
+  def enroll_status(enroll, age_id, skill_id)
+    age = self.bracket_ages.where(:id => age_id).first
+    skill = self.bracket_skills.where(:id => skill_id).first
+    status = enroll.present? ? enroll.enroll_status : nil
+    if age.present? && skill.present? && status.nil?
+      if skill.event_bracket_age_id == age.id
         if skill.available_for_enroll
-          status = :enroll
+          status =  :enroll
         end
-      elsif age.event_bracket_skill_id.equal?(skill.id)
+      elsif age.event_bracket_skill_id == skill.id
         if age.available_for_enroll
-          status = :enroll
+          status =  :enroll
         end
       end
     elsif age.present?
       if age.available_for_enroll
-        status = :enroll
+        status =  :enroll
       end
     elsif skill.present?
       if skill.available_for_enroll
-        status = :enroll
+        status =  :enroll
       end
-    elsif my_enroll.nil?
+    elsif enroll.nil?
       status = :wait_list
     end
     #end
+
+    if enroll.nil? and status.nil?
+      status = :wait_list
+    end
+
     status
   end
 

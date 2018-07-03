@@ -328,44 +328,9 @@ class PlayersController < ApplicationController
       enroll_collection_params.each {|enroll|
         data = enroll.merge(:user_id => @player.user_id)
         my_enroll = @player.event.enrolls.where(:user_id => data[:user_id]).where(:category_id => data[:category_id]).first
-        #Get status
-        age = EventBracketAge.where(:event_id => @player.event_id).where(:id => data[:event_bracket_age_id]).first
-        skill = EventBracketSkill.where(:event_id => @player.event_id).where(:id => data[:event_bracket_skill_id]).first
 
-        # if my_enroll.nil?
-        if age.present? && skill.present?
-          if skill.event_bracket_age_id == age.id
-            if skill.available_for_enroll
-              data = data.merge(:enroll_status => :enroll)
-            end
-          elsif age.event_bracket_skill_id == skill.id
-            if age.available_for_enroll
-              data = data.merge(:enroll_status => :enroll)
-            end
-          end
-        elsif age.present?
-          if age.available_for_enroll
-            data = data.merge(:enroll_status => :enroll)
-          end
-        elsif skill.present?
-          if skill.available_for_enroll
-            data = data.merge(:enroll_status => :enroll)
-          end
-        elsif my_enroll.nil?
-          data = data.merge(:enroll_status => :wait_list)
-        end
-        #end
-
-        if my_enroll.nil? and data[:enroll_status].nil?
-          data = data.merge(:enroll_status => :wait_list)
-        end
-
-=begin
-        if data[:status].equal? :wait_list
-          return response_no_space_error
-        end
-=end
-
+        enroll_status = @player.event.enroll_status(my_enroll, data[:event_bracket_age_id], data[:event_bracket_skill_id])
+        data = data.merge(:enroll_status => enroll_status)
         #Save data
         if my_enroll.present?
           my_enroll.update! data
@@ -374,9 +339,9 @@ class PlayersController < ApplicationController
           my_enroll = @player.event.enrolls.create!(data)
           my_enroll.attendee_type_ids = 7
         end
-
         enrolls_ids << my_enroll.id
       }
+      @player.enroll_ids = enrolls_ids
       @player.event.enrolls.where.not(id: enrolls_ids).destroy_all
     end
     json_response_success(t("edited_success", model: Player.model_name.human), true)
