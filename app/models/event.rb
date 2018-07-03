@@ -114,7 +114,7 @@ class Event < ApplicationRecord
         deleteIds << discount_personalized.id
       }
     end
-    #self.discount_personalizeds.where.not(id: deleteIds).destroy_all
+    self.discount_personalizeds.where.not(id: deleteIds).destroy_all
   end
 
 
