@@ -73,8 +73,9 @@ class Event < ApplicationRecord
   scope :upcoming, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}
 
   def sync_discount_generals!(data)
+    deleteIds = []
     if data.present?
-      deleteIds = []
+
       discounts_general = nil
       data.each {|discount|
         if discount[:id].present?
@@ -90,15 +91,13 @@ class Event < ApplicationRecord
         end
         deleteIds << discounts_general.id
       }
-      unless deleteIds.nil?
-        self.discount_generals.where.not(id: deleteIds).destroy_all
-      end
     end
+      self.discount_generals.where.not(id: deleteIds).destroy_all
   end
 
   def sync_discount_personalizeds!(data)
+    deleteIds = []
     if data.present?
-      deleteIds = []
       discount_personalized = nil
       data.each {|discount|
         if discount[:id].present?
@@ -114,10 +113,8 @@ class Event < ApplicationRecord
         end
         deleteIds << discount_personalized.id
       }
-      unless deleteIds.nil?
-        self.discount_personalizeds.where.not(id: deleteIds).destroy_all
-      end
     end
+    #self.discount_personalizeds.where.not(id: deleteIds).destroy_all
   end
 
 
