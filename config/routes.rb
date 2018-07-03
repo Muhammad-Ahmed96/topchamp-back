@@ -101,7 +101,11 @@ Rails.application.routes.draw do
         put :inactive
       end
     end
-    resources :players, only: [:index] do
+    resources :players, only: [:index, :create, :update, :show, :destroy] do
+      member do
+        put :activate
+        put :inactive
+      end
     end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
