@@ -5,14 +5,14 @@ class PlayerSerializer < ActiveModel::Serializer
 
   def categories
     categories = []
-    object.event_enrolls.each {|enroll| categories << enroll.category}
+    object.enrolls.each {|enroll| categories << enroll.category}
     categories
   end
   
   def brackets
     brackets = []
-    object.event_enrolls.each {|enroll| brackets << enroll.bracket_skill if enroll.bracket_skill.present?}
-    object.event_enrolls.each {|enroll| brackets << enroll.bracket_age if enroll.bracket_age.present?}
+    object.enrolls.each {|enroll| brackets << enroll.bracket_skill if enroll.bracket_skill.present?}
+    object.enrolls.each {|enroll| brackets << enroll.bracket_age if enroll.bracket_age.present?}
     brackets
   end
 

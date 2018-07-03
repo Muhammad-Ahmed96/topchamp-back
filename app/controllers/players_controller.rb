@@ -188,12 +188,18 @@ class PlayersController < ApplicationController
       column = nil
     end
 
+   skill_level_column = nil
+    if column.to_s == "skill_level"
+      skill_level_column = "raking"
+      column = nil
+    end
+
     players = Player.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
     .email_like(email).category_in(category).bracket_age_in(bracket_age).bracket_skill_in(bracket_skill).skill_level_like(skill_level)
     .status_in(status).event_order(event_title_column, direction).first_name_order(first_name_column, direction)
                   .last_name_order(last_name_column, direction).email_order(email_column, direction).sport_in(sport)
                   .sports_order(sports_column, direction).categories_order(category_column, direction).bracket_age_order(bracket_age_column, direction)
-                  .bracket_skill_order(bracket_skill_column, direction).role_in(role)
+                  .bracket_skill_order(bracket_skill_column, direction).role_in(role).skill_level_order(skill_level_column, direction)
       if paginate.to_s == "0"
       json_response_serializer_collection(players.all, PlayerSerializer)
     else
@@ -201,7 +207,7 @@ class PlayersController < ApplicationController
     end
   end
   swagger_path '/players' do
-    operation :get do
+    operation :post do
       key :summary, 'Create players'
       key :description, 'Players Catalog'
       key :operationId, 'playersCreate'
@@ -248,7 +254,7 @@ class PlayersController < ApplicationController
     json_response_success(t("created_success", model: Player.model_name.human), true)
   end
   swagger_path '/players/:id' do
-    operation :post do
+    operation :get do
       key :summary, 'Show players'
       key :description, 'Players Catalog'
       key :operationId, 'playersShow'

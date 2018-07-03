@@ -107,6 +107,7 @@ Rails.application.routes.draw do
         put :inactive
       end
     end
+    resources :business_categories, only: [:index]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

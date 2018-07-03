@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_03_143800) do
+ActiveRecord::Schema.define(version: 2018_07_03_212457) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -63,6 +63,16 @@ ActiveRecord::Schema.define(version: 2018_07_03_143800) do
     t.string "postal_code"
     t.string "city"
     t.string "state"
+  end
+
+  create_table "business_categories", force: :cascade do |t|
+    t.string "code"
+    t.string "group"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_business_categories_on_deleted_at"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -394,7 +404,6 @@ ActiveRecord::Schema.define(version: 2018_07_03_143800) do
     t.string "brand"
     t.string "product"
     t.string "franchise_brand"
-    t.string "business_category"
     t.string "geography"
     t.text "description"
     t.string "contact_name"
@@ -412,6 +421,7 @@ ActiveRecord::Schema.define(version: 2018_07_03_143800) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.bigint "business_category_id"
     t.index ["deleted_at"], name: "index_sponsors_on_deleted_at"
   end
 
