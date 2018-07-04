@@ -332,19 +332,7 @@ class PlayersController < ApplicationController
     if enroll_collection_params.present?
       enrolls_ids = []
       enroll_collection_params.each {|enroll|
-        data = enroll.merge(:user_id => @player.user_id)
-        my_enroll = @player.event.enrolls.where(:user_id => data[:user_id]).where(:category_id => data[:category_id]).first
-
-        enroll_status = @player.event.enroll_status(my_enroll, data[:event_bracket_age_id], data[:event_bracket_skill_id])
-        data = data.merge(:enroll_status => enroll_status)
-        #Save data
-        if my_enroll.present?
-          my_enroll.update! data
-          #Player attendee
-        else
-          my_enroll = @player.event.enrolls.create!(data)
-          my_enroll.attendee_type_ids = 7
-        end
+        my_enroll = @player.event.add_enroll(@player.user_id, enroll[:category_id], enroll[:event_bracket_age_id], enroll[:event_bracket_skill_id], [7])
         enrolls_ids << my_enroll.id
       }
       @player.enroll_ids = enrolls_ids
