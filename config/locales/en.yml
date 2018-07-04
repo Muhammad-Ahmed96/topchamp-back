@@ -210,3 +210,4 @@ en:
           attributes:
             current_password:
               invalid: "Invalid password. Please verify your information."
+  events_required: "Eventos requeridos"

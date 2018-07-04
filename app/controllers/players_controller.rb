@@ -120,6 +120,7 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def index
     authorize Player
     column = params[:column].nil? ? 'event_title' : params[:column]
@@ -188,24 +189,25 @@ class PlayersController < ApplicationController
       column = nil
     end
 
-   skill_level_column = nil
+    skill_level_column = nil
     if column.to_s == "skill_level"
       skill_level_column = "raking"
       column = nil
     end
 
     players = Player.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
-    .email_like(email).category_in(category).bracket_age_in(bracket_age).bracket_skill_in(bracket_skill).skill_level_like(skill_level)
-    .status_in(status).event_order(event_title_column, direction).first_name_order(first_name_column, direction)
+                  .email_like(email).category_in(category).bracket_age_in(bracket_age).bracket_skill_in(bracket_skill).skill_level_like(skill_level)
+                  .status_in(status).event_order(event_title_column, direction).first_name_order(first_name_column, direction)
                   .last_name_order(last_name_column, direction).email_order(email_column, direction).sport_in(sport)
                   .sports_order(sports_column, direction).categories_order(category_column, direction).bracket_age_order(bracket_age_column, direction)
                   .bracket_skill_order(bracket_skill_column, direction).role_in(role).skill_level_order(skill_level_column, direction)
-      if paginate.to_s == "0"
+    if paginate.to_s == "0"
       json_response_serializer_collection(players.all, PlayerSerializer)
     else
       paginate players, per_page: 50, root: :data
     end
   end
+
   swagger_path '/players' do
     operation :post do
       key :summary, 'Create players'
@@ -220,10 +222,14 @@ class PlayersController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :event_id
+        key :name, :events
         key :in, :body
         key :required, true
-        key :type, :string
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
       end
       response 200 do
         key :description, ''
@@ -242,17 +248,25 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def create
     authorize Player
-    data = create_params.merge(:status => :Active)
-    player = Player.where(:user_id =>data[:user_id]).where(:event_id => data[:event_id]).first
-    if player.present?
-      player.update!(data)
+    if create_params[:events].present? and create_params[:events].kind_of?(Array)
+      create_params[:events].each do |event_id|
+        data = {user_id: create_params[:user_id], event_id: event_id}
+        player = Player.where(:user_id => data[:user_id]).where(:event_id => data[:event_id]).first
+        if player.present?
+          player.update!(data)
+        else
+          Player.create!(data)
+        end
+      end
     else
-      Player.create!(data)
+      return json_response_error([t("events_required")], 422)
     end
     json_response_success(t("created_success", model: Player.model_name.human), true)
   end
+
   swagger_path '/players/:id' do
     operation :get do
       key :summary, 'Show players'
@@ -289,6 +303,7 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def show
     authorize @player
     json_response_serializer(@player, PlayerSerializer)
@@ -327,6 +342,7 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def update
     authorize @player
     if enroll_collection_params.present?
@@ -340,6 +356,7 @@ class PlayersController < ApplicationController
     end
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
+
   swagger_path '/players/:id' do
     operation :delete do
       key :summary, 'Delete players'
@@ -364,11 +381,13 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def destroy
     authorize @player
     @player.destroy
     json_response_success(t("deleted_success", model: Player.model_name.human), true)
   end
+
   swagger_path '/players/:id/activate' do
     operation :put do
       key :summary, 'Activate players'
@@ -393,12 +412,14 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def activate
     authorize Player
     @player.status = :Active
     @player.save!(:validate => false)
     json_response_success(t("activated_success", model: Player.model_name.human), true)
   end
+
   swagger_path '/players/:id/inactive' do
     operation :put do
       key :summary, 'Inactive players'
@@ -423,6 +444,7 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def inactive
     authorize Player
     @player.status = :Inactive
@@ -432,8 +454,9 @@ class PlayersController < ApplicationController
 
 
   private
+
   def create_params
-    params.permit(:user_id, :event_id)
+    params.permit(:user_id, events: [])
   end
 
   def set_resource
