@@ -1,6 +1,7 @@
 class Player < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
+  before_create :set_status
   belongs_to :user
   belongs_to :event
   has_and_belongs_to_many :enrolls, class_name: "EventEnroll"
@@ -75,6 +76,12 @@ class Player < ApplicationRecord
     property :event do
       key :'$ref', :EventSingle
     end
+  end
+
+
+  private
+  def set_status
+    self.status = :Active
   end
 
 end
