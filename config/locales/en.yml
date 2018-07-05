@@ -212,3 +212,4 @@ en:
               invalid: "Invalid password. Please verify your information."
   events_required: "Eventos requeridos"
   no_player: "No player found"
+  not_event: "Event required"

@@ -66,6 +66,7 @@ class ApidocsController < ApplicationController
       ParticipantsController,
       PlayersController,
       BusinessCategoriesController,
+      PartnersController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
