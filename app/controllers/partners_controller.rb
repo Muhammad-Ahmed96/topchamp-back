@@ -92,7 +92,7 @@ class PartnersController < ApplicationController
       not_in = player.partner_mixed_id
     end
 
-    users =  User.my_order(column, direction).search(search)
+    users =  User.my_order(column, direction).search(search).where.not(id: [not_in, @resource.id])
     if paginate.to_s == "0"
       json_response_serializer_collection(users.all, UserSingleSerializer)
     else
