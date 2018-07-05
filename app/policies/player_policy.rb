@@ -29,6 +29,14 @@ class PlayerPolicy < ApplicationPolicy
     user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
+  def partner_double?
+    user.sysadmin? || user.agent? || user.director? || user.member?
+  end
+
+  def partner_mixed?
+    user.sysadmin? || user.agent? || user.director? || user.member?
+  end
+
   class Scope < Scope
     def resolve
       scope

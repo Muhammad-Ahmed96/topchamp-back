@@ -311,7 +311,7 @@ class InvitationsController < ApplicationController
       event = @invitation.event
       if event.present?
         my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
-        data = {:user_id => @invitation.user_id, enroll_status: :enroll}
+        data = {:user_id => @invitation.user_id, enroll_status: :enrolls}
         #Save data
         if my_enroll.present?
           my_enroll.update! data

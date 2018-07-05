@@ -102,6 +102,10 @@ Rails.application.routes.draw do
       end
     end
     resources :players, only: [:index, :create, :update, :show, :destroy] do
+      collection do
+        post :partner_mixed
+        post :partner_double
+      end
       member do
         put :activate
         put :inactive
