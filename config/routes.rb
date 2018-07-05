@@ -102,12 +102,17 @@ Rails.application.routes.draw do
       end
     end
     resources :players, only: [:index, :create, :update, :show, :destroy] do
+      collection do
+        post :partner_mixed
+        post :partner_double
+      end
       member do
         put :activate
         put :inactive
       end
     end
     resources :business_categories, only: [:index]
+    resources :partners, only: [:index]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

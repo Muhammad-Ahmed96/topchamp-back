@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_03_212457) do
+ActiveRecord::Schema.define(version: 2018_07_05_205310) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -54,6 +54,13 @@ ActiveRecord::Schema.define(version: 2018_07_03_212457) do
     t.bigint "invitation_id", null: false
     t.index ["attendee_type_id"], name: "index_attendee_types_invitations_on_attendee_type_id"
     t.index ["invitation_id"], name: "index_attendee_types_invitations_on_invitation_id"
+  end
+
+  create_table "attendee_types_participants", id: false, force: :cascade do |t|
+    t.bigint "participant_id", null: false
+    t.bigint "attendee_type_id", null: false
+    t.index ["attendee_type_id"], name: "index_attendee_types_participants_on_attendee_type_id"
+    t.index ["participant_id"], name: "index_attendee_types_participants_on_participant_id"
   end
 
   create_table "billing_addresses", force: :cascade do |t|
@@ -352,6 +359,16 @@ ActiveRecord::Schema.define(version: 2018_07_03_212457) do
     t.string "allergies"
   end
 
+  create_table "participants", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "event_id"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_participants_on_deleted_at"
+  end
+
   create_table "players", force: :cascade do |t|
     t.bigint "user_id"
     t.bigint "event_id"
@@ -360,6 +377,8 @@ ActiveRecord::Schema.define(version: 2018_07_03_212457) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.bigint "partner_double_id"
+    t.bigint "partner_mixed_id"
     t.index ["deleted_at"], name: "index_players_on_deleted_at"
   end
 

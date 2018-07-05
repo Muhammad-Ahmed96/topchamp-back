@@ -307,22 +307,25 @@ class InvitationsController < ApplicationController
   end
 
   def enroll
-    logger::info "jojooj"
-    logger::info @invitation.status.to_s
     if @invitation.status != "role"
       event = @invitation.event
-      my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
-      data = {:user_id => @invitation.user_id, enroll_status: :enroll}
-      #Save data
-      if my_enroll.present?
-        my_enroll.update! data
-        #Player attendee
-      else
-        my_enroll = event.enrolls.create!(data)
+      if event.present?
+        my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
+        data = {:user_id => @invitation.user_id, enroll_status: :enrolls}
+        #Save data
+        if my_enroll.present?
+          my_enroll.update! data
+        else
+          my_enroll = event.enrolls.create!(data)
+        end
+        my_enroll.attendee_type_ids = @invitation.attendee_type_ids
+
+
+        #my_enroll = event.add_enroll(@invitation.user_id, enroll[:category_id], enroll[:event_bracket_age_id], enroll[:event_bracket_skill_id], @invitation.attendee_type_ids)
+
+        @invitation.status = :role
+        @invitation.save!
       end
-      my_enroll.attendee_type_ids = @invitation.attendee_type_ids
-      @invitation.status = :role
-      @invitation.save!
     end
     json_response_success(t("edited_success", model: Invitation.model_name.human), true)
   end
@@ -377,7 +380,7 @@ class InvitationsController < ApplicationController
       }
       @invitations.each {|invitation|
         event = invitation.event
-        if invitation.invitation_type == "sing_up" or (event.present? and (event.registration_rule.nil? or event.registration_rule.allow_group_registrations) or  event.creator_user_id == @resource.id)
+        if invitation.invitation_type == "sing_up" or (event.present? and (event.registration_rule.nil? or event.registration_rule.allow_group_registrations) or event.creator_user_id == @resource.id)
           invitation.send_mail
         else
           return render_not_permit_error

@@ -667,6 +667,22 @@ class Event < ApplicationRecord
     self.title.present? && self.start_date.present?
   end
 
+  def add_enroll(user_id, category_id, event_bracket_age_id, event_bracket_skill_id, attendee_type_ids)
+    data = {:user_id => user_id, :category_id => category_id, :event_bracket_age_id => event_bracket_age_id,
+    :event_bracket_skill_id =>event_bracket_skill_id}
+    my_enroll = self.enrolls.where(:user_id => user_id).where(:category_id => category_id).first
+    enroll_status = self.enroll_status(my_enroll, event_bracket_age_id, event_bracket_skill_id)
+    data = data.merge(:enroll_status => enroll_status)
+    #Save data
+    if my_enroll.present?
+      my_enroll.update! data
+    else
+      my_enroll = self.enrolls.create!(data)
+    end
+    my_enroll.attendee_type_ids = attendee_type_ids
+    my_enroll
+  end
+
   private
 
   def url_valid?(url)
