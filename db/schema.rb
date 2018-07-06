@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_06_052607) do
+ActiveRecord::Schema.define(version: 2018_07_06_222533) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -182,6 +182,12 @@ ActiveRecord::Schema.define(version: 2018_07_06_052607) do
     t.integer "on_site_players"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "early_bird_date_start"
+    t.date "early_bird_date_end"
+    t.date "late_date_start"
+    t.date "late_date_end"
+    t.date "on_site_date_start"
+    t.date "on_site_date_end"
   end
 
   create_table "event_enrolls", force: :cascade do |t|
@@ -213,6 +219,7 @@ ActiveRecord::Schema.define(version: 2018_07_06_052607) do
     t.datetime "updated_at", null: false
     t.text "refund_policy"
     t.float "service_fee"
+    t.float "app_fee"
   end
 
   create_table "event_payment_methods", force: :cascade do |t|
