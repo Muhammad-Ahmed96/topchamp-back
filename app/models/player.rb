@@ -77,8 +77,16 @@ class Player < ApplicationRecord
       key :'$ref', :EventSingle
     end
   end
+  def send_mail_partner_double(partner)
+    PartnerInvitationMailer.double(self, partner)
+  end
 
-
+  def send_mail_partner_mixed(partner)
+    PartnerInvitationMailer.mixed(self, partner)
+  end
+  def self.get_player(event_id, user_id)
+    Player.first_or_create({event_id: event_id, user_id: user_id})
+  end
   private
   def set_status
     self.status = :Active
