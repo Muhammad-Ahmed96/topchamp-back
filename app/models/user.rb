@@ -12,7 +12,7 @@ class User < ApplicationRecord
   has_one :shipping_address, :dependent => :destroy
   has_one :association_information, :dependent => :destroy
   has_one :medical_information, :dependent => :destroy
-  has_many :enrolls, :class_name => "EventEnroll"
+  has_many :players
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
@@ -191,10 +191,10 @@ class User < ApplicationRecord
       key :'$ref', :MedicalInformation
     end
 
-    property :enrolls do
+    property :players do
       key :type, :array
       items do
-        key :'$ref', :EventEnroll
+        key :'$ref', :Player
       end
     end
   end

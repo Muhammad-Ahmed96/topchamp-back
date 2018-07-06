@@ -100,6 +100,7 @@ class ApidocsController < ApplicationController
       Participant,
       Player,
       BusinessCategory,
+      PlayerBracket,
       self,
   ].freeze
 

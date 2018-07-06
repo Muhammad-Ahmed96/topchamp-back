@@ -69,13 +69,7 @@ class PlayersController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :bracket_age_id
-        key :in, :query
-        key :required, false
-        key :type, :string
-      end
-      parameter do
-        key :name, :bracket_skill_id
+        key :name, :bracket
         key :in, :query
         key :required, false
         key :type, :string
@@ -133,16 +127,18 @@ class PlayersController < ApplicationController
     email = params[:email]
     category = params[:category_id]
     sport = params[:sport_id]
-    bracket_age = params[:bracket_age_id]
-    bracket_skill = params[:bracket_skill_id]
+    bracket = params[:bracket]
     skill_level = params[:skill_level]
     status = params[:status]
     role = params[:role]
 
 
-    event_title_column = nil
+    event_column = nil
     if column.to_s == "event_title"
-      event_title_column = "title"
+      event_column = "title"
+      column = nil
+    elsif column.to_s == "bracket"
+      event_column = "bracket_by"
       column = nil
     end
 
@@ -177,18 +173,6 @@ class PlayersController < ApplicationController
       column = nil
     end
 
-    bracket_age_column = nil
-    if column.to_s == "bracket"
-      bracket_age_column = "age"
-      column = nil
-    end
-
-    bracket_skill_column = nil
-    if column.to_s == "bracket"
-      bracket_skill_column = "lowest_skill"
-      column = nil
-    end
-
     skill_level_column = nil
     if column.to_s == "skill_level"
       skill_level_column = "raking"
@@ -196,11 +180,11 @@ class PlayersController < ApplicationController
     end
 
     players = Player.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
-                  .email_like(email).category_in(category).bracket_age_in(bracket_age).bracket_skill_in(bracket_skill).skill_level_like(skill_level)
-                  .status_in(status).event_order(event_title_column, direction).first_name_order(first_name_column, direction)
+                  .email_like(email).category_in(category).bracket_in(bracket).skill_level_like(skill_level)
+                  .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction)
                   .last_name_order(last_name_column, direction).email_order(email_column, direction).sport_in(sport)
-                  .sports_order(sports_column, direction).categories_order(category_column, direction).bracket_age_order(bracket_age_column, direction)
-                  .bracket_skill_order(bracket_skill_column, direction).role_in(role).skill_level_order(skill_level_column, direction)
+                  .sports_order(sports_column, direction).categories_order(category_column, direction)
+                  .role_in(role).skill_level_order(skill_level_column, direction)
     if paginate.to_s == "0"
       json_response_serializer_collection(players.all, PlayerSerializer)
     else
@@ -254,12 +238,7 @@ class PlayersController < ApplicationController
     if create_params[:events].present? and create_params[:events].kind_of?(Array)
       create_params[:events].each do |event_id|
         data = {user_id: create_params[:user_id], event_id: event_id}
-        player = Player.where(:user_id => data[:user_id]).where(:event_id => data[:event_id]).first
-        if player.present?
-          player.update!(data)
-        else
-          Player.create!(data)
-        end
+        Player.where(user_id: data[:user_id]).where(event_id: data[:event_id]).first_or_create!
       end
     else
       return json_response_error([t("events_required")], 422)
@@ -345,15 +324,7 @@ class PlayersController < ApplicationController
 
   def update
     authorize @player
-    if enroll_collection_params.present?
-      enrolls_ids = []
-      enroll_collection_params.each {|enroll|
-        my_enroll = @player.event.add_enroll(@player.user_id, enroll[:category_id], enroll[:event_bracket_age_id], enroll[:event_bracket_skill_id], [7])
-        enrolls_ids << my_enroll.id
-      }
-      @player.enroll_ids = enrolls_ids
-      @player.event.enrolls.where.not(id: enrolls_ids).destroy_all
-    end
+    @player.sync_brackets! enroll_collection_params
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
@@ -490,12 +461,12 @@ class PlayersController < ApplicationController
 
   def partner_double
     authorize Player
-    player = get_player(partner_params[:event_id], partner_params[:partner_id])
-    myPlayer = get_player(partner_params[:event_id], @resource.id)
-    if player.present? and myPlayer.present?
-      myPlayer.partner_double_id = player.id
-      myPlayer.save!(:validate => false)
-      myPlayer.send_mail_partner_double(player)
+    player = Player.where(user_id: partner_params[:partner_id]).where(event_id: partner_params[:event_id]).first_or_create!
+    current_player =  Player.where(user_id:  @resource.id).where(event_id: partner_params[:event_id]).first_or_create!
+    if player.present? and current_player.present?
+      current_player.partner_double_id = player.id
+      current_player.save!(:validate => false)
+      current_player.send_mail_partner_double(player)
     else
       return json_response_error([t("no_player")], 422)
     end
@@ -539,12 +510,12 @@ class PlayersController < ApplicationController
   end
   def partner_mixed
     authorize Player
-    player = get_player(partner_params[:event_id], partner_params[:partner_id])
-    myPlayer = get_player(partner_params[:event_id], @resource.id)
-    if player.present? and myPlayer.present?
-      myPlayer.partner_mixed_id = player.id
-      myPlayer.save!(:validate => false)
-      myPlayer.send_mail_partner_mixed(player)
+    player = Player.where(user_id: partner_params[:partner_id]).where(event_id: partner_params[:event_id]).first_or_create!
+    current_player =  Player.where(user_id:  @resource.id).where(event_id: partner_params[:event_id]).first_or_create!
+    if player.present? and current_player.present?
+      current_player.partner_mixed_id = player.id
+      current_player.save!(:validate => false)
+      current_player.send_mail_partner_mixed(player)
     else
       return json_response_error([t("no_player")], 422)
     end
@@ -553,10 +524,6 @@ class PlayersController < ApplicationController
 
 
   private
-
-  def get_player(event_id, user_id)
-    Player.first_or_create({event_id: event_id, user_id: user_id})
-  end
 
   def create_params
     params.permit(:user_id, events: [])

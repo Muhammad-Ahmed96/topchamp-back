@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_05_205310) do
+ActiveRecord::Schema.define(version: 2018_07_06_052607) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -369,6 +369,17 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.index ["deleted_at"], name: "index_participants_on_deleted_at"
   end
 
+  create_table "player_brackets", force: :cascade do |t|
+    t.bigint "player_id"
+    t.bigint "category_id"
+    t.bigint "event_bracket_age_id"
+    t.bigint "event_bracket_skill_id"
+    t.string "enroll_status"
+    t.string "string"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "players", force: :cascade do |t|
     t.bigint "user_id"
     t.bigint "event_id"
@@ -379,6 +390,7 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.datetime "deleted_at"
     t.bigint "partner_double_id"
     t.bigint "partner_mixed_id"
+    t.bigint "attendee_type_id"
     t.index ["deleted_at"], name: "index_players_on_deleted_at"
   end
 

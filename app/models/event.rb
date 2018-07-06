@@ -20,7 +20,8 @@ class Event < ApplicationRecord
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
-  has_many :enrolls, class_name: 'EventEnroll'
+  has_many :players
+  has_many :participants
   has_one :registration_rule, class_name: 'EventRegistrationRule'
   has_many :agendas, class_name: 'EventAgenda'
   #has_one :rule, class_name: 'EventRule'
@@ -310,10 +311,10 @@ class Event < ApplicationRecord
   end
 
 
-  def enroll_status(enroll, age_id, skill_id)
+  def enroll_status(bracket, age_id, skill_id)
     age = self.bracket_ages.where(:id => age_id).first
     skill = self.bracket_skills.where(:id => skill_id).first
-    status = enroll.present? ? enroll.enroll_status : nil
+    status = bracket.present? ? bracket.enroll_status : nil
     if age.present? && skill.present? && status.nil?
       if skill.event_bracket_age_id == age.id
         if skill.available_for_enroll
@@ -332,12 +333,12 @@ class Event < ApplicationRecord
       if skill.available_for_enroll
         status =  :enroll
       end
-    elsif enroll.nil?
+    elsif bracket.nil?
       status = :wait_list
     end
     #end
 
-    if enroll.nil? and status.nil?
+    if bracket.nil? and status.nil?
       status = :wait_list
     end
 
