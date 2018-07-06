@@ -9,6 +9,8 @@ class Sponsor < ApplicationRecord
   validates :geography, presence: true
   validates :geography, inclusion: {in: Geography.collection}
 
+  belongs_to :business_category
+
 
   has_attached_file :logo, :path => ":rails_root/public/images/sponsor/:to_param/:style/:basename.:extension",
                     :url => "/images/sponsor/:to_param/:style/:basename.:extension",
@@ -62,7 +64,7 @@ class Sponsor < ApplicationRecord
     property :franchise_brand do
       key :type, :string
     end
-    property :business_category do
+    property :business_category_id do
       key :type, :string
     end
     property :geography do
@@ -107,6 +109,10 @@ class Sponsor < ApplicationRecord
     property :status do
       key :type, :string
     end
+
+    property :business_category do
+      key :'$ref', :BusinessCategory
+    end
   end
 
   swagger_schema :SponsorInput do
@@ -129,7 +135,7 @@ class Sponsor < ApplicationRecord
     property :franchise_brand do
       key :type, :string
     end
-    property :business_category do
+    property :business_category_id do
       key :type, :string
     end
     property :geography do

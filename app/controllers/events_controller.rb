@@ -1224,12 +1224,8 @@ class EventsController < ApplicationController
         end
       end
     end
-    if discount_generals_params.present?
       @event.sync_discount_generals! discount_generals_params
-    end
-    if discount_personalizeds_params.present?
       @event.sync_discount_personalizeds! discount_personalizeds_params
-    end
     json_response_serializer(@event, EventSerializer)
   end
 
