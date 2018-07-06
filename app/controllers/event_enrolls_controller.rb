@@ -5,7 +5,7 @@ class EventEnrollsController < ApplicationController
   around_action :transactions_filter, only: [:create, :user_cancel, :change_attendees]
 
   def index
-    json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
+    json_response_serializer_collection(@event.players, PlayerSerializer)
   end
 
   swagger_path '/events/:id/enrolls' do
@@ -47,17 +47,9 @@ class EventEnrollsController < ApplicationController
   end
 
   def create
-    if enroll_collection_params.present?
-      enroll_collection_params.each {|enroll|
-        my_enroll = @event.add_enroll(@resource.id, enroll[:category_id], enroll[:event_bracket_age_id], enroll[:event_bracket_skill_id], [7])
-        player = Player.where(:user_id => my_enroll.user_id).where(:event_id => my_enroll.event_id).first
-        if player.nil?
-          player = Player.create!(:user_id => my_enroll.user_id, :event_id => my_enroll.event_id, :status => :Active )
-        end
-        player.enroll_ids = [my_enroll.id]
-      }
-    end
-    json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
+    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    player.sync_brackets! enroll_collection_params
+    json_response_success(t("created_success", model: "Enroll"), true)
   end
   swagger_path '/events/:id/enrolls/user_cancel' do
     operation :post do
@@ -85,8 +77,8 @@ class EventEnrollsController < ApplicationController
   end
   def user_cancel
     authorize(@event)
-    user_id = @resource.id
-    @event.enrolls.where(:user_id => user_id).destroy_all
+    @event.players.where(:user_id =>  @resource.id).destroy_all
+    @event.participants.where(:user_id =>  @resource.id).destroy_all
     json_response_success(t("success"), true)
   end
   swagger_path '/events/:id/enrolls/change_attendees' do
@@ -115,11 +107,8 @@ class EventEnrollsController < ApplicationController
   end
   def change_attendees
     authorize(@event)
-    user_id = @resource.id
-    enroll = @event.enrolls.where(:user_id => user_id).first
-    if enroll.present?
-      enroll.attendee_type_ids = change_attendees_params[:attendee_type_ids]
-    end
+    participant = @event.participants.where(:user_id => @resource.id).first!
+    participant.attendee_type_ids = change_attendees_params[:attendee_type_ids]
     json_response_success(t("success"), true)
   end
 

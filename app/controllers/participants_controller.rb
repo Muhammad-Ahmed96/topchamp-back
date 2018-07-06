@@ -117,17 +117,15 @@ class ParticipantsController < ApplicationController
       attendee_type_column = "name"
       column = nil
     end
-
-    status_column = nil
-    if column.to_s == "status"
-      status_column = column
+    user_column = nil
+    if column.to_s == "first_name" or  column.to_s == "last_name" or column.to_s == "email"
+      user_column = column
       column = nil
     end
-
     participants = Participant.my_order(column, direction).first_name_like(first_name).last_name_like(last_name).email_like(email)
                        .status_in(status).event_in(event_id).attendee_type_in(attendee_type_id).event_order(event_title_column, direction)
-                       .attendee_type_order(attendee_type_column, direction).status_order(status_column, direction)
-                       .event_like(event_title)
+                       .attendee_type_order(attendee_type_column, direction)
+                       .event_like(event_title).user_order(user_column, direction)
     if paginate.to_s == "0"
       json_response_serializer_collection(participants.all, ParticipantSerializer)
     else
@@ -203,7 +201,7 @@ class ParticipantsController < ApplicationController
 
   def update_attendee_types
     if attendee_types_params[:attendee_types].present? and attendee_types_params[:attendee_types].kind_of?(Array)
-      @participant.enroll.attendee_type_ids = attendee_types_params[:attendee_types]
+      @participant.attendee_type_ids = attendee_types_params[:attendee_types]
     end
     json_response_serializer(@participant, ParticipantSerializer)
   end
@@ -234,9 +232,8 @@ class ParticipantsController < ApplicationController
   end
 
   def activate
-    enroll = @participant.enroll
-    enroll.status = :Active
-    enroll.save!(:validate => false)
+    @participant.status = :Active
+    @participant.save!(:validate => false)
     json_response_success(t("activated_success", model: Participant.model_name.human), true)
   end
 
@@ -266,9 +263,8 @@ class ParticipantsController < ApplicationController
   end
 
   def inactive
-    enroll = @participant.enroll
-    enroll.status = :Inactive
-    enroll.save!(:validate => false)
+    @participant.status = :Inactive
+    @participant.save!(:validate => false)
     json_response_success(t("inactivated_success", model: Participant.model_name.human), true)
   end
 
@@ -279,6 +275,6 @@ class ParticipantsController < ApplicationController
   end
 
   def set_resource
-    @participant = Participant.joins(:enrolls).merge(EventEnroll.where id: params[:id]).first!
+    @participant = Participant.find(params[:id])
   end
 end

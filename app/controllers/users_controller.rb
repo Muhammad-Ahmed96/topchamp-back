@@ -109,6 +109,13 @@ class UsersController < ApplicationController
         key :required, false
         key :type, :string
       end
+      parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
       response 200 do
         key :description, ''
         schema do
@@ -137,6 +144,7 @@ class UsersController < ApplicationController
     search = params[:search].strip unless params[:search].nil?
     column = params[:column].nil? ? 'first_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
     status = params[:status]
     role = params[:role]
     first_name = params[:first_name]
@@ -158,10 +166,16 @@ class UsersController < ApplicationController
       column_sports = "name"
       column = nil
     end
-    paginate User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
+
+    users =  User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
                  .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
                  .email_like(email).last_sign_in_at_like(last_sign_in_at).state_like(state).city_like(city)
-                 .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction), per_page: 50, root: :data
+                 .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction)
+    if paginate.to_s == "0"
+      json_response_serializer_collection(users.all, UserSerializer)
+    else
+      paginate users, per_page: 50, root: :data
+    end
   end
 
   swagger_path '/users' do
@@ -679,8 +693,8 @@ class UsersController < ApplicationController
 
   def current_enrolls
     ids = []
-    if @resource.enrolls.present?
-      @resource.enrolls.each {|enroll|
+    if @resource.players.present?
+      @resource.players.each {|enroll|
         ids << enroll.event.id
       }
     end

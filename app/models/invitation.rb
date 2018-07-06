@@ -40,8 +40,8 @@ class Invitation < ApplicationRecord
   end
 
   def self.get_invitation(params, senderId, type)
-    @user = User.find_by_uid params[:email]
-    userId = @user.present? ? @user.id : nil
+    user = User.find_by_uid params[:email]
+    userId = user.present? ? user.id : nil
     attendee_types = params[:attendee_types]
     if attendee_types.kind_of?(Array)
       attendee_types = attendee_types.map(&:to_i)

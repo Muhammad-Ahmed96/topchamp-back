@@ -84,7 +84,7 @@ class PartnersController < ApplicationController
     end
     type = params[:type]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
-    player = Player.get_player(event_id,@resource.id)
+    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
     not_in = nil;
     if type == "doubles"
       not_in = player.partner_double_id
