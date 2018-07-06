@@ -41,7 +41,7 @@ end
 if AttendeeType.count == 0
   AttendeeType.create([{name: 'Advertiser'}, {name: 'Coach'}, {name: 'Exhibitor'}, {name: 'Instructor'},
                     {name: 'Media'}, {name: 'Official'}, {name: 'Player'}, {name: 'Staff'}, {name: 'Spectator'},
-                       {name: 'Sponsor'}, {name: 'VIP'}])
+                       {name: 'Sponsor'}, {name: 'VIP'}, {name: 'Director'}])
 end
 
 if AgendaType.count == 0
