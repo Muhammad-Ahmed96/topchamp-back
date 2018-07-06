@@ -461,12 +461,14 @@ class PlayersController < ApplicationController
 
   def partner_double
     authorize Player
-    player = Player.where(user_id: partner_params[:partner_id]).where(event_id: partner_params[:event_id]).first_or_create!
-    current_player =  Player.where(user_id:  @resource.id).where(event_id: partner_params[:event_id]).first_or_create!
-    if player.present? and current_player.present?
-      current_player.partner_double_id = player.id
-      current_player.save!(:validate => false)
-      current_player.send_mail_partner_double(player)
+    to_user = User.find( partner_params[:partner_id])
+    if params[:url].nil?
+      params[:url] = "localhost/test"
+    end
+    if to_user.present?
+      data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
+      @invitation = Invitation.get_invitation(data, @resource.id, "partner_double")
+      @invitation.send_mail
     else
       return json_response_error([t("no_player")], 422)
     end
@@ -510,12 +512,14 @@ class PlayersController < ApplicationController
   end
   def partner_mixed
     authorize Player
-    player = Player.where(user_id: partner_params[:partner_id]).where(event_id: partner_params[:event_id]).first_or_create!
-    current_player =  Player.where(user_id:  @resource.id).where(event_id: partner_params[:event_id]).first_or_create!
-    if player.present? and current_player.present?
-      current_player.partner_mixed_id = player.id
-      current_player.save!(:validate => false)
-      current_player.send_mail_partner_mixed(player)
+    to_user = User.find( partner_params[:partner_id])
+    if params[:url].nil?
+      params[:url] = "localhost/test"
+    end
+    if to_user.present?
+      data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
+      @invitation = Invitation.get_invitation(data, @resource.id, "partner_mixed")
+      @invitation.send_mail
     else
       return json_response_error([t("no_player")], 422)
     end
@@ -534,7 +538,7 @@ class PlayersController < ApplicationController
   end
 
   def partner_params
-    params.permit(:event_id, :partner_id)
+    params.permit(:event_id, :partner_id, :url)
   end
 
 

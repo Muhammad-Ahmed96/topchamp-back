@@ -152,9 +152,9 @@
                     <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                       <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                         Would you like to partner for this upcoming
-                        <strong>{{ event }}</strong>
+                        <strong><%=@invitation.event.title unless  @invitation.event.nil? %></strong>
                         on
-                        <strong>{{date}}</strong>
+                        <strong><% if @invitation.event.present?%><%= @invitation.event.start_date.strftime("%B %d, %Y") unless @invitation.event.start_date.nil?%>&ensp;<%= t("to") + " " + @invitation.event.end_date.strftime("%B %d, %Y") unless @invitation.event.end_date.nil?%><% end %></strong>
                         ?
                       </div>
                     </td>
@@ -212,7 +212,7 @@
                     <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                       <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                         Thanks, <br/>
-                        <strong>{{First Name Last Name (of person sending invite)}}</strong>
+                        <strong><% if @invitation.sender.present? %><%= @invitation.sender.first_name%>&ensp;<%= @invitation.sender.last_name%><% end %></strong>
                       </div>
                     </td>
                   </tr>

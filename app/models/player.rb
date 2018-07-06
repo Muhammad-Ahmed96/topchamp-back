@@ -85,13 +85,6 @@ class Player < ApplicationRecord
       key :'$ref', :EventSingle
     end
   end
-  def send_mail_partner_double(partner)
-    PartnerInvitationMailer.double(self, partner)
-  end
-
-  def send_mail_partner_mixed(partner)
-    PartnerInvitationMailer.mixed(self, partner)
-  end
   private
   def set_status
     self.status = :Active

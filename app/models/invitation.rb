@@ -72,6 +72,10 @@ class Invitation < ApplicationRecord
         InvitationMailer.date(invitation).deliver
       when "sing_up"
         InvitationMailer.sing_up(invitation).deliver
+      when "partner_double"
+        InvitationMailer.partner(invitation).deliver
+      when "partner_mixed"
+        InvitationMailer.partner(invitation).deliver
       end
     end
   end

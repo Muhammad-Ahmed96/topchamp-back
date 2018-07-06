@@ -16,3 +16,9 @@ end
 
 class InvitationTypes::SingUp < InvitationTypes
 end
+
+class InvitationTypes::PartnerDouble < InvitationTypes
+end
+
+class InvitationTypes::PartnerMixed < InvitationTypes
+end
