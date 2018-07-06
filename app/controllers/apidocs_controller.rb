@@ -63,6 +63,10 @@ class ApidocsController < ApplicationController
       ScoringOptionsController,
       SkillLevelsController,
       EventEnrollsController,
+      ParticipantsController,
+      PlayersController,
+      BusinessCategoriesController,
+      PartnersController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -93,6 +97,9 @@ class ApidocsController < ApplicationController
       EventAgenda,
       EventEnroll,
       Invitation,
+      Participant,
+      Player,
+      BusinessCategory,
       self,
   ].freeze
 

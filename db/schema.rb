@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_21_042321) do
+ActiveRecord::Schema.define(version: 2018_07_05_205310) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -56,6 +56,13 @@ ActiveRecord::Schema.define(version: 2018_06_21_042321) do
     t.index ["invitation_id"], name: "index_attendee_types_invitations_on_invitation_id"
   end
 
+  create_table "attendee_types_participants", id: false, force: :cascade do |t|
+    t.bigint "participant_id", null: false
+    t.bigint "attendee_type_id", null: false
+    t.index ["attendee_type_id"], name: "index_attendee_types_participants_on_attendee_type_id"
+    t.index ["participant_id"], name: "index_attendee_types_participants_on_participant_id"
+  end
+
   create_table "billing_addresses", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "address_line_1"
@@ -63,6 +70,16 @@ ActiveRecord::Schema.define(version: 2018_06_21_042321) do
     t.string "postal_code"
     t.string "city"
     t.string "state"
+  end
+
+  create_table "business_categories", force: :cascade do |t|
+    t.string "code"
+    t.string "group"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_business_categories_on_deleted_at"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -177,7 +194,15 @@ ActiveRecord::Schema.define(version: 2018_06_21_042321) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.string "enroll_status"
     t.index ["deleted_at"], name: "index_event_enrolls_on_deleted_at"
+  end
+
+  create_table "event_enrolls_players", id: false, force: :cascade do |t|
+    t.bigint "player_id", null: false
+    t.bigint "event_enroll_id", null: false
+    t.index ["event_enroll_id"], name: "index_event_enrolls_players_on_event_enroll_id"
+    t.index ["player_id"], name: "index_event_enrolls_players_on_player_id"
   end
 
   create_table "event_payment_informations", force: :cascade do |t|
@@ -334,6 +359,29 @@ ActiveRecord::Schema.define(version: 2018_06_21_042321) do
     t.string "allergies"
   end
 
+  create_table "participants", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "event_id"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_participants_on_deleted_at"
+  end
+
+  create_table "players", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "event_id"
+    t.float "skill_level"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "partner_double_id"
+    t.bigint "partner_mixed_id"
+    t.index ["deleted_at"], name: "index_players_on_deleted_at"
+  end
+
   create_table "regions", force: :cascade do |t|
     t.string "name"
     t.string "base"
@@ -375,7 +423,6 @@ ActiveRecord::Schema.define(version: 2018_06_21_042321) do
     t.string "brand"
     t.string "product"
     t.string "franchise_brand"
-    t.string "business_category"
     t.string "geography"
     t.text "description"
     t.string "contact_name"
@@ -393,6 +440,7 @@ ActiveRecord::Schema.define(version: 2018_06_21_042321) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.bigint "business_category_id"
     t.index ["deleted_at"], name: "index_sponsors_on_deleted_at"
   end
 
