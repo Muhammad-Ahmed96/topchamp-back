@@ -310,19 +310,16 @@ class InvitationsController < ApplicationController
     if @invitation.status != "role"
       event = @invitation.event
       if event.present?
-        my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
-        data = {:user_id => @invitation.user_id, enroll_status: :enrolls}
-        #Save data
-        if my_enroll.present?
-          my_enroll.update! data
-        else
-          my_enroll = event.enrolls.create!(data)
+        participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
+        types = @invitation.attendee_type_ids
+        type_id = AttendeeType.player_id
+        is_player = types.detect{|w| w == type_id}
+        unless is_player.nil?
+          #Create player
+          types.delete(type_id)
+          player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first_or_create!
         end
-        my_enroll.attendee_type_ids = @invitation.attendee_type_ids
-
-
-        #my_enroll = event.add_enroll(@invitation.user_id, enroll[:category_id], enroll[:event_bracket_age_id], enroll[:event_bracket_skill_id], @invitation.attendee_type_ids)
-
+        participant.attendee_type_ids = types
         @invitation.status = :role
         @invitation.save!
       end

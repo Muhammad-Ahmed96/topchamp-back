@@ -17,6 +17,15 @@ class EventPaymentInformation < ApplicationRecord
     property :bank_account do
       key :type, :string
     end
+    property :service_fee do
+      key :type, :number
+      key :format, :float
+    end
+
+    property :app_fee do
+      key :type, :number
+      key :format, :float
+    end
   end
 
   swagger_schema :EventPaymentInformationInput do
@@ -27,17 +36,27 @@ class EventPaymentInformation < ApplicationRecord
       key :type, :string
     end
     property :service_fee do
-      key :type, :string
+      key :type, :number
+      key :format, :float
     end
     property :refund_policy do
       key :type, :string
+    end
+    property :app_fee do
+      key :type, :number
+      key :format, :float
     end
   end
 
 
   swagger_schema :EventPaymentInformationServiceFee do
     property :service_fee do
-      key :type, :string
+      key :type, :number
+      key :format, :float
+    end
+    property :app_fee do
+      key :type, :number
+      key :format, :float
     end
   end
 

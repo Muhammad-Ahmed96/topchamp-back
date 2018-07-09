@@ -585,7 +585,7 @@ class EventsController < ApplicationController
   def show
     authorize Event
     @event = Event.find(params[:id])
-    json_response_serializer( @event , EventSerializer)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id' do
@@ -723,6 +723,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def update
     authorize Event
     if !sports_params[:sports].nil?
@@ -1214,18 +1215,13 @@ class EventsController < ApplicationController
 
   def discounts
     authorize Event
+    # Save discounts of te event
     if discounts_params.present?
-      discount = @event.discount
-      if discounts_params.present?
-        if discount.present?
-          discount.update!(discounts_params)
-        else
-          @event.create_discount!(discounts_params)
-        end
-      end
+      EventDiscount.where(:event_id => @event.id).update_or_create!(discounts_params)
     end
-      @event.sync_discount_generals! discount_generals_params
-      @event.sync_discount_personalizeds! discount_personalizeds_params
+    # Syncronize array discounts
+    @event.sync_discount_generals! discount_generals_params
+    @event.sync_discount_personalizeds! discount_personalizeds_params
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -1437,6 +1433,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def registration_rule
     authorize Event
     if registration_rule_params.present?
@@ -1550,6 +1547,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def details
     authorize Event
     unless categories_params[:categories].nil?
@@ -1602,6 +1600,7 @@ class EventsController < ApplicationController
     end
     json_response_serializer(@event, EventSerializer)
   end
+
   swagger_path '/events/:id/categories' do
     operation :get do
       key :summary, 'Events categories List '
@@ -1630,6 +1629,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def categories
     authorize Event
     json_response(@event.categories)
@@ -1673,7 +1673,7 @@ class EventsController < ApplicationController
   def payment_information_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee)
+      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee, :app_fee)
     end
   end
 
@@ -1687,8 +1687,9 @@ class EventsController < ApplicationController
   def discounts_params
     # whitelist params
     unless params[:discounts].nil?
-      params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :late_registration, :late_players,
-                                        :on_site_registration, :on_site_players)
+      params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :early_bird_date_start, :early_bird_date_end,
+                                        :late_registration, :late_players, :late_date_start, :late_date_end,
+                                        :on_site_registration, :on_site_players, :on_site_date_start, :on_site_date_end)
     end
 
   end
@@ -1738,7 +1739,7 @@ class EventsController < ApplicationController
   def service_fee_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.require(:payment_information).permit(:service_fee)
+      params.require(:payment_information).permit(:service_fee, :app_fee)
     end
   end
 

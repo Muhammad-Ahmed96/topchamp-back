@@ -210,6 +210,6 @@ en:
           attributes:
             current_password:
               invalid: "Invalid password. Please verify your information."
-  events_required: "Eventos requeridos"
+  events_required: "Event required"
   no_player: "No player found"
   not_event: "Event required"

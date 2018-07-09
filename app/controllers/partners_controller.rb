@@ -84,7 +84,7 @@ class PartnersController < ApplicationController
     end
     type = params[:type]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
-    player = Player.get_player(event_id,@resource.id)
+    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
     not_in = nil;
     if type == "doubles"
       not_in = player.partner_double_id
@@ -92,7 +92,7 @@ class PartnersController < ApplicationController
       not_in = player.partner_mixed_id
     end
 
-    users =  User.my_order(column, direction).search(search)
+    users =  User.my_order(column, direction).search(search).where.not(id: [not_in, @resource.id])
     if paginate.to_s == "0"
       json_response_serializer_collection(users.all, UserSingleSerializer)
     else

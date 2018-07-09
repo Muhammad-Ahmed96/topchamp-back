@@ -1,19 +1,14 @@
 class PlayerSerializer < ActiveModel::Serializer
-  attributes :id, :skill_level, :status, :categories, :brackets, :sports
+  attributes :id, :skill_level, :status, :categories, :sports
   belongs_to :user, serializer: UserSingleSerializer
   belongs_to :event, serializer: EventSingleSerializer
 
+  has_many :brackets
+
   def categories
     categories = []
-    object.enrolls.each {|enroll| categories << enroll.category}
+    object.brackets.each {|bracket| categories << bracket.category if categories.detect{|w| w.id == bracket.category.id}.nil? }
     categories
-  end
-  
-  def brackets
-    brackets = []
-    object.enrolls.each {|enroll| brackets << enroll.bracket_skill if enroll.bracket_skill.present?}
-    object.enrolls.each {|enroll| brackets << enroll.bracket_age if enroll.bracket_age.present?}
-    brackets
   end
 
   def sports
