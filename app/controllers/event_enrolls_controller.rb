@@ -24,16 +24,7 @@ class EventEnrollsController < ApplicationController
           key :'$ref', :EventEnrollInput
         end
       end
-      response 200 do
-        key :name, :categories
-        key :description, 'enrolls'
-        schema do
-          key :type, :array
-          items do
-            key :'$ref', :EventEnroll
-          end
-        end
-      end
+
       response 401 do
         key :description, 'not authorized'
         schema do

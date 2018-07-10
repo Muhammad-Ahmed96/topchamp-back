@@ -16,7 +16,7 @@ class EventBracketSkill < ApplicationRecord
 
 
   def available_for_enroll
-    count  = EventEnroll.where(:event_bracket_skill_id => self.id).where(:enroll_status => :enroll).count
+    count  = 0 #
     self.quantity > count
   end
 

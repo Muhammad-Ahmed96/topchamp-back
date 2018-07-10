@@ -429,13 +429,6 @@ class Event < ApplicationRecord
         key :'$ref', :EventAgenda
       end
     end
-
-    property :enrolls do
-      key :type, :array
-      items do
-        key :'$ref', :EventEnroll
-      end
-    end
   end
   swagger_schema :EventInput do
     key :required, [:event_type_id, :title, :description]
