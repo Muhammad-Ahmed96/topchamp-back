@@ -3,11 +3,15 @@ class ApplicationRecord < ActiveRecord::Base
 
   scope :my_order, lambda{ |column, direction = "desc"| order "#{column} #{direction}" if column.present? }
   def self.update_or_create(attributes)
-    assign_or_new(attributes).save
+    obj = assign_or_new(attributes)
+    obj.save
+    obj
   end
 
   def self.update_or_create!(attributes)
-    assign_or_new(attributes).save!
+    obj = assign_or_new(attributes)
+    obj.save!
+    obj
   end
   def self.assign_or_new(attributes)
     obj = first || new

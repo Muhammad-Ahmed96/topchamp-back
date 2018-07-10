@@ -6,7 +6,7 @@ class EventSerializer < ActiveModel::Serializer
              :awards_for, :awards_through, :awards_plus
   has_many :sports, serializer: SportSerializer
   has_many :regions, serializer: RegionSerializer
-  has_many :categories, serializer: CategorySerializer
+  has_many :categories, serializer: EventCategorySingleSerializer
   has_one :venue, serializer: VenueSerializer
   has_one :event_type, serializer: EventTypeSerializer
   has_one :payment_information, serializer: EventPaymentInformationSerializer
@@ -21,8 +21,7 @@ class EventSerializer < ActiveModel::Serializer
   belongs_to :sport_regulator, serializer: SportRegulatorSerializer
   belongs_to :elimination_format, serializer: EliminationFormatSerializer
 
-  has_many :bracket_ages, serializer: EventBracketAgeSerializer
-  has_many :bracket_skills, serializer: EventBracketSkillSerializer
+  has_many :brackets, serializer: EventBracketSerializer
   belongs_to :scoring_option_match_1, serializer: ScoringOptionSerializer
   belongs_to :scoring_option_match_2, serializer: ScoringOptionSerializer
 

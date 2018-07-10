@@ -40,7 +40,9 @@ class Player < ApplicationRecord
     if data.present? and data.kind_of?(Array)
       brackets_ids = []
       data.each {|bracket|
-        saved_bracket = self.brackets.where(:category_id  => bracket[:category_id]).where(:event_bracket_age_id => bracket[:event_bracket_age_id]).where(:event_bracket_skill_id => bracket[:event_bracket_skill_id]).first_or_create!
+        #todo
+        # reformat brackets to event
+        saved_bracket = self.brackets.where(:category_id  => bracket[:category_id]).where(:event_bracket_id => bracket[:event_bracket_age_id]).where(:event_bracket_skill_id => bracket[:event_bracket_skill_id]).first_or_create!
         brackets_ids << saved_bracket.id
       }
       self.brackets.where.not(:id => brackets_ids).destroy_all

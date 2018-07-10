@@ -4,6 +4,7 @@ class EventBracketSkill < ApplicationRecord
   validates :highest_skill, inclusion: {in: SkillLevels.collection}, numericality: {greater_than_or_equal_to: :lowest_skill}
   validates :quantity,  numericality: { only_integer: true }, :allow_nil => true
   has_many :bracket_ages, class_name: "EventBracketAge", :dependent => :delete_all
+  belongs_to :event
 
 
 
