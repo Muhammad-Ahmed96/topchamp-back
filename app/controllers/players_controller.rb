@@ -462,13 +462,17 @@ class PlayersController < ApplicationController
   def partner_double
     authorize Player
     to_user = User.find( partner_params[:partner_id])
+    event = Event.find( partner_params[:event_id])
+    unless event.present?
+      return response_no_event
+    end
     if params[:url].nil?
       params[:url] = "localhost/test"
     end
     if to_user.present?
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, "partner_double")
-      @invitation.send_mail
+      @invitation.send_mail(true)
     else
       return json_response_error([t("no_player")], 422)
     end
@@ -513,13 +517,17 @@ class PlayersController < ApplicationController
   def partner_mixed
     authorize Player
     to_user = User.find( partner_params[:partner_id])
+    event = Event.find( partner_params[:event_id])
+    unless event.present?
+      return response_no_event
+    end
     if params[:url].nil?
       params[:url] = "localhost/test"
     end
     if to_user.present?
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, "partner_mixed")
-      @invitation.send_mail
+      @invitation.send_mail(true)
     else
       return json_response_error([t("no_player")], 422)
     end
@@ -548,5 +556,9 @@ class PlayersController < ApplicationController
         ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_age_id, :event_bracket_skill_id)
       end
     end
+  end
+
+  def response_no_event
+    json_response_error([t("not_event")], 422)
   end
 end
