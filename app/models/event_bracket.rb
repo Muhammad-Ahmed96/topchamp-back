@@ -1,6 +1,7 @@
 class EventBracket < ApplicationRecord
   include Swagger::Blocks
   scope :only_parent, -> {where :event_bracket_id => nil}
+  after_destroy :on_destroy
 
   belongs_to :event
   attr_accessor :status
@@ -101,5 +102,12 @@ class EventBracket < ApplicationRecord
     property :highest_skill do
       key :type, :number
     end
+  end
+
+
+  private
+
+  def on_destroy
+    PlayerBracket.where(:event_bracket_id => self.id).destroy_all
   end
 end
