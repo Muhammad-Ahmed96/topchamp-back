@@ -1701,9 +1701,9 @@ class EventsController < ApplicationController
       elsif@event.bracket_by == "skill"
         return response_message_error(t("not_skill_braket"), 4)
       elsif@event.bracket_by == "skill_age"
-        return response_message_error(t("not_skill_age_braket"), 5)
+        return response_message_error(t("not_skill_braket"), 5)
       elsif@event.bracket_by == "age_skill"
-        return response_message_error(t("not_age_skill_braket"), 6)
+        return response_message_error(t("not_age_bracket"), 6)
       end
     end
     json_response_serializer_collection(response_data, EventCategorySerializer)
