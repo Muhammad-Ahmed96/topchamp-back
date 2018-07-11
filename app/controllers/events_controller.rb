@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories, :available_categories]
+                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
@@ -1624,6 +1624,7 @@ class EventsController < ApplicationController
     authorize Event
     json_response_serializer_collection(@event.categories, EventCategorySerializer)
   end
+
   swagger_path '/events/:id/available_categories' do
     operation :get do
       key :summary, 'Events categories List '
@@ -1652,10 +1653,16 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def available_categories
+    @event =  Event.find(params[:id])
     gender = @resource.gender
-    age = @resource.age
     event_categories = @event.categories
+    if @event.only_for_men and gender == "Female"
+      return response_message_error(t("only_for_men_event"), 0)
+    elsif @event.only_for_women and gender == "Male"
+      return response_message_error("only_for_wemen_event", 1)
+    end
     # validate gender categories
     if gender == "Male"
       event_categories = event_categories.only_men
@@ -1663,9 +1670,21 @@ class EventsController < ApplicationController
       event_categories = event_categories.only_women
     end
     #validate bracket
-    player  = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
     event_categories.each do |item|
       item.player = player
+    end
+    error = false
+    event_categories.each do |item|
+      if @event.bracket_by == "age"
+
+      elsif @event.bracket_by == "skill"
+
+      elsif @event.bracket_by == "skill_age"
+
+      elsif @event.bracket_by == "age_skill"
+
+      end
     end
     json_response_serializer_collection(event_categories, EventCategorySerializer)
   end
@@ -1826,5 +1845,9 @@ class EventsController < ApplicationController
   def set_resource
     #apply policy scope
     @event = EventPolicy::Scope.new(current_user, Event).resolve.find(params[:id])
+  end
+
+  def response_message_error(message, code)
+    json_response_error(message, 422, code)
   end
 end

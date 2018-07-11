@@ -213,3 +213,5 @@ en:
   events_required: "Event required"
   no_player: "No player found"
   not_event: "Event required"
+  only_for_men_event: "This event is only for male members"
+  only_for_wemen_event: "This event is only for female members"
