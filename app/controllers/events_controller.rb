@@ -1495,21 +1495,12 @@ class EventsController < ApplicationController
         key :type, :integer
       end
       parameter do
-        key :name, :bracket_ages
+        key :name, :brackets
         key :in, :body
-        key :description, 'Bracket ages'
+        key :description, 'Brackets'
         key :type, :array
         items do
-          key :'$ref', :EventBracketAgeInput
-        end
-      end
-      parameter do
-        key :name, :bracket_skills
-        key :in, :body
-        key :description, 'Bracket ages'
-        key :type, :array
-        items do
-          key :'$ref', :EventBracketSkillInput
+          key :'$ref', :EventBracketInput
         end
       end
       parameter do
@@ -1551,11 +1542,10 @@ class EventsController < ApplicationController
   def details
     authorize Event
     unless categories_params[:categories].nil?
-      @event.category_ids = categories_params[:categories]
+      @event.internal_category_ids = categories_params[:categories]
     end
     @event.update! details_params
-    @event.sync_bracket_age! bracket_ages_params
-    @event.sync_bracket_skill! bracket_skills_params
+    @event.sync_brackes! bracket_params
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -1766,31 +1756,19 @@ class EventsController < ApplicationController
                   :scoring_option_match_2_id, :sport_regulator_id, :awards_for, :awards_through, :awards_plus)
   end
 
-  def bracket_ages_params
+# params to brackets
+  def bracket_params
     # whitelist params
-    #ActionController::Parameters.permit_all_parameters = true
-    unless params[:bracket_ages].nil?
-      params[:bracket_ages].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_skill_id, :age, :quantity,
-                                                               bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
+    unless params[:brackets].nil?
+      params[:brackets].map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity,
+                                                               brackets: [:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity])
       end
     end
-    #ActionController::Parameters.permit_all_parameters = false
-  end
-
-  def bracket_skills_params
-    # whitelist params
-    #ActionController::Parameters.permit_all_parameters = true
-    unless params[:bracket_skills].nil? and !params[:bracket_skills].kind_of?(Array)
-      params[:bracket_skills].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
-                                                               bracket_ages: [:id, :event_bracket_skill_id, :age, :quantity])
-      end
-    end
-    #ActionController::Parameters.permit_all_parameters = false
   end
 
   def agenda_params
+    #validate presence and type
     unless params[:agendas].nil? and !params[:agendas].kind_of?(Array)
       params[:agendas].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :category_id, :start_date, :end_date, :start_time,
@@ -1799,7 +1777,9 @@ class EventsController < ApplicationController
     end
   end
 
+# search current resource of id
   def set_resource
+    #apply policy scope
     @event = EventPolicy::Scope.new(current_user, Event).resolve.find(params[:id])
   end
 end

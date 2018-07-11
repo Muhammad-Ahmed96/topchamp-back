@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_06_222533) do
+ActiveRecord::Schema.define(version: 2018_07_10_232704) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -152,6 +152,19 @@ ActiveRecord::Schema.define(version: 2018_07_06_222533) do
     t.integer "quantity", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "event_brackets", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_id"
+    t.float "age"
+    t.float "lowest_skill"
+    t.float "highest_skill"
+    t.integer "quantity", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_brackets_on_deleted_at"
   end
 
   create_table "event_discount_generals", force: :cascade do |t|
@@ -379,12 +392,10 @@ ActiveRecord::Schema.define(version: 2018_07_06_222533) do
   create_table "player_brackets", force: :cascade do |t|
     t.bigint "player_id"
     t.bigint "category_id"
-    t.bigint "event_bracket_age_id"
-    t.bigint "event_bracket_skill_id"
     t.string "enroll_status"
-    t.string "string"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "event_bracket_id"
   end
 
   create_table "players", force: :cascade do |t|

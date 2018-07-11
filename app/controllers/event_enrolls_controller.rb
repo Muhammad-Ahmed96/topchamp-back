@@ -21,19 +21,10 @@ class EventEnrollsController < ApplicationController
         key :description, 'Enrolls'
         key :type, :array
         items do
-          key :'$ref', :EventEnrollInput
+          key :'$ref', :PlayerBracketInput
         end
       end
-      response 200 do
-        key :name, :categories
-        key :description, 'enrolls'
-        schema do
-          key :type, :array
-          items do
-            key :'$ref', :EventEnroll
-          end
-        end
-      end
+
       response 401 do
         key :description, 'not authorized'
         schema do
@@ -48,7 +39,7 @@ class EventEnrollsController < ApplicationController
 
   def create
     player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
-    player.sync_brackets! enroll_collection_params
+    player.sync_brackets! player_brackets_params
     json_response_success(t("created_success", model: "Enroll"), true)
   end
   swagger_path '/events/:id/enrolls/user_cancel' do
@@ -116,13 +107,13 @@ class EventEnrollsController < ApplicationController
   private
 
   def enroll_params
-    params.permit(:category_id, :event_bracket_age_id, :event_bracket_skill_id)
+    params.permit(:category_id, :event_bracket_id,)
   end
 
-  def enroll_collection_params
+  def player_brackets_params
     unless params[:enrolls].nil? and !params[:enrolls].kind_of?(Array)
       params[:enrolls].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_age_id, :event_bracket_skill_id)
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_id)
       end
     end
   end
