@@ -1656,6 +1656,7 @@ class EventsController < ApplicationController
 
   def available_categories
     @event =  Event.find(params[:id])
+    response_data = []
     gender = @resource.gender
     event_categories = @event.categories
     if @event.only_for_men and gender == "Female"
@@ -1671,22 +1672,41 @@ class EventsController < ApplicationController
     end
     #validate bracket
     player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    age = player.present? ? player.user.age : nil
+    #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
+    skill = player.present? ? player.skill_level: nil
     event_categories.each do |item|
       item.player = player
     end
-    error = false
-    event_categories.each do |item|
-      if @event.bracket_by == "age"
+    event_categories.to_a.each do |item|
+      valid = false
+      if @event.bracket_by == "age" or @event.bracket_by == "skill"
+        if item.brackets.length > 0
+          response_data << item
+        end
+      elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
+        if item.brackets.length > 0
+          item.brackets.each do |bra|
+            if bra.brackets.age_filter(age).skill_filter(skill).length > 0
+              response_data << item
+            end
+          end
 
-      elsif @event.bracket_by == "skill"
-
-      elsif @event.bracket_by == "skill_age"
-
-      elsif @event.bracket_by == "age_skill"
-
+        end
       end
     end
-    json_response_serializer_collection(event_categories, EventCategorySerializer)
+    if response_data.length == 0
+      if @event.bracket_by == "age"
+        return response_message_error(t("not_age_bracket"), 3)
+      elsif@event.bracket_by == "skill"
+        return response_message_error(t("not_skill_braket"), 4)
+      elsif@event.bracket_by == "skill_age"
+        return response_message_error(t("not_skill_age_braket"), 5)
+      elsif@event.bracket_by == "age_skill"
+        return response_message_error(t("not_age_skill_braket"), 6)
+      end
+    end
+    json_response_serializer_collection(response_data, EventCategorySerializer)
   end
 
   private
