@@ -314,7 +314,12 @@ class User < ApplicationRecord
   end
 
   def age
-    (Time.now.to_s(:number).to_i - self.birth_date.to_time.to_s(:number).to_i)/10e9.to_i
+    if self.birth_date.present?
+      (Time.now.to_s(:number).to_i - self.birth_date.to_time.to_s(:number).to_i)/10e9.to_i
+    else
+      0
+    end
+
   end
 
   private
