@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
+                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories, :available_categories]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
@@ -1622,7 +1622,52 @@ class EventsController < ApplicationController
 
   def categories
     authorize Event
-    json_response(@event.categories)
+    json_response_serializer_collection(@event.categories, EventCategorySerializer)
+  end
+  swagger_path '/events/:id/available_categories' do
+    operation :get do
+      key :summary, 'Events categories List '
+      key :description, 'Categories filter for the current user'
+      key :operationId, 'eventsAvailableCategories'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :name, :categories
+        key :description, 'categories'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :CategoryBrackets
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def available_categories
+    gender = @resource.gender
+    age = @resource.age
+    event_categories = @event.categories
+    # validate gender categories
+    if gender == "Male"
+      event_categories = event_categories.only_men
+    elsif gender == "Female"
+      event_categories = event_categories.only_women
+    end
+    #validate bracket
+    player  = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    event_categories.each do |item|
+      item.player = player
+    end
+    json_response_serializer_collection(event_categories, EventCategorySerializer)
   end
 
   private

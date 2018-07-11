@@ -573,6 +573,16 @@ class Event < ApplicationRecord
     player.sync_brackets! data
   end
 
+  def only_for_men
+    categories = self.internal_category_ids
+    categories.included_in? Category.men_categories and !categories.included_in? Category.women_categories
+  end
+
+  def only_for_women
+    categories = self.internal_category_ids
+    categories.included_in? Category.women_categories and !categories.included_in? Category.men_categories
+  end
+
   private
 
   #validate a url

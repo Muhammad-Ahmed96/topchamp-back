@@ -37,8 +37,8 @@ class Player < ApplicationRecord
   end
 
   def sync_brackets!(data)
+    brackets_ids = []
     if data.present? and data.kind_of?(Array)
-      brackets_ids = []
       data.each do |bracket|
         #get bracket to enroll
         current_bracket = EventBracket.where(:event_id => self.event.id).where(:id => bracket[:event_bracket_id]).first
@@ -55,9 +55,9 @@ class Player < ApplicationRecord
           brackets_ids << saved_bracket.id
         end
       end
-      #delete other brackets
-      self.brackets.where.not(:id => brackets_ids).destroy_all
     end
+    #delete other brackets
+    self.brackets.where.not(:id => brackets_ids).destroy_all
   end
 
   swagger_schema :Player do
