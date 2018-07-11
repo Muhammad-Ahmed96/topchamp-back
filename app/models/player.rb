@@ -40,10 +40,19 @@ class Player < ApplicationRecord
     if data.present? and data.kind_of?(Array)
       brackets_ids = []
       data.each {|bracket|
-        #todo
         # reformat brackets to event
-        saved_bracket = self.brackets.where(:category_id  => bracket[:category_id]).where(:event_bracket_id => bracket[:event_bracket_age_id]).where(:event_bracket_skill_id => bracket[:event_bracket_skill_id]).first_or_create!
-        brackets_ids << saved_bracket.id
+        current_bracket = EventBracket.where(:event_id => self.event.id).where(:id => bracket[:event_bracket_id]).first
+        category = self.event.internal_categories.where(:id => bracket[:category_id]).count
+        if current_bracket.present? and category > 0
+          status = current_bracket.get_status(bracket[:category_id])
+          save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id]}
+          saved_bracket = self.brackets.where(:category_id  => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
+          if saved_bracket.enroll_status != "enroll"
+            saved_bracket.enroll_status = status
+            saved_bracket.save!
+          end
+          brackets_ids << saved_bracket.id
+        end
       }
       self.brackets.where.not(:id => brackets_ids).destroy_all
     end
@@ -86,6 +95,16 @@ class Player < ApplicationRecord
     property :event do
       key :'$ref', :EventSingle
     end
+  end
+
+  def categories
+    categories = []
+    self.brackets.each {|bracket| categories << bracket.category if categories.detect{|w| w.id == bracket.category.id}.nil? }
+    categories
+  end
+
+  def sports
+    self.user.sports
   end
   private
   def set_status

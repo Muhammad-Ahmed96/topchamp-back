@@ -2,10 +2,26 @@ class EventBracket < ApplicationRecord
   include Swagger::Blocks
   scope :only_parent, -> {where :event_bracket_id => nil}
 
+  belongs_to :event
+  attr_accessor :status
+
   validates :quantity,  numericality: { only_integer: true }, :allow_nil => true
   validates :lowest_skill, inclusion: {in: SkillLevels.collection},numericality:{less_than_or_equal_to: :highest_skill},  :allow_nil => true
   validates :highest_skill, inclusion: {in: SkillLevels.collection}, numericality: {greater_than_or_equal_to: :lowest_skill},  :allow_nil => true
   has_many :brackets, class_name: "EventBracket"
+
+  def available_for_enroll(category_id)
+    count  = PlayerBracket.where(:event_bracket_id => self.id).where(:category_id => category_id).where(:enroll_status => :enroll).count
+    self.quantity.nil? or self.quantity > count
+  end
+
+  def get_status(category_id)
+    status = :waiting_list
+    if self.available_for_enroll(category_id)
+      status = :enroll
+    end
+    status
+  end
   swagger_schema :EventBracket do
     property :id do
       key :type, :integer

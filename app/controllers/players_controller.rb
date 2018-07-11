@@ -301,7 +301,7 @@ class PlayersController < ApplicationController
         key :description, 'Enrolls'
         key :type, :array
         items do
-          key :'$ref', :EventEnrollInput
+          key :'$ref', :PlayerBracketInput
         end
       end
       response 200 do
@@ -324,7 +324,7 @@ class PlayersController < ApplicationController
 
   def update
     authorize @player
-    @player.sync_brackets! enroll_collection_params
+    @player.sync_brackets! player_brackets_params
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
@@ -550,10 +550,10 @@ class PlayersController < ApplicationController
   end
 
 
-  def enroll_collection_params
+  def player_brackets_params
     unless params[:enrolls].nil? and !params[:enrolls].kind_of?(Array)
       params[:enrolls].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_age_id, :event_bracket_skill_id)
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_id)
       end
     end
   end

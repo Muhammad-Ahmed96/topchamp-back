@@ -6,7 +6,7 @@ class EventSerializer < ActiveModel::Serializer
              :awards_for, :awards_through, :awards_plus
   has_many :sports, serializer: SportSerializer
   has_many :regions, serializer: RegionSerializer
-  has_many :categories, serializer: EventCategorySingleSerializer
+  has_many :categories, serializer: EventCategorySerializer
   has_one :venue, serializer: VenueSerializer
   has_one :event_type, serializer: EventTypeSerializer
   has_one :payment_information, serializer: EventPaymentInformationSerializer
