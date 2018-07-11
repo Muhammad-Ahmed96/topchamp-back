@@ -313,6 +313,10 @@ class User < ApplicationRecord
     end
   end
 
+  def age
+    (Time.now.to_s(:number).to_i - self.birth_date.to_time.to_s(:number).to_i)/10e9.to_i
+  end
+
   private
 
   def check_dimensions
