@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
+                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories, :availiable_categories]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
@@ -1623,6 +1623,11 @@ class EventsController < ApplicationController
   def categories
     authorize Event
     json_response(@event.categories)
+  end
+
+  def availiable_categories
+    @resource.id
+    #categories =  @event.categories.where()
   end
 
   private
