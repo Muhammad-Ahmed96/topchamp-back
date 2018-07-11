@@ -39,9 +39,10 @@ class Player < ApplicationRecord
   def sync_brackets!(data)
     if data.present? and data.kind_of?(Array)
       brackets_ids = []
-      data.each {|bracket|
-        # reformat brackets to event
+      data.each do |bracket|
+        #get bracket to enroll
         current_bracket = EventBracket.where(:event_id => self.event.id).where(:id => bracket[:event_bracket_id]).first
+        # check if category exist in event
         category = self.event.internal_categories.where(:id => bracket[:category_id]).count
         if current_bracket.present? and category > 0
           status = current_bracket.get_status(bracket[:category_id])
@@ -53,7 +54,8 @@ class Player < ApplicationRecord
           end
           brackets_ids << saved_bracket.id
         end
-      }
+      end
+      #delete other brackets
       self.brackets.where.not(:id => brackets_ids).destroy_all
     end
   end

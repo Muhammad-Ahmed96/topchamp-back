@@ -29,7 +29,7 @@ class Event < ApplicationRecord
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
 
-  has_many :brackets, -> { only_parent}, class_name: "EventBracket"
+  has_many :brackets, -> {only_parent}, class_name: "EventBracket"
   has_many :internal_brackets, class_name: "EventBracket"
 
 
@@ -144,20 +144,20 @@ class Event < ApplicationRecord
     end
   end
 
-# sync all brackets of event
+  # sync all brackets of event
   def sync_brackes!(brackets)
     if brackets.kind_of? Array
       not_delete = []
       brackets.each do |bracket|
         #asing data of bracket
-        data = {:event_bracket_id =>  bracket[:event_bracket_id], :age => bracket[:age],
+        data = {:event_bracket_id => bracket[:event_bracket_id], :age => bracket[:age],
                 :lowest_skill => bracket[:lowest_skill], :highest_skill => bracket[:highest_skill],
                 :quantity => bracket[:quantity]}
         saved_bracket = self.internal_brackets.where(id: bracket[:id]).update_or_create!(data)
         not_delete << saved_bracket.id
         if bracket[:brackets].kind_of? Array
           bracket[:brackets].each do |child_bracket|
-            data = {:event_bracket_id =>  saved_bracket.id, :age => child_bracket[:age],
+            data = {:event_bracket_id => saved_bracket.id, :age => child_bracket[:age],
                     :lowest_skill => child_bracket[:lowest_skill], :highest_skill => child_bracket[:highest_skill],
                     :quantity => child_bracket[:quantity]}
             saved_bracket = self.internal_brackets.where(id: child_bracket[:id]).update_or_create!(data)
@@ -255,11 +255,6 @@ class Event < ApplicationRecord
     http.request(request)
 
     response = http.request(request)
-  end
-
-#Get status of brackets
-  def enroll_status(age_id, skill_id)
-    brackets = self.players.brackets.where(:event_bracket_age_id => age_id).where(:event_bracket_skill_id => skill_id)
   end
 
   swagger_schema :Event do
@@ -571,6 +566,11 @@ class Event < ApplicationRecord
   #Determine if is complete for activate
   def valid_to_activate?
     self.title.present? && self.start_date.present?
+  end
+
+  def add_player(user_id, data)
+    player = Player.where(user_id: user_id).where(event_id: self.id).first_or_create!
+    player.sync_brackets! data
   end
 
   private
