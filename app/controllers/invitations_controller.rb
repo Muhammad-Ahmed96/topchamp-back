@@ -288,6 +288,16 @@ class InvitationsController < ApplicationController
       key :operationId, 'invitationsEnrollCreate'
       key :produces, ['application/json',]
       key :tags, ['invitations']
+      parameter do
+        key :name, :attendee_types
+        key :in, :body
+        key :required, true
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
       response 200 do
         key :description, ''
         schema do
@@ -310,16 +320,25 @@ class InvitationsController < ApplicationController
     if @invitation.status != "role"
       event = @invitation.event
       if event.present?
-        participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
-        types = @invitation.attendee_type_ids
+        types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
+        if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
+          @invitation.status = :role
+          @invitation.save!
+          return   json_response_success(t("edited_success", model: Invitation.model_name.human), true)
+          #return json_response_error([t("attendee_types_required")], 401)
+        end
         type_id = AttendeeType.player_id
-        is_player = types.detect{|w| w == type_id}
+        is_player = types.detect {|w| w == type_id}
         unless is_player.nil?
           #Create player
           types.delete(type_id)
           player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first_or_create!
         end
-        participant.attendee_type_ids = types
+        if types.length > 0
+          participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
+          types |= participant.attendee_type_ids.to_a
+          participant.attendee_type_ids = types
+        end
         @invitation.status = :role
         @invitation.save!
       end
@@ -396,6 +415,10 @@ class InvitationsController < ApplicationController
 
   def array_params
     params.permit(invitations: [:event_id, :email, :url, attendee_types: []])
+  end
+
+  def enroll_params
+    params.permit(attendee_types: [])
   end
 
   def import_params

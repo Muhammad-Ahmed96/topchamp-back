@@ -65,6 +65,7 @@ Rails.application.routes.draw do
         put :details
         put :agendas
         get :categories
+        get :available_categories
       end
       resources :event_enrolls,only: [:create, :index], :path => :enrolls do
         collection do

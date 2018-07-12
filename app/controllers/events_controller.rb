@@ -1622,7 +1622,91 @@ class EventsController < ApplicationController
 
   def categories
     authorize Event
-    json_response(@event.categories)
+    json_response_serializer_collection(@event.categories, EventCategorySerializer)
+  end
+
+  swagger_path '/events/:id/available_categories' do
+    operation :get do
+      key :summary, 'Events categories List '
+      key :description, 'Categories filter for the current user'
+      key :operationId, 'eventsAvailableCategories'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :name, :categories
+        key :description, 'categories'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :CategoryBrackets
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def available_categories
+    @event =  Event.find(params[:id])
+    response_data = []
+    gender = @resource.gender
+    event_categories = @event.categories
+    if @event.only_for_men and gender == "Female"
+      return response_message_error(t("only_for_men_event"), 0)
+    elsif @event.only_for_women and gender == "Male"
+      return response_message_error("only_for_wemen_event", 1)
+    end
+    # validate gender categories
+    if gender == "Male"
+      event_categories = event_categories.only_men
+    elsif gender == "Female"
+      event_categories = event_categories.only_women
+    end
+    #validate bracket
+    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    age = player.present? ? player.user.age : nil
+    #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
+    skill = player.present? ? player.skill_level: nil
+    event_categories.each do |item|
+      item.player = player
+    end
+    event_categories.to_a.each do |item|
+      valid = false
+      if @event.bracket_by == "age" or @event.bracket_by == "skill"
+        if item.brackets.length > 0
+          response_data << item
+        end
+      elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
+        if item.brackets.length > 0
+          item.brackets.each do |bra|
+            if bra.brackets.age_filter(age).skill_filter(skill).length > 0
+              response_data << item
+            end
+          end
+
+        end
+      end
+    end
+    if response_data.length == 0
+      if @event.bracket_by == "age"
+        return response_message_error(t("not_age_bracket"), 3)
+      elsif@event.bracket_by == "skill"
+        return response_message_error(t("not_skill_braket"), 4)
+      elsif@event.bracket_by == "skill_age"
+        return response_message_error(t("not_skill_braket"), 5)
+      elsif@event.bracket_by == "age_skill"
+        return response_message_error(t("not_age_bracket"), 6)
+      end
+    end
+    json_response_serializer_collection(response_data, EventCategorySerializer)
   end
 
   private
@@ -1781,5 +1865,9 @@ class EventsController < ApplicationController
   def set_resource
     #apply policy scope
     @event = EventPolicy::Scope.new(current_user, Event).resolve.find(params[:id])
+  end
+
+  def response_message_error(message, code)
+    json_response_error(message, 422, code)
   end
 end
