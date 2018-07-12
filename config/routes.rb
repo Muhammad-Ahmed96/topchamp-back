@@ -89,6 +89,7 @@ Rails.application.routes.draw do
         post :event
         post :date
         post :sing_up
+        post :refuse
       end
       member do
         post :resend_mail
