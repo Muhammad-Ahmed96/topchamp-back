@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_12_221619) do
+ActiveRecord::Schema.define(version: 2018_07_12_232406) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -262,6 +262,9 @@ ActiveRecord::Schema.define(version: 2018_07_12_221619) do
     t.boolean "use_link_home_page", default: false
     t.boolean "use_link_event_website", default: false
     t.boolean "allow_attendees_change", default: false
+    t.boolean "allow_waiver"
+    t.text "waiver"
+    t.boolean "allow_wait_list"
   end
 
   create_table "event_rules", force: :cascade do |t|
