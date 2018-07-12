@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :current_enroll]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :current_enrolls, :sing_up_information]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create]
 # Update password
@@ -701,6 +701,60 @@ class UsersController < ApplicationController
     events = Event.where(:id => ids).all
     json_response_serializer_collection(events, SingleEventSerializer)
   end
+  swagger_path '/users/:id/sing_up_information' do
+    operation :put do
+      key :summary, 'Sing up information of user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersSingUpInformation'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      parameter do
+        key :name, :postal_code
+        key :in, :body
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :body
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :body
+        key :type, :string
+      end
+      parameter do
+        key :name, :country
+        key :in, :body
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def sing_up_information
+    contact_information = @user.contact_information
+    if contact_information.present?
+      contact_information.update! sing_up_informations_params
+    else
+      @user.create_contact_information! sing_up_informations_params
+    end
+
+    json_response_serializer(@user, UserSingleSerializer)
+  end
 
   private
 
@@ -741,6 +795,10 @@ class UsersController < ApplicationController
     # whitelist params
     params.require(:medical_information).permit(:insurance_provider, :insurance_policy_number, :group_id, :primary_physician_full_name, :primary_physician_country_code_phone,
                                                 :primary_physician_phone, :dietary_restrictions, :allergies)
+  end
+
+  def sing_up_informations_params
+    params.permit(:postal_code, :state, :city, :country)
   end
 
   def set_resource

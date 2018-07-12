@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_10_232704) do
+ActiveRecord::Schema.define(version: 2018_07_12_221619) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -111,6 +111,7 @@ ActiveRecord::Schema.define(version: 2018_07_10_232704) do
     t.string "emergency_contact_country_code_phone"
     t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
+    t.string "country"
   end
 
   create_table "elimination_formats", force: :cascade do |t|

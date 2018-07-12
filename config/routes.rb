@@ -12,6 +12,7 @@ Rails.application.routes.draw do
         put :activate
         put :inactive
         put :profile
+        put :sing_up_information
       end
     end
     resources :sports, only: [:index]
