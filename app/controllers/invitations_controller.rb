@@ -321,6 +321,12 @@ class InvitationsController < ApplicationController
       event = @invitation.event
       if event.present?
         types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
+        if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
+          @invitation.status = :role
+          @invitation.save!
+          return   json_response_success(t("edited_success", model: Invitation.model_name.human), true)
+          #return json_response_error([t("attendee_types_required")], 401)
+        end
         type_id = AttendeeType.player_id
         is_player = types.detect {|w| w == type_id}
         unless is_player.nil?
