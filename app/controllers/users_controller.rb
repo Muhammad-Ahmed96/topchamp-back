@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :current_enrolls, :sing_up_information]
-  before_action :authenticate_user!
+  before_action :authenticate_user!, except: [:sing_up_information]
   around_action :transactions_filter, only: [:update, :create]
 # Update password
   swagger_path '/users' do
@@ -746,6 +746,9 @@ class UsersController < ApplicationController
     end
   end
   def sing_up_information
+    if @user.active_for_authentication?
+      return json_response_error([t("is_already_active")], 422)
+    end
     contact_information = @user.contact_information
     if contact_information.present?
       contact_information.update! sing_up_informations_params
