@@ -1585,9 +1585,7 @@ class EventsController < ApplicationController
 
   def agendas
     authorize Event
-    if agenda_params.present?
       @event.sync_agendas! agenda_params
-    end
     json_response_serializer(@event, EventSerializer)
   end
 

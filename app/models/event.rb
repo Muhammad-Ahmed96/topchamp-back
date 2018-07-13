@@ -121,8 +121,8 @@ class Event < ApplicationRecord
 
 
   def sync_agendas!(data)
+    deleteIds = []
     if data.present?
-      deleteIds = []
       event_agenda = nil
       data.each {|agenda|
         if agenda[:id].present?
@@ -138,9 +138,9 @@ class Event < ApplicationRecord
         end
         deleteIds << event_agenda.id
       }
-      unless deleteIds.nil?
-        self.agendas.where.not(id: deleteIds).destroy_all
-      end
+    end
+    unless deleteIds.nil?
+      self.agendas.where.not(id: deleteIds).destroy_all
     end
   end
 
