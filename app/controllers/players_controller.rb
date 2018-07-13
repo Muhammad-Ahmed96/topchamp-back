@@ -1,6 +1,6 @@
 class PlayersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner, :wait_list, :enrolled]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :partner]
   swagger_path '/players' do
@@ -533,6 +533,68 @@ class PlayersController < ApplicationController
       return json_response_error([t("no_player")], 422)
     end
     json_response_success(t("edited_success", model: Player.model_name.human), true)
+  end
+
+  swagger_path '/players/:id/wait_list' do
+    operation :get do
+      key :summary, 'Wait list of players'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersWaitList'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      response 200 do
+        schema do
+          property :data do
+            items do
+              key :'$ref', :PlayerBracket
+            end
+          end
+        end
+      end
+
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def wait_list
+    json_response_serializer_collection(@player.brackets_wait_list, PlayerBracketSingleSerializer)
+  end
+  swagger_path '/players/:id/enrolled' do
+    operation :get do
+      key :summary, 'brackets enrolled of players'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersEnrolled'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      response 200 do
+        schema do
+          property :data do
+            items do
+              key :'$ref', :PlayerBracket
+            end
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def enrolled
+    json_response_serializer_collection(@player.brackets_enroll, PlayerBracketSingleSerializer)
   end
 
 

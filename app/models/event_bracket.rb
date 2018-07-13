@@ -113,6 +113,25 @@ class EventBracket < ApplicationRecord
     end
   end
 
+  swagger_schema :EventBracketSingle do
+    property :id do
+      key :type, :integer
+      key :format, :integer
+    end
+    property :age do
+      key :type, :number
+    end
+    property :quantity do
+      key :type, :number
+    end
+    property :lowest_skill do
+      key :type, :number
+    end
+    property :highest_skill do
+      key :type, :number
+    end
+  end
+
 
   private
 
