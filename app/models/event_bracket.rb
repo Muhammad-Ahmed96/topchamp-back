@@ -26,6 +26,8 @@ class EventBracket < ApplicationRecord
     status = :waiting_list
     if self.available_for_enroll(category_id)
       status = :enroll
+    elsif !self.event.registration_rule.allow_wait_list
+      status = :sold_out
     end
     status
   end

@@ -38,10 +38,17 @@ class EventEnrollsController < ApplicationController
   end
 
   def create
-    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
-    player.sync_brackets! player_brackets_params
-    json_response_success(t("created_success", model: "Enroll"), true)
+    brackets = @event.available_brackets(player_brackets_params)
+    if brackets.length > 0
+      player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+      player.sync_brackets! brackets
+      return json_response_serializer(player, PlayerSerializer)
+    else
+      return response_no_enroll_error
+    end
+
   end
+
   swagger_path '/events/:id/enrolls/user_cancel' do
     operation :post do
       key :summary, 'Cancel registration to event'
@@ -66,12 +73,14 @@ class EventEnrollsController < ApplicationController
       end
     end
   end
+
   def user_cancel
     authorize(@event)
-    @event.players.where(:user_id =>  @resource.id).destroy_all
-    @event.participants.where(:user_id =>  @resource.id).destroy_all
+    @event.players.where(:user_id => @resource.id).destroy_all
+    @event.participants.where(:user_id => @resource.id).destroy_all
     json_response_success(t("success"), true)
   end
+
   swagger_path '/events/:id/enrolls/change_attendees' do
     operation :post do
       key :summary, 'Change attendees to event'
@@ -96,6 +105,7 @@ class EventEnrollsController < ApplicationController
       end
     end
   end
+
   def change_attendees
     authorize(@event)
     participant = @event.participants.where(:user_id => @resource.id).first!
@@ -128,5 +138,9 @@ class EventEnrollsController < ApplicationController
 
   def response_no_space_error
     json_response_error([t("insufficient_space")], 422)
+  end
+
+  def response_no_enroll_error
+    json_response_error([t("not_brackets_to_enrroll")], 422)
   end
 end

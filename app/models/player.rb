@@ -6,6 +6,8 @@ class Player < ApplicationRecord
   belongs_to :event
   belongs_to :attendee_type, :optional => true
   has_many :brackets, class_name: "PlayerBracket"
+  has_many :brackets_enroll, class_name: "PlayerBracket"
+  has_many :brackets_wait_list, -> {}, class_name: "PlayerBracket"
 
   scope :status_in, lambda {|status| where status: status if status.present?}
   #scope :skill_level_like, lambda {|search| where ["to_char(skill_level,'9999999999') LIKE LOWER(?)", "%#{search}%"] if search.present?}

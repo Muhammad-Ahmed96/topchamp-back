@@ -324,7 +324,8 @@ class PlayersController < ApplicationController
 
   def update
     authorize @player
-    @player.sync_brackets! player_brackets_params
+    brackets = @player.event.available_brackets(player_brackets_params)
+    @player.sync_brackets! brackets
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 

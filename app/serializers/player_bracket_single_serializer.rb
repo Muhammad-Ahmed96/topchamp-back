@@ -1,5 +1,5 @@
 class PlayerBracketSingleSerializer < ActiveModel::Serializer
-  attributes :id, :age, :lowest_skill, :highest_skill
+  attributes :id, :age, :lowest_skill, :highest_skill, :enroll_status
   belongs_to :category, serializer: CategorySerializer
   has_one :parent_bracket, serializer: EventBracketSingleSerializer
 

@@ -2,7 +2,8 @@ class PlayerBracket < ApplicationRecord
   include Swagger::Blocks
   belongs_to :category, :optional => true
   belongs_to :bracket, :foreign_key => :event_bracket_id, :class_name => "EventBracket", :optional => true
-
+  scope :enroll, -> { where enroll_status: :enroll }
+  scope :wait_list, -> { where enroll_status: :waiting_list }
 
   swagger_schema :PlayerBracketInput do
     property :category_id do

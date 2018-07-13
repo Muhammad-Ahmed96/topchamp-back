@@ -583,6 +583,21 @@ class Event < ApplicationRecord
     categories.included_in? Category.women_categories and !categories.included_in? Category.men_categories
   end
 
+  def available_brackets(data)
+    brackets = []
+    data.each do |bracket|
+      current_bracket = EventBracket.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
+      category = self.internal_categories.where(:id => bracket[:category_id]).count
+      if current_bracket.present? and category > 0
+        status = current_bracket.get_status(bracket[:category_id])
+        if status == :enroll or status == :waiting_list
+          brackets << bracket
+        end
+      end
+    end
+    brackets
+  end
+
   private
 
   #validate a url
