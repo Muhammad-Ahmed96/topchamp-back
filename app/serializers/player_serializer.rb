@@ -4,6 +4,8 @@ class PlayerSerializer < ActiveModel::Serializer
   belongs_to :event, serializer: EventSingleSerializer
 
   has_many :brackets, serializer: PlayerBracketSingleSerializer
+  has_many :brackets_enroll, serializer: PlayerBracketSingleSerializer, key: :enroll
+  has_many :brackets_wait_list, serializer: PlayerBracketSingleSerializer, key: :wait_list
   has_many :categories, serializer: CategorySerializer
   has_many :sports, serializer: SportSerializer
 end

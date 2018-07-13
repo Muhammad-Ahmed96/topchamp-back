@@ -222,3 +222,4 @@ en:
   not_age_skill_braket: "This event does not have a bracket for your age/skill"
   attendee_types_required: "attendee types required"
   refuse_success: "%{model} refuse success"
+  not_brackets_to_enrroll: "No brackets to enroll"

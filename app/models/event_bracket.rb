@@ -26,6 +26,8 @@ class EventBracket < ApplicationRecord
     status = :waiting_list
     if self.available_for_enroll(category_id)
       status = :enroll
+    elsif !self.event.registration_rule.allow_wait_list
+      status = :sold_out
     end
     status
   end
@@ -93,6 +95,25 @@ class EventBracket < ApplicationRecord
 
 
   swagger_schema :EventBracketInputAlone do
+    property :id do
+      key :type, :integer
+      key :format, :integer
+    end
+    property :age do
+      key :type, :number
+    end
+    property :quantity do
+      key :type, :number
+    end
+    property :lowest_skill do
+      key :type, :number
+    end
+    property :highest_skill do
+      key :type, :number
+    end
+  end
+
+  swagger_schema :EventBracketSingle do
     property :id do
       key :type, :integer
       key :format, :integer
