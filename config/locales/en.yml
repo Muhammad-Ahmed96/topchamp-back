@@ -196,6 +196,7 @@ en:
       role: "Role"
   reset: "Reset Password"
   unable_activate: "Unable to activate"
+  is_already_active: "Is already active"
   to: "to"
   not_permitted: "not permitted"
   insufficient_space: "insufficient space"
@@ -220,3 +221,4 @@ en:
   not_skill_age_braket: "This event does not have a bracket for your skill/age"
   not_age_skill_braket: "This event does not have a bracket for your age/skill"
   attendee_types_required: "attendee types required"
+  refuse_success: "%{model} refuse success"

@@ -116,7 +116,8 @@ class ApplicationRegistrationsController < ::DeviseTokenAuth::RegistrationsContr
           @resource.save!
           update_auth_header
         end
-        render_create_success
+        #render_create_success
+        json_response_serializer(@resource, UserSingleSerializer)
       else
         clean_up_passwords @resource
         render_create_error

@@ -12,6 +12,7 @@ Rails.application.routes.draw do
         put :activate
         put :inactive
         put :profile
+        put :sing_up_information
       end
     end
     resources :sports, only: [:index]
@@ -89,6 +90,7 @@ Rails.application.routes.draw do
         post :event
         post :date
         post :sing_up
+        post :refuse
       end
       member do
         post :resend_mail

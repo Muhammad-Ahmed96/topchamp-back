@@ -46,6 +46,18 @@ class EventRegistrationRule < ApplicationRecord
     property :link_event_website do
       key :type, :string
     end
+
+    property :allow_waiver do
+      key :type, :boolean
+    end
+
+    property :waiver do
+      key :type, :string
+    end
+
+    property :allow_wait_list do
+      key :type, :boolean
+    end
   end
 
   swagger_schema :EventRegistrationRuleInput do
@@ -82,6 +94,17 @@ class EventRegistrationRule < ApplicationRecord
     end
     property :link_event_website do
       key :type, :string
+    end
+    property :allow_waiver do
+      key :type, :boolean
+    end
+
+    property :waiver do
+      key :type, :string
+    end
+
+    property :allow_wait_list do
+      key :type, :boolean
     end
   end
 end

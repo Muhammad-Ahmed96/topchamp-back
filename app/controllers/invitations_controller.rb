@@ -1,6 +1,6 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail, :enroll]
+  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail, :enroll, :refuse_invitation]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll]
   swagger_path '/invitations' do
@@ -373,6 +373,46 @@ class InvitationsController < ApplicationController
     send_file("#{Rails.root}/app/assets/template/invitations_template.xlsx",
               filename: "invitations_template.xlsx",
               type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  end
+
+  swagger_path '/invitations/:id/refuse' do
+    operation :post do
+      key :summary, 'Invitations refuse'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsRefuse'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :attendee_types
+        key :in, :body
+        key :required, true
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def refuse
+    @invitation.status = "refuse"
+    @invitation.save!(:validate => false)
+    json_response_success(t("refuse_success", model: Invitation.model_name.human), true)
   end
 
   private
