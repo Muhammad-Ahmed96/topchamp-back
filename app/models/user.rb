@@ -16,7 +16,7 @@ class User < ApplicationRecord
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/user/:style/avatar_profile.png"
 
   # authenticate :resend_limit, if: :new_record?
   #authenticate :valid_pin, unless: :new_record?
