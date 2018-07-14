@@ -90,11 +90,12 @@ Rails.application.routes.draw do
         post :event
         post :date
         post :sing_up
-        post :refuse
+        post :partner
       end
       member do
         post :resend_mail
         post :enroll
+        post :refuse
       end
     end
     resources :participants, only: [:index, :show] do

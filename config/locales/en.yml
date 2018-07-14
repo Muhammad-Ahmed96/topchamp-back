@@ -223,3 +223,4 @@ en:
   attendee_types_required: "attendee types required"
   refuse_success: "%{model} refuse success"
   not_brackets_to_enrroll: "No brackets to enroll"
+  not_type: "Type required"

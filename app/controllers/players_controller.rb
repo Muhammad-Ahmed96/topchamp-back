@@ -461,6 +461,8 @@ class PlayersController < ApplicationController
   end
 
   def partner_double
+    #todo
+    # Delete this method
     authorize Player
     to_user = User.find( partner_params[:partner_id])
     event = Event.find( partner_params[:event_id])
@@ -516,6 +518,8 @@ class PlayersController < ApplicationController
     end
   end
   def partner_mixed
+    #todo
+    # Delete this method
     authorize Player
     to_user = User.find( partner_params[:partner_id])
     event = Event.find( partner_params[:event_id])
