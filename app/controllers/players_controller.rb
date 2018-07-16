@@ -162,7 +162,7 @@ class PlayersController < ApplicationController
     end
 
     sports_column = nil
-    if column.to_s == "sporst"
+    if column.to_s == "sports"
       sports_column = "name"
       column = nil
     end
