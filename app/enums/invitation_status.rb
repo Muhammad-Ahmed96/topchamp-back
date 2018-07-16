@@ -15,3 +15,6 @@ end
 
 class InvitationStatus::Role < InvitationStatus
 end
+
+class InvitationStatus::Refuse < InvitationStatus
+end

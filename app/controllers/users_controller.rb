@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :current_enroll]
-  before_action :authenticate_user!
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
+  before_action :authenticate_user!, except: [:sing_up_information]
   around_action :transactions_filter, only: [:update, :create]
 # Update password
   swagger_path '/users' do
@@ -109,6 +109,13 @@ class UsersController < ApplicationController
         key :required, false
         key :type, :string
       end
+      parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
       response 200 do
         key :description, ''
         schema do
@@ -137,6 +144,7 @@ class UsersController < ApplicationController
     search = params[:search].strip unless params[:search].nil?
     column = params[:column].nil? ? 'first_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
     status = params[:status]
     role = params[:role]
     first_name = params[:first_name]
@@ -158,10 +166,16 @@ class UsersController < ApplicationController
       column_sports = "name"
       column = nil
     end
-    paginate User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
+
+    users =  User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
                  .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
                  .email_like(email).last_sign_in_at_like(last_sign_in_at).state_like(state).city_like(city)
-                 .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction), per_page: 50, root: :data
+                 .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction)
+    if paginate.to_s == "0"
+      json_response_serializer_collection(users.all, UserSerializer)
+    else
+      paginate users, per_page: 50, root: :data
+    end
   end
 
   swagger_path '/users' do
@@ -679,13 +693,70 @@ class UsersController < ApplicationController
 
   def current_enrolls
     ids = []
-    if @resource.enrolls.present?
-      @resource.enrolls.each {|enroll|
+    if @resource.players.present?
+      @resource.players.each {|enroll|
         ids << enroll.event.id
       }
     end
     events = Event.where(:id => ids).all
     json_response_serializer_collection(events, SingleEventSerializer)
+  end
+  swagger_path '/users/:id/sing_up_information' do
+    operation :put do
+      key :summary, 'Sing up information of user'
+      key :description, 'User Catalog'
+      key :operationId, 'usersSingUpInformation'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      parameter do
+        key :name, :postal_code
+        key :in, :body
+        key :type, :string
+      end
+      parameter do
+        key :name, :state
+        key :in, :body
+        key :type, :string
+      end
+      parameter do
+        key :name, :city
+        key :in, :body
+        key :type, :string
+      end
+      parameter do
+        key :name, :country
+        key :in, :body
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def sing_up_information
+    if @user.active_for_authentication?
+      return json_response_error([t("is_already_active")], 422)
+    end
+    contact_information = @user.contact_information
+    if contact_information.present?
+      contact_information.update! sing_up_informations_params
+    else
+      @user.create_contact_information! sing_up_informations_params
+    end
+
+    json_response_serializer(@user, UserSingleSerializer)
   end
 
   private
@@ -727,6 +798,10 @@ class UsersController < ApplicationController
     # whitelist params
     params.require(:medical_information).permit(:insurance_provider, :insurance_policy_number, :group_id, :primary_physician_full_name, :primary_physician_country_code_phone,
                                                 :primary_physician_phone, :dietary_restrictions, :allergies)
+  end
+
+  def sing_up_informations_params
+    params.permit(:postal_code, :state, :city, :country)
   end
 
   def set_resource

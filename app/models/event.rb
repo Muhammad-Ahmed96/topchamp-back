@@ -11,7 +11,8 @@ class Event < ApplicationRecord
 
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions
-  has_and_belongs_to_many :categories
+  has_and_belongs_to_many :internal_categories, :join_table => "categories_events", class_name: "Category"
+  has_many :categories, :class_name => "CategoriesEvent"
   belongs_to :venue, optional: true
   belongs_to :event_type, optional: true
   has_one :payment_information, class_name: 'EventPaymentInformation'
@@ -20,15 +21,16 @@ class Event < ApplicationRecord
   has_many :discount_generals, class_name: 'EventDiscountGeneral'
   has_many :discount_personalizeds, class_name: 'EventDiscountPersonalized'
   has_one :tax, class_name: 'EventTax'
-  has_many :enrolls, class_name: 'EventEnroll'
+  has_many :players
+  has_many :participants
   has_one :registration_rule, class_name: 'EventRegistrationRule'
   has_many :agendas, class_name: 'EventAgenda'
   #has_one :rule, class_name: 'EventRule'
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
 
-  has_many :bracket_ages, class_name: "EventBracketAge"
-  has_many :bracket_skills, class_name: "EventBracketSkill"
+  has_many :brackets, -> {only_parent}, class_name: "EventBracket"
+  has_many :internal_brackets, class_name: "EventBracket"
 
 
   belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
@@ -92,7 +94,7 @@ class Event < ApplicationRecord
         deleteIds << discounts_general.id
       }
     end
-      self.discount_generals.where.not(id: deleteIds).destroy_all
+    self.discount_generals.where.not(id: deleteIds).destroy_all
   end
 
   def sync_discount_personalizeds!(data)
@@ -119,8 +121,8 @@ class Event < ApplicationRecord
 
 
   def sync_agendas!(data)
+    deleteIds = []
     if data.present?
-      deleteIds = []
       event_agenda = nil
       data.each {|agenda|
         if agenda[:id].present?
@@ -136,90 +138,34 @@ class Event < ApplicationRecord
         end
         deleteIds << event_agenda.id
       }
-      unless deleteIds.nil?
-        self.agendas.where.not(id: deleteIds).destroy_all
-      end
+    end
+    unless deleteIds.nil?
+      self.agendas.where.not(id: deleteIds).destroy_all
     end
   end
 
-
-  def sync_bracket_age!(data)
-    if data.present?
-      deleteIds = []
-      data.each {|bracket_age|
-        if bracket_age[:id].present?
-          deleteIds << bracket_age[:id]
-        end
-      }
-      unless deleteIds.nil?
-        self.bracket_ages.where.not(id: deleteIds).destroy_all
-      end
-      deleteIds = []
-      data.each {|bracket_age|
-        bracket = nil
-        bracket_skills = bracket_age[:bracket_skills]
-        bracket_age.delete :bracket_skills
-        if bracket_age[:id].present?
-          bracket = self.bracket_ages.where(id: bracket_age[:id]).first
-          if bracket.present?
-            bracket.update! bracket_age
-          else
-            bracket_age[:id] = nil
-            bracket = self.bracket_ages.create! bracket_age
+  # sync all brackets of event
+  def sync_brackes!(brackets)
+    if brackets.kind_of? Array
+      not_delete = []
+      brackets.each do |bracket|
+        #asing data of bracket
+        data = {:event_bracket_id => bracket[:event_bracket_id], :age => bracket[:age],
+                :lowest_skill => bracket[:lowest_skill], :highest_skill => bracket[:highest_skill],
+                :quantity => bracket[:quantity]}
+        parent_bracket = self.internal_brackets.where(id: bracket[:id]).update_or_create!(data)
+        not_delete << parent_bracket.id
+        if bracket[:brackets].kind_of? Array
+          bracket[:brackets].each do |child_bracket|
+            data = {:event_bracket_id => parent_bracket.id, :age => child_bracket[:age],
+                    :lowest_skill => child_bracket[:lowest_skill], :highest_skill => child_bracket[:highest_skill],
+                    :quantity => child_bracket[:quantity]}
+            current_bracket = self.internal_brackets.where(id: child_bracket[:id]).update_or_create!(data)
+            not_delete << current_bracket.id
           end
-        else
-          bracket = self.bracket_ages.create! bracket_age
         end
-        deleteIds << bracket.id
-        bracket.sync_bracket_skill! bracket_skills
-      }
-=begin
-      unless deleteIds.nil?
-        self.bracket_ages.where.not(id: deleteIds).destroy_all
       end
-=end
-    else
-      self.bracket_ages.destroy_all
-    end
-  end
-
-  def sync_bracket_skill!(data)
-    if data.present?
-      deleteIds = []
-      data.each {|bracket_skill|
-        if bracket_skill[:id].present?
-          deleteIds << bracket_skill[:id]
-        end
-      }
-      unless deleteIds.nil?
-        self.bracket_skills.where.not(id: deleteIds).destroy_all
-      end
-      deleteIds = []
-      data.each {|bracket_skill|
-        bracket = nil
-        bracket_ages = bracket_skill[:bracket_ages]
-        bracket_skill.delete :bracket_ages
-        if bracket_skill[:id].present?
-          bracket = self.bracket_skills.where(id: bracket_skill[:id]).first
-          if bracket.present?
-            bracket.update! bracket_skill
-          else
-            bracket_skill[:id] = nil
-            bracket = self.bracket_skills.create! bracket_skill
-          end
-        else
-          bracket = self.bracket_skills.create! bracket_skill
-        end
-        deleteIds << bracket.id
-        bracket.sync_bracket_age! bracket_ages
-      }
-=begin
-      unless deleteIds.nil?
-        self.bracket_skills.where.not(id: deleteIds).destroy_all
-      end
-=end
-    else
-      self.bracket_skills.destroy_all
+      self.internal_brackets.where.not(:id => not_delete).destroy_all
     end
   end
 
@@ -241,6 +187,7 @@ class Event < ApplicationRecord
     end
   end
 
+  #SEO URL for the event
   def public_url
     if self.event_url.nil? || self.visibility.to_s == "Private"
       return
@@ -273,6 +220,7 @@ class Event < ApplicationRecord
     response = http.request(request)
   end
 
+  # Removr URL for SEO
   def remove_public_url
     if self.event_url.nil? || self.visibility.to_s == "Public"
       return
@@ -307,41 +255,6 @@ class Event < ApplicationRecord
     http.request(request)
 
     response = http.request(request)
-  end
-
-
-  def enroll_status(enroll, age_id, skill_id)
-    age = self.bracket_ages.where(:id => age_id).first
-    skill = self.bracket_skills.where(:id => skill_id).first
-    status = enroll.present? ? enroll.enroll_status : nil
-    if age.present? && skill.present? && status.nil?
-      if skill.event_bracket_age_id == age.id
-        if skill.available_for_enroll
-          status =  :enroll
-        end
-      elsif age.event_bracket_skill_id == skill.id
-        if age.available_for_enroll
-          status =  :enroll
-        end
-      end
-    elsif age.present?
-      if age.available_for_enroll
-        status =  :enroll
-      end
-    elsif skill.present?
-      if skill.available_for_enroll
-        status =  :enroll
-      end
-    elsif enroll.nil?
-      status = :wait_list
-    end
-    #end
-
-    if enroll.nil? and status.nil?
-      status = :wait_list
-    end
-
-    status
   end
 
   swagger_schema :Event do
@@ -445,16 +358,10 @@ class Event < ApplicationRecord
     property :registration_rule do
       key :'$ref', :EventRegistrationRule
     end
-    property :bracket_ages do
+    property :brackets do
       key :type, :array
       items do
-        key :'$ref', :EventBracketAge
-      end
-    end
-    property :bracket_skills do
-      key :type, :array
-      items do
-        key :'$ref', :EventBracketSkill
+        key :'$ref', :EventBracket
       end
     end
     property :sport_regulator_id do
@@ -515,13 +422,6 @@ class Event < ApplicationRecord
       key :type, :array
       items do
         key :'$ref', :EventAgenda
-      end
-    end
-
-    property :enrolls do
-      key :type, :array
-      items do
-        key :'$ref', :EventEnroll
       end
     end
   end
@@ -656,46 +556,64 @@ class Event < ApplicationRecord
     end
   end
 
-
+  #Attach creator
   def save_creator!
     if Current.user
       self.creator_user_id = Current.user.id
     end
   end
 
+  #Determine if is complete for activate
   def valid_to_activate?
     self.title.present? && self.start_date.present?
   end
 
-  def add_enroll(user_id, category_id, event_bracket_age_id, event_bracket_skill_id, attendee_type_ids)
-    data = {:user_id => user_id, :category_id => category_id, :event_bracket_age_id => event_bracket_age_id,
-    :event_bracket_skill_id =>event_bracket_skill_id}
-    my_enroll = self.enrolls.where(:user_id => user_id).where(:category_id => category_id).first
-    enroll_status = self.enroll_status(my_enroll, event_bracket_age_id, event_bracket_skill_id)
-    data = data.merge(:enroll_status => enroll_status)
-    #Save data
-    if my_enroll.present?
-      my_enroll.update! data
-    else
-      my_enroll = self.enrolls.create!(data)
+  def add_player(user_id, data)
+    player = Player.where(user_id: user_id).where(event_id: self.id).first_or_create!
+    player.sync_brackets! data
+  end
+
+  def only_for_men
+    categories = self.internal_category_ids
+    categories.included_in? Category.men_categories and !categories.included_in? Category.women_categories
+  end
+
+  def only_for_women
+    categories = self.internal_category_ids
+    categories.included_in? Category.women_categories and !categories.included_in? Category.men_categories
+  end
+
+  def available_brackets(data)
+    brackets = []
+    data.each do |bracket|
+      current_bracket = EventBracket.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
+      category = self.internal_categories.where(:id => bracket[:category_id]).count
+      if current_bracket.present? and category > 0
+        status = current_bracket.get_status(bracket[:category_id])
+        if status == :enroll or status == :waiting_list
+          brackets << bracket
+        end
+      end
     end
-    my_enroll.attendee_type_ids = attendee_type_ids
-    my_enroll
+    brackets
   end
 
   private
 
+  #validate a url
   def url_valid?(url)
     url = URI.parse(url) rescue false
     url.kind_of?(URI::HTTP) || url.kind_of?(URI::HTTPS)
   end
 
+  #Validate image dimensions
   def check_dimensions
     required_width = 300
     required_height = 300
     temp_file = icon.queued_for_write[:original]
     unless temp_file.nil?
       dimensions = Paperclip::Geometry.from_file(temp_file.path)
+      # add errors to show
       errors.add(:image, "Maximun width must be #{required_width}px") unless dimensions.width <= required_width
       errors.add(:image, "Maximun height must be #{required_height}px") unless dimensions.height <= required_height
     end

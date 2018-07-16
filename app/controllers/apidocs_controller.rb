@@ -95,11 +95,12 @@ class ApidocsController < ApplicationController
       SportRegulator,
       EliminationFormat,
       EventAgenda,
-      EventEnroll,
       Invitation,
       Participant,
       Player,
       BusinessCategory,
+      PlayerBracket,
+      EventBracket,
       self,
   ].freeze
 

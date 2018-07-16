@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_05_205310) do
+ActiveRecord::Schema.define(version: 2018_07_12_232406) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -111,6 +111,7 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.string "emergency_contact_country_code_phone"
     t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
+    t.string "country"
   end
 
   create_table "elimination_formats", force: :cascade do |t|
@@ -154,6 +155,19 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "event_brackets", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_id"
+    t.float "age"
+    t.float "lowest_skill"
+    t.float "highest_skill"
+    t.integer "quantity", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_brackets_on_deleted_at"
+  end
+
   create_table "event_discount_generals", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "code"
@@ -182,6 +196,12 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.integer "on_site_players"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "early_bird_date_start"
+    t.date "early_bird_date_end"
+    t.date "late_date_start"
+    t.date "late_date_end"
+    t.date "on_site_date_start"
+    t.date "on_site_date_end"
   end
 
   create_table "event_enrolls", force: :cascade do |t|
@@ -213,6 +233,7 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.datetime "updated_at", null: false
     t.text "refund_policy"
     t.float "service_fee"
+    t.float "app_fee"
   end
 
   create_table "event_payment_methods", force: :cascade do |t|
@@ -241,6 +262,9 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.boolean "use_link_home_page", default: false
     t.boolean "use_link_event_website", default: false
     t.boolean "allow_attendees_change", default: false
+    t.boolean "allow_waiver"
+    t.text "waiver"
+    t.boolean "allow_wait_list"
   end
 
   create_table "event_rules", force: :cascade do |t|
@@ -369,6 +393,15 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.index ["deleted_at"], name: "index_participants_on_deleted_at"
   end
 
+  create_table "player_brackets", force: :cascade do |t|
+    t.bigint "player_id"
+    t.bigint "category_id"
+    t.string "enroll_status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "event_bracket_id"
+  end
+
   create_table "players", force: :cascade do |t|
     t.bigint "user_id"
     t.bigint "event_id"
@@ -379,6 +412,7 @@ ActiveRecord::Schema.define(version: 2018_07_05_205310) do
     t.datetime "deleted_at"
     t.bigint "partner_double_id"
     t.bigint "partner_mixed_id"
+    t.bigint "attendee_type_id"
     t.index ["deleted_at"], name: "index_players_on_deleted_at"
   end
 

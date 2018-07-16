@@ -5,7 +5,6 @@ class EventSingleSerializer < ActiveModel::Serializer
              :elimination_format_id, :bracket_by, :scoring_option_match_1_id, :scoring_option_match_2_id, :sport_regulator_id,
              :awards_for, :awards_through, :awards_plus
 
-  has_many :categories, serializer: CategorySerializer
-  has_many :bracket_ages, serializer: EventBracketAgeSerializer
-  has_many :bracket_skills, serializer: EventBracketSkillSerializer
+  has_many :categories, serializer: EventCategorySerializer
+  has_many :brackets, serializer: EventBracketSerializer
 end

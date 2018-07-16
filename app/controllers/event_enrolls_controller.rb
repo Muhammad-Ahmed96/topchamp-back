@@ -5,7 +5,7 @@ class EventEnrollsController < ApplicationController
   around_action :transactions_filter, only: [:create, :user_cancel, :change_attendees]
 
   def index
-    json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
+    json_response_serializer_collection(@event.players, PlayerSerializer)
   end
 
   swagger_path '/events/:id/enrolls' do
@@ -21,19 +21,10 @@ class EventEnrollsController < ApplicationController
         key :description, 'Enrolls'
         key :type, :array
         items do
-          key :'$ref', :EventEnrollInput
+          key :'$ref', :PlayerBracketInput
         end
       end
-      response 200 do
-        key :name, :categories
-        key :description, 'enrolls'
-        schema do
-          key :type, :array
-          items do
-            key :'$ref', :EventEnroll
-          end
-        end
-      end
+
       response 401 do
         key :description, 'not authorized'
         schema do
@@ -47,18 +38,17 @@ class EventEnrollsController < ApplicationController
   end
 
   def create
-    if enroll_collection_params.present?
-      enroll_collection_params.each {|enroll|
-        my_enroll = @event.add_enroll(@resource.id, enroll[:category_id], enroll[:event_bracket_age_id], enroll[:event_bracket_skill_id], [7])
-        player = Player.where(:user_id => my_enroll.user_id).where(:event_id => my_enroll.event_id).first
-        if player.nil?
-          player = Player.create!(:user_id => my_enroll.user_id, :event_id => my_enroll.event_id, :status => :Active )
-        end
-        player.enroll_ids = [my_enroll.id]
-      }
+    brackets = @event.available_brackets(player_brackets_params)
+    if brackets.length > 0
+      player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+      player.sync_brackets! brackets
+      return json_response_serializer(player, PlayerSerializer)
+    else
+      return response_no_enroll_error
     end
-    json_response_serializer_collection(@event.enrolls, EventEnrollSerializer)
+
   end
+
   swagger_path '/events/:id/enrolls/user_cancel' do
     operation :post do
       key :summary, 'Cancel registration to event'
@@ -83,12 +73,14 @@ class EventEnrollsController < ApplicationController
       end
     end
   end
+
   def user_cancel
     authorize(@event)
-    user_id = @resource.id
-    @event.enrolls.where(:user_id => user_id).destroy_all
+    @event.players.where(:user_id => @resource.id).destroy_all
+    @event.participants.where(:user_id => @resource.id).destroy_all
     json_response_success(t("success"), true)
   end
+
   swagger_path '/events/:id/enrolls/change_attendees' do
     operation :post do
       key :summary, 'Change attendees to event'
@@ -113,13 +105,11 @@ class EventEnrollsController < ApplicationController
       end
     end
   end
+
   def change_attendees
     authorize(@event)
-    user_id = @resource.id
-    enroll = @event.enrolls.where(:user_id => user_id).first
-    if enroll.present?
-      enroll.attendee_type_ids = change_attendees_params[:attendee_type_ids]
-    end
+    participant = @event.participants.where(:user_id => @resource.id).first!
+    participant.attendee_type_ids = change_attendees_params[:attendee_type_ids]
     json_response_success(t("success"), true)
   end
 
@@ -127,13 +117,13 @@ class EventEnrollsController < ApplicationController
   private
 
   def enroll_params
-    params.permit(:category_id, :event_bracket_age_id, :event_bracket_skill_id)
+    params.permit(:category_id, :event_bracket_id,)
   end
 
-  def enroll_collection_params
+  def player_brackets_params
     unless params[:enrolls].nil? and !params[:enrolls].kind_of?(Array)
       params[:enrolls].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_age_id, :event_bracket_skill_id)
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_id)
       end
     end
   end
@@ -148,5 +138,9 @@ class EventEnrollsController < ApplicationController
 
   def response_no_space_error
     json_response_error([t("insufficient_space")], 422)
+  end
+
+  def response_no_enroll_error
+    json_response_error([t("not_brackets_to_enrroll")], 422)
   end
 end

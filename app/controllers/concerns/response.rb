@@ -7,8 +7,8 @@ module Response
     render json: {success: success, message: message}, status: status
   end
 
-  def json_response_error(errors, status = :ok)
-    render json: {success: false, errors: errors}, status: status
+  def json_response_error(errors, status = :ok, code = nil)
+    render json: {success: false, errors: errors, code: code}, status: status
   end
 
   def json_response_data(object, status = :ok)
