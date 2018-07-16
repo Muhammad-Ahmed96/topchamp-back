@@ -44,7 +44,7 @@ class InvitationPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      scope.where(sender_id: user.id)
+      scope.joins(:event).merge(Event.where :creator_user_id => user.id)
     end
   end
 end
