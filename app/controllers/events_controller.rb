@@ -585,7 +585,7 @@ class EventsController < ApplicationController
   def show
     authorize Event
     @event = Event.find(params[:id])
-    json_response_serializer( @event , EventSerializer)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id' do
@@ -723,6 +723,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def update
     authorize Event
     if !sports_params[:sports].nil?
@@ -1214,18 +1215,13 @@ class EventsController < ApplicationController
 
   def discounts
     authorize Event
+    # Save discounts of te event
     if discounts_params.present?
-      discount = @event.discount
-      if discounts_params.present?
-        if discount.present?
-          discount.update!(discounts_params)
-        else
-          @event.create_discount!(discounts_params)
-        end
-      end
+      EventDiscount.where(:event_id => @event.id).update_or_create!(discounts_params)
     end
-      @event.sync_discount_generals! discount_generals_params
-      @event.sync_discount_personalizeds! discount_personalizeds_params
+    # Syncronize array discounts
+    @event.sync_discount_generals! discount_generals_params
+    @event.sync_discount_personalizeds! discount_personalizeds_params
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -1437,6 +1433,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def registration_rule
     authorize Event
     if registration_rule_params.present?
@@ -1498,21 +1495,12 @@ class EventsController < ApplicationController
         key :type, :integer
       end
       parameter do
-        key :name, :bracket_ages
+        key :name, :brackets
         key :in, :body
-        key :description, 'Bracket ages'
+        key :description, 'Brackets'
         key :type, :array
         items do
-          key :'$ref', :EventBracketAgeInput
-        end
-      end
-      parameter do
-        key :name, :bracket_skills
-        key :in, :body
-        key :description, 'Bracket ages'
-        key :type, :array
-        items do
-          key :'$ref', :EventBracketSkillInput
+          key :'$ref', :EventBracketInput
         end
       end
       parameter do
@@ -1550,14 +1538,14 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def details
     authorize Event
     unless categories_params[:categories].nil?
-      @event.category_ids = categories_params[:categories]
+      @event.internal_category_ids = categories_params[:categories]
     end
     @event.update! details_params
-    @event.sync_bracket_age! bracket_ages_params
-    @event.sync_bracket_skill! bracket_skills_params
+    @event.sync_brackes! bracket_params
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -1597,11 +1585,10 @@ class EventsController < ApplicationController
 
   def agendas
     authorize Event
-    if agenda_params.present?
       @event.sync_agendas! agenda_params
-    end
     json_response_serializer(@event, EventSerializer)
   end
+
   swagger_path '/events/:id/categories' do
     operation :get do
       key :summary, 'Events categories List '
@@ -1630,9 +1617,94 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def categories
     authorize Event
-    json_response(@event.categories)
+    json_response_serializer_collection(@event.categories, EventCategorySerializer)
+  end
+
+  swagger_path '/events/:id/available_categories' do
+    operation :get do
+      key :summary, 'Events categories List '
+      key :description, 'Categories filter for the current user'
+      key :operationId, 'eventsAvailableCategories'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :name, :categories
+        key :description, 'categories'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :CategoryBrackets
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def available_categories
+    @event =  Event.find(params[:id])
+    response_data = []
+    gender = @resource.gender
+    event_categories = @event.categories
+    if @event.only_for_men and gender == "Female"
+      return response_message_error(t("only_for_men_event"), 0)
+    elsif @event.only_for_women and gender == "Male"
+      return response_message_error("only_for_wemen_event", 1)
+    end
+    # validate gender categories
+    if gender == "Male"
+      event_categories = event_categories.only_men
+    elsif gender == "Female"
+      event_categories = event_categories.only_women
+    end
+    #validate bracket
+    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    age = player.present? ? player.user.age : nil
+    #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
+    skill = player.present? ? player.skill_level: nil
+    event_categories.each do |item|
+      item.player = player
+    end
+    event_categories.to_a.each do |item|
+      valid = false
+      if @event.bracket_by == "age" or @event.bracket_by == "skill"
+        if item.brackets.length > 0
+          response_data << item
+        end
+      elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
+        if item.brackets.length > 0
+          item.brackets.each do |bra|
+            if bra.brackets.age_filter(age).skill_filter(skill).length > 0
+              response_data << item
+            end
+          end
+
+        end
+      end
+    end
+    if response_data.length == 0
+      if @event.bracket_by == "age"
+        return response_message_error(t("not_age_bracket"), 3)
+      elsif@event.bracket_by == "skill"
+        return response_message_error(t("not_skill_braket"), 4)
+      elsif@event.bracket_by == "skill_age"
+        return response_message_error(t("not_skill_braket"), 5)
+      elsif@event.bracket_by == "age_skill"
+        return response_message_error(t("not_age_bracket"), 6)
+      end
+    end
+    json_response_serializer_collection(response_data, EventCategorySerializer)
   end
 
   private
@@ -1673,7 +1745,7 @@ class EventsController < ApplicationController
   def payment_information_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee)
+      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee, :app_fee)
     end
   end
 
@@ -1687,8 +1759,9 @@ class EventsController < ApplicationController
   def discounts_params
     # whitelist params
     unless params[:discounts].nil?
-      params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :late_registration, :late_players,
-                                        :on_site_registration, :on_site_players)
+      params.require(:discounts).permit(:early_bird_registration, :early_bird_players, :early_bird_date_start, :early_bird_date_end,
+                                        :late_registration, :late_players, :late_date_start, :late_date_end,
+                                        :on_site_registration, :on_site_players, :on_site_date_start, :on_site_date_end)
     end
 
   end
@@ -1738,7 +1811,7 @@ class EventsController < ApplicationController
   def service_fee_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.require(:payment_information).permit(:service_fee)
+      params.require(:payment_information).permit(:service_fee, :app_fee)
     end
   end
 
@@ -1748,7 +1821,7 @@ class EventsController < ApplicationController
       params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
                                                 :password, :require_director_approval, :allow_players_cancel, :use_link_home_page,
                                                 :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app,
-                                                :allow_attendees_change)
+                                                :allow_attendees_change, :allow_waiver, :waiver, :allow_wait_list)
     end
   end
 
@@ -1765,31 +1838,19 @@ class EventsController < ApplicationController
                   :scoring_option_match_2_id, :sport_regulator_id, :awards_for, :awards_through, :awards_plus)
   end
 
-  def bracket_ages_params
+# params to brackets
+  def bracket_params
     # whitelist params
-    #ActionController::Parameters.permit_all_parameters = true
-    unless params[:bracket_ages].nil?
-      params[:bracket_ages].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_skill_id, :age, :quantity,
-                                                               bracket_skills: [:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity])
+    unless params[:brackets].nil?
+      params[:brackets].map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity,
+                                                               brackets: [:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity])
       end
     end
-    #ActionController::Parameters.permit_all_parameters = false
-  end
-
-  def bracket_skills_params
-    # whitelist params
-    #ActionController::Parameters.permit_all_parameters = true
-    unless params[:bracket_skills].nil? and !params[:bracket_skills].kind_of?(Array)
-      params[:bracket_skills].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_age_id, :lowest_skill, :highest_skill, :quantity,
-                                                               bracket_ages: [:id, :event_bracket_skill_id, :age, :quantity])
-      end
-    end
-    #ActionController::Parameters.permit_all_parameters = false
   end
 
   def agenda_params
+    #validate presence and type
     unless params[:agendas].nil? and !params[:agendas].kind_of?(Array)
       params[:agendas].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :category_id, :start_date, :end_date, :start_time,
@@ -1798,7 +1859,13 @@ class EventsController < ApplicationController
     end
   end
 
+# search current resource of id
   def set_resource
+    #apply policy scope
     @event = EventPolicy::Scope.new(current_user, Event).resolve.find(params[:id])
+  end
+
+  def response_message_error(message, code)
+    json_response_error(message, 422, code)
   end
 end

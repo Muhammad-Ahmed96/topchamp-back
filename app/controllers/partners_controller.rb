@@ -51,6 +51,13 @@ class PartnersController < ApplicationController
         key :required, false
         key :type, :integer
       end
+      parameter do
+        key :name, :type_users
+        key :in, :query
+        key :description, 'Type {nil or all or registered}'
+        key :required, false
+        key :type, :integer
+      end
       response 200 do
         key :description, ''
         schema do
@@ -82,21 +89,35 @@ class PartnersController < ApplicationController
     if event.nil?
       return json_response_error([t("not_event")], 422)
     end
+    type_users = params[:type_users]
     type = params[:type]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
-    player = Player.get_player(event_id,@resource.id)
     not_in = nil;
+    gender = nil
+    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
     if type == "doubles"
       not_in = player.partner_double_id
+      gender = player.user.gender
     elsif type == "mixed"
       not_in = player.partner_mixed_id
+      gender = player.user.gender == "Male" ? "Female" : "Male"
+    end
+    users_in = nil
+    if type_users == "registered"
+      users_in = event.players.pluck(:user_id)
     end
 
-    users =  User.my_order(column, direction).search(search)
+    users =  User.my_order(column, direction).search(search).where.not(id: [not_in, @resource.id]).where(:gender => gender).where(:id => users_in)
     if paginate.to_s == "0"
       json_response_serializer_collection(users.all, UserSingleSerializer)
     else
       paginate users, per_page: 50, root: :data
     end
+  end
+
+
+  private
+  def response_no_type_users
+    json_response_error([t("not_type")], 422)
   end
 end

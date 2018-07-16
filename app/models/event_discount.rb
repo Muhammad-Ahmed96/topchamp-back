@@ -19,6 +19,15 @@ class EventDiscount < ApplicationRecord
     property :early_bird_players do
       key :type, :int64
     end
+    property :early_bird_date_start do
+      key :type, :string
+      key :format, :date
+    end
+
+    property :early_bird_date_end do
+      key :type, :string
+      key :format, :date
+    end
     property :late_registration do
       key :type, :float
     end
@@ -26,12 +35,31 @@ class EventDiscount < ApplicationRecord
     property :late_players do
       key :type, :int64
     end
+    property :late_date_start do
+      key :type, :string
+      key :format, :date
+    end
+
+    property :late_date_end do
+      key :type, :string
+      key :format, :date
+    end
 
     property :on_site_registration do
       key :type, :float
     end
     property :on_site_players do
       key :type, :int64
+    end
+
+    property :late_date_start do
+      key :type, :string
+      key :format, :date
+    end
+
+    property :late_date_end do
+      key :type, :string
+      key :format, :date
     end
   end
 
@@ -42,6 +70,18 @@ class EventDiscount < ApplicationRecord
     property :early_bird_players do
       key :type, :int64
     end
+
+    property :early_bird_date_start do
+      key :type, :string
+      key :format, :date
+    end
+
+    property :early_bird_date_end do
+      key :type, :string
+      key :format, :date
+    end
+
+
     property :late_registration do
       key :type, :float
     end
@@ -50,11 +90,31 @@ class EventDiscount < ApplicationRecord
       key :type, :int64
     end
 
+    property :late_date_start do
+      key :type, :string
+      key :format, :date
+    end
+
+    property :late_date_end do
+      key :type, :string
+      key :format, :date
+    end
+
     property :on_site_registration do
       key :type, :float
     end
     property :on_site_players do
       key :type, :int64
+    end
+
+    property :on_site_date_start do
+      key :type, :string
+      key :format, :date
+    end
+
+    property :on_site_date_end do
+      key :type, :string
+      key :format, :date
     end
   end
 end

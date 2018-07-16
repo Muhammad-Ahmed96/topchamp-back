@@ -1,6 +1,6 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail, :enroll]
+  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail, :enroll, :refuse]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll]
   swagger_path '/invitations' do
@@ -288,6 +288,16 @@ class InvitationsController < ApplicationController
       key :operationId, 'invitationsEnrollCreate'
       key :produces, ['application/json',]
       key :tags, ['invitations']
+      parameter do
+        key :name, :attendee_types
+        key :in, :body
+        key :required, true
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
       response 200 do
         key :description, ''
         schema do
@@ -310,19 +320,25 @@ class InvitationsController < ApplicationController
     if @invitation.status != "role"
       event = @invitation.event
       if event.present?
-        my_enroll = event.enrolls.where(:user_id => @invitation.user_id).first
-        data = {:user_id => @invitation.user_id, enroll_status: :enrolls}
-        #Save data
-        if my_enroll.present?
-          my_enroll.update! data
-        else
-          my_enroll = event.enrolls.create!(data)
+        types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
+        if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
+          @invitation.status = :role
+          @invitation.save!
+          return   json_response_success(t("edited_success", model: Invitation.model_name.human), true)
+          #return json_response_error([t("attendee_types_required")], 401)
         end
-        my_enroll.attendee_type_ids = @invitation.attendee_type_ids
-
-
-        #my_enroll = event.add_enroll(@invitation.user_id, enroll[:category_id], enroll[:event_bracket_age_id], enroll[:event_bracket_skill_id], @invitation.attendee_type_ids)
-
+        type_id = AttendeeType.player_id
+        is_player = types.detect {|w| w == type_id}
+        unless is_player.nil?
+          #Create player
+          types.delete(type_id)
+          player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first_or_create!
+        end
+        if types.length > 0
+          participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
+          types |= participant.attendee_type_ids.to_a
+          participant.attendee_type_ids = types
+        end
         @invitation.status = :role
         @invitation.save!
       end
@@ -357,6 +373,117 @@ class InvitationsController < ApplicationController
     send_file("#{Rails.root}/app/assets/template/invitations_template.xlsx",
               filename: "invitations_template.xlsx",
               type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  end
+
+  swagger_path '/invitations/:id/refuse' do
+    operation :post do
+      key :summary, 'Invitations refuse'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsRefuse'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :attendee_types
+        key :in, :body
+        key :required, true
+        key :type, :array
+        items do
+          key :type, :integer
+          key :format, :int64
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def refuse
+    @invitation.status = "refuse"
+    @invitation.save!(:validate => false)
+    json_response_success(t("refuse_success", model: Invitation.model_name.human), true)
+  end
+  swagger_path '/invitations/partner' do
+    operation :post do
+      key :summary, 'Invitations partner'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsSendPartner'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :event_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+      end
+      parameter do
+        key :name, :partner_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+      end
+      parameter do
+        key :name, :type
+        key :in, :body
+        key :description, "partner_mixed or partner_double"
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :url
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def partner
+    to_user = User.find( partner_params[:partner_id])
+    event = Event.find( partner_params[:event_id])
+    type = ["partner_mixed","partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
+    unless event.present?
+      return response_no_event
+    end
+    unless type.present?
+      return response_no_type
+    end
+    if params[:url].nil?
+      params[:url] = "localhost/test"
+    end
+    if to_user.present?
+      data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
+      @invitation = Invitation.get_invitation(data, @resource.id, type)
+      @invitation.send_mail(true)
+    else
+      return json_response_error([t("no_player")], 422)
+    end
+    json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
   private
@@ -401,6 +528,10 @@ class InvitationsController < ApplicationController
     params.permit(invitations: [:event_id, :email, :url, attendee_types: []])
   end
 
+  def enroll_params
+    params.permit(attendee_types: [])
+  end
+
   def import_params
     params.permit(:event_id, :file)
   end
@@ -415,5 +546,17 @@ class InvitationsController < ApplicationController
 
   def render_not_permit_error
     json_response_error([t("not_permitted")], 422)
+  end
+
+  def partner_params
+    params.permit(:event_id, :partner_id, :type, :url)
+  end
+
+  def response_no_event
+    json_response_error([t("not_event")], 422)
+  end
+
+  def response_no_type
+    json_response_error([t("not_type")], 422)
   end
 end

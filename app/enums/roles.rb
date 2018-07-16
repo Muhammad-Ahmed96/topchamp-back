@@ -19,5 +19,7 @@ end
 class Roles::Member < Roles
 end
 
+=begin
 class Roles::Director < Roles
 end
+=end

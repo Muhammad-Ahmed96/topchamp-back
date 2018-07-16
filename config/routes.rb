@@ -12,6 +12,7 @@ Rails.application.routes.draw do
         put :activate
         put :inactive
         put :profile
+        put :sing_up_information
       end
     end
     resources :sports, only: [:index]
@@ -65,6 +66,7 @@ Rails.application.routes.draw do
         put :details
         put :agendas
         get :categories
+        get :available_categories
       end
       resources :event_enrolls,only: [:create, :index], :path => :enrolls do
         collection do
@@ -88,10 +90,12 @@ Rails.application.routes.draw do
         post :event
         post :date
         post :sing_up
+        post :partner
       end
       member do
         post :resend_mail
         post :enroll
+        post :refuse
       end
     end
     resources :participants, only: [:index, :show] do
@@ -109,6 +113,8 @@ Rails.application.routes.draw do
       member do
         put :activate
         put :inactive
+        get :wait_list
+        get :enrolled
       end
     end
     resources :business_categories, only: [:index]

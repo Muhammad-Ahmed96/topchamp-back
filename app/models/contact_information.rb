@@ -55,6 +55,9 @@ class ContactInformation < ApplicationRecord
       key :type, :integer
       key :format, :int64
     end
+    property :country do
+      key :type, :string
+    end
   end
 
   swagger_schema :ContactInformationInput do
@@ -101,6 +104,10 @@ class ContactInformation < ApplicationRecord
       key :type, :integer
       key :format, :int64
     end
+    property :country do
+      key :type, :string
+    end
+
   end
   swagger_schema :ContactInformationInputSingUp do
     key :required, [:cell_phone, :country_code_phone]
@@ -110,6 +117,22 @@ class ContactInformation < ApplicationRecord
     property :cell_phone do
       key :type, :integer
       key :format, :int64
+    end
+  end
+
+  swagger_schema :ContactInformationInputSingUpContinue do
+    key :required, [:postal_code, :state]
+    property :postal_code do
+      key :type, :string
+    end
+    property :state do
+      key :type, :string
+    end
+    property :city do
+      key :type, :string
+    end
+    property :country do
+      key :type, :string
     end
   end
 end

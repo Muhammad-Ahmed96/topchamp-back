@@ -12,11 +12,11 @@ class User < ApplicationRecord
   has_one :shipping_address, :dependent => :destroy
   has_one :association_information, :dependent => :destroy
   has_one :medical_information, :dependent => :destroy
-  has_many :enrolls, :class_name => "EventEnroll"
+  has_many :players
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/user/:style/avatar_profile.png"
 
   # authenticate :resend_limit, if: :new_record?
   #authenticate :valid_pin, unless: :new_record?
@@ -191,10 +191,10 @@ class User < ApplicationRecord
       key :'$ref', :MedicalInformation
     end
 
-    property :enrolls do
+    property :players do
       key :type, :array
       items do
-        key :'$ref', :EventEnroll
+        key :'$ref', :Player
       end
     end
   end
@@ -311,6 +311,15 @@ class User < ApplicationRecord
     else
       false
     end
+  end
+
+  def age
+    if self.birth_date.present?
+      (Time.now.to_s(:number).to_i - self.birth_date.to_time.to_s(:number).to_i)/10e9.to_i
+    else
+      0
+    end
+
   end
 
   private
