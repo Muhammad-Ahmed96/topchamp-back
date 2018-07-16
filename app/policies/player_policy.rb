@@ -39,7 +39,7 @@ class PlayerPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      scope
+      scope.joins(:event).merge(Event.where :creator_user_id => user.id)
     end
   end
 end

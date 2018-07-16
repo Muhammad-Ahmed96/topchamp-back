@@ -179,7 +179,7 @@ class PlayersController < ApplicationController
       column = nil
     end
 
-    players = Player.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
+    players = PlayerPolicy::Scope.new(current_user, Player).resolve.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
                   .email_like(email).category_in(category).bracket_in(bracket).skill_level_like(skill_level)
                   .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction)
                   .last_name_order(last_name_column, direction).email_order(email_column, direction).sport_in(sport)
