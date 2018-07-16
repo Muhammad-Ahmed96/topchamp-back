@@ -1660,7 +1660,7 @@ class EventsController < ApplicationController
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
     elsif @event.only_for_women and gender == "Male"
-      return response_message_error("only_for_wemen_event", 1)
+      return response_message_error(t("only_for_women_event"), 1)
     end
     # validate gender categories
     if gender == "Male"
