@@ -483,7 +483,7 @@ class InvitationsController < ApplicationController
     else
       return json_response_error([t("no_player")], 422)
     end
-    json_response_success(t("edited_success", model: Player.model_name.human), true)
+    json_response_success(t("created_success", model: Invitation.model_name.human), true)
   end
 
   private

@@ -1843,8 +1843,8 @@ class EventsController < ApplicationController
     # whitelist params
     unless params[:brackets].nil?
       params[:brackets].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity,
-                                                               brackets: [:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity,
+                                                               brackets: [:id, :event_bracket_id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity])
       end
     end
   end

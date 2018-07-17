@@ -75,6 +75,13 @@ class EventBracket < ApplicationRecord
     property :age do
       key :type, :number
     end
+    property :young_age do
+      key :type, :number
+    end
+
+    property :old_age do
+      key :type, :number
+    end
     property :lowest_skill do
       key :type, :number
     end
@@ -102,6 +109,15 @@ class EventBracket < ApplicationRecord
     property :age do
       key :type, :number
     end
+
+    property :young_age do
+      key :type, :number
+    end
+
+    property :old_age do
+      key :type, :number
+    end
+
     property :quantity do
       key :type, :number
     end
@@ -119,6 +135,13 @@ class EventBracket < ApplicationRecord
       key :format, :integer
     end
     property :age do
+      key :type, :number
+    end
+    property :young_age do
+      key :type, :number
+    end
+
+    property :old_age do
       key :type, :number
     end
     property :quantity do
