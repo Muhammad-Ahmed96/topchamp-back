@@ -86,7 +86,7 @@ if ScoringOption.count == 0
 end
 
 if SportRegulator.count == 0
-  SportRegulator.create([{name: 'International Federation of Pickleball / USA Pickleball Association rules', index: 0},{name: 'National Senior Games Association rules', index: 1}])
+  SportRegulator.create([{name: 'International Federation of Pickleball / USA Pickleball Association rules', index: 0},{name: 'National Senior Games Association rules', index: 1, allow_age_range: true}])
 end
 
 if EliminationFormat.count == 0

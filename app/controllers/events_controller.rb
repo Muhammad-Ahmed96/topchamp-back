@@ -1685,7 +1685,7 @@ class EventsController < ApplicationController
       elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
         if item.brackets.length > 0
           item.brackets.each do |bra|
-            if bra.brackets.age_filter(age).skill_filter(skill).length > 0
+            if bra.brackets.age_filter(age, @event.sport_regulator.allow_age_range).skill_filter(skill).length > 0
               response_data << item
             end
           end
@@ -1843,8 +1843,8 @@ class EventsController < ApplicationController
     # whitelist params
     unless params[:brackets].nil?
       params[:brackets].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity,
-                                                               brackets: [:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity,
+                                                               brackets: [:id, :event_bracket_id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity])
       end
     end
   end

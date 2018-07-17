@@ -14,7 +14,15 @@ class EventBracket < ApplicationRecord
   validates :highest_skill, inclusion: {in: SkillLevels.collection}, numericality: {greater_than_or_equal_to: :lowest_skill},  :allow_nil => true
   has_many :brackets, class_name: "EventBracket"
 
-  scope :age_filter, lambda {|age| where("age <= ?", age).or(EventBracket.where(:age => nil)) if age.present?}
+  scope :age_filter, lambda {|age, allow_age_range|
+    if age.present?
+      if allow_age_range
+        where("young_age <= ?", age).where("old_age >= ?", age).or(EventBracket.where(:young_age => nil).where(:old_age => nil))
+      else
+        where("age <= ?", age).or(EventBracket.where(:age => nil))
+      end
+    end
+  }
   scope :skill_filter, lambda {|skill| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill).or(EventBracket.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
 
   def available_for_enroll(category_id)
@@ -75,6 +83,13 @@ class EventBracket < ApplicationRecord
     property :age do
       key :type, :number
     end
+    property :young_age do
+      key :type, :number
+    end
+
+    property :old_age do
+      key :type, :number
+    end
     property :lowest_skill do
       key :type, :number
     end
@@ -102,6 +117,15 @@ class EventBracket < ApplicationRecord
     property :age do
       key :type, :number
     end
+
+    property :young_age do
+      key :type, :number
+    end
+
+    property :old_age do
+      key :type, :number
+    end
+
     property :quantity do
       key :type, :number
     end
@@ -119,6 +143,13 @@ class EventBracket < ApplicationRecord
       key :format, :integer
     end
     property :age do
+      key :type, :number
+    end
+    property :young_age do
+      key :type, :number
+    end
+
+    property :old_age do
       key :type, :number
     end
     property :quantity do
