@@ -87,6 +87,7 @@ Rails.application.routes.draw do
     resources :invitations, only: [:index, :show, :update, :destroy] do
       collection do
         get :download_template
+        get :template_sing_up
         post :event
         post :date
         post :sing_up

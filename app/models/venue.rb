@@ -16,7 +16,13 @@ class Venue < ApplicationRecord
   #validates :sports, presence: true
 
   validates :description, length: {maximum: 1000},  :allow_nil => true
+  #validates :address_line_1, uniqueness: {case_sensitive: false, message: "" }
 
+
+  validate do
+    venue = Venue.where(:address_line_1 => self.address_line_1).first
+    errors.add(:address_line_1 ,"That location is already in use for venue #{venue.name}. Try another location or change your Venue name") if venue.present?
+  end
   #validates :address_line_1, presence: true
   #validates :address_line_2, presence: true
   #validates :postal_code, presence: true
