@@ -375,6 +375,34 @@ class InvitationsController < ApplicationController
               type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
   end
 
+  swagger_path '/invitations/template_sing_up.xlsx' do
+    operation :get do
+      key :summary, 'Invitations download template sing up'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsDownloadTemplateSingUp'
+      key :produces, ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',]
+      key :tags, ['invitations']
+      response 200 do
+        key :description, 'template'
+        key :type, 'file'
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def template_sing_up
+    send_file("#{Rails.root}/app/assets/template/invitations_template_sign_up.xlsx",
+              filename: "invitations_template_sign_up.xlsx",
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  end
+
   swagger_path '/invitations/:id/refuse' do
     operation :post do
       key :summary, 'Invitations refuse'
