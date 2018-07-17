@@ -1685,7 +1685,7 @@ class EventsController < ApplicationController
       elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
         if item.brackets.length > 0
           item.brackets.each do |bra|
-            if bra.brackets.age_filter(age).skill_filter(skill).length > 0
+            if bra.brackets.age_filter(age, @event.sport_regulator.allow_age_range).skill_filter(skill).length > 0
               response_data << item
             end
           end

@@ -152,14 +152,14 @@ class Event < ApplicationRecord
         #asing data of bracket
         data = {:event_bracket_id => bracket[:event_bracket_id], :age => bracket[:age],
                 :lowest_skill => bracket[:lowest_skill], :highest_skill => bracket[:highest_skill],
-                :quantity => bracket[:quantity]}
+                :quantity => bracket[:quantity], :young_age => bracket[:young_age], :old_age => bracket[:old_age]}
         parent_bracket = self.internal_brackets.where(id: bracket[:id]).update_or_create!(data)
         not_delete << parent_bracket.id
         if bracket[:brackets].kind_of? Array
           bracket[:brackets].each do |child_bracket|
             data = {:event_bracket_id => parent_bracket.id, :age => child_bracket[:age],
                     :lowest_skill => child_bracket[:lowest_skill], :highest_skill => child_bracket[:highest_skill],
-                    :quantity => child_bracket[:quantity]}
+                    :quantity => child_bracket[:quantity], :young_age => child_bracket[:young_age], :old_age => child_bracket[:old_age]}
             current_bracket = self.internal_brackets.where(id: child_bracket[:id]).update_or_create!(data)
             not_delete << current_bracket.id
           end
