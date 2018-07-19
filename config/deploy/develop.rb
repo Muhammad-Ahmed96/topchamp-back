@@ -3,7 +3,7 @@
 # Defines a single server with a list of roles and multiple properties.
 # You can define all roles on a single server, or split them:
 
-server "34.215.140.55", user: "ubuntu", roles: %w{app db web}
+server "54.203.30.224", user: "ubuntu", roles: %w{app db web}
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
@@ -13,7 +13,7 @@ set :branch, 'develop'
 set :ssh_options, {
     forward_agent: true,
     auth_methods: ["publickey"],
-    keys: ["top_champ_develop.pem"]
+    keys: ["top_champ_dev.pem"]
 }
 set :log_level, :debug
 
