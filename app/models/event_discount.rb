@@ -1,7 +1,7 @@
 class EventDiscount < ApplicationRecord
   include Swagger::Blocks
-  validates_numericality_of :early_bird_registration, :late_registration, :on_site_registration
-  validates_numericality_of  :early_bird_players, :late_players, :on_site_players, :only_integer => true
+  validates_numericality_of :early_bird_registration, :late_registration, :on_site_registration, :allow_nil => true
+  validates_numericality_of  :early_bird_players, :late_players, :on_site_players, :only_integer => true, :allow_nil => true
 
 
   swagger_schema :EventDiscount do
