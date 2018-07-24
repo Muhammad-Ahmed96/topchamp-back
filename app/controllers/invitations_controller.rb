@@ -97,6 +97,110 @@ class InvitationsController < ApplicationController
     end
   end
 
+
+  swagger_path '/invitations/partners' do
+    operation :get do
+      key :summary, 'Get invitations partner list'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsIndexPartner'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :column
+        key :in, :query
+        key :description, 'Column to order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :direction
+        key :in, :query
+        key :description, 'Direction to order, (ASC or DESC)'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
+        key :name, :type
+        key :in, :query
+        key :description, "partner_mixed or partner_double"
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :PaginateModel
+          property :data do
+            items do
+              key :'$ref', :Sport
+            end
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def index_partner
+    column = params[:column].nil? ? 'email' : params[:column]
+    direction = params[:direction].nil? ? 'asc' : params[:direction]
+    email = params[:email]
+    status = params[:status]
+    phone = params[:phone]
+    event = params[:event]
+    first_name = params[:first_name]
+    last_name = params[:last_name]
+    type = params[:type].nil? ? ["partner_mixed", "partner_double"] : params[:type]
+    event_id = index_partners_params
+    eventColumn = nil
+    userColumn = nil
+    phoneColumn = nil
+    if column.to_s == "event"
+      eventColumn = "title"
+      column = nil
+    end
+
+    if column.to_s == "first_name"
+      userColumn = column
+      column = nil
+    end
+
+    if column.to_s == "last_name"
+      userColumn = column
+      column = nil
+    end
+
+    if column.to_s == "phone"
+      phoneColumn = "cell_phone"
+      column = nil
+    end
+
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
+    invitations = Invitation.my_order(column, direction).event_like(event)
+                      .email_like(email).first_name_like(first_name).last_name_like(last_name).event_order(eventColumn, direction).user_order(userColumn, direction)
+                      .in_status(status).phone_like(phone).phone_order(phoneColumn, direction).in_type(type).where(:user_id => @resource.id).where(:event_id => event_id)
+    if paginate.to_s == "0"
+      json_response_serializer_collection(invitations.all, InvitationSerializer)
+    else
+      paginate invitations, per_page: 50, root: :data
+    end
+  end
+
   swagger_path '/invitations/event' do
     operation :post do
       key :summary, 'Invitations to event'
@@ -586,5 +690,9 @@ class InvitationsController < ApplicationController
 
   def response_no_type
     json_response_error([t("not_type")], 422)
+  end
+
+  def index_partners_params
+    params.required(:event_id)
   end
 end

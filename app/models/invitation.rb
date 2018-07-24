@@ -13,6 +13,7 @@ class Invitation < ApplicationRecord
   accepts_nested_attributes_for :attendee_types
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :in_type, lambda {|type| where invitation_type: type if type.present?}
   scope :email_like, lambda {|search| Invitation.where ["LOWER(invitations.email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(events.title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
