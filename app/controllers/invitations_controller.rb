@@ -157,6 +157,7 @@ class InvitationsController < ApplicationController
   end
 
   def index_partner
+    valid_types = ["partner_mixed", "partner_double"]
     column = params[:column].nil? ? 'email' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     email = params[:email]
@@ -165,8 +166,13 @@ class InvitationsController < ApplicationController
     event = params[:event]
     first_name = params[:first_name]
     last_name = params[:last_name]
-    type = params[:type].nil? ? ["partner_mixed", "partner_double"] : params[:type]
+    type = params[:type].nil? ? valid_types : [params[:type]]
     event_id = index_partners_params
+
+
+    unless type.included_in? valid_types
+      return response_no_type
+    end
     eventColumn = nil
     userColumn = nil
     phoneColumn = nil
