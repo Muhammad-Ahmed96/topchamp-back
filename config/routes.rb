@@ -88,10 +88,11 @@ Rails.application.routes.draw do
       collection do
         get :download_template
         get :template_sing_up
+        get :index_partner,  :path => "partner"
         post :event
         post :date
         post :sing_up
-        post :partner
+        #post :partner
       end
       member do
         post :resend_mail

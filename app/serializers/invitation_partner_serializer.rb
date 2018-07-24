@@ -1,8 +1,7 @@
-class InvitationSerializer < ActiveModel::Serializer
+class InvitationPartnerSerializer < ActiveModel::Serializer
   attributes :id, :event_id, :email, :status, :status_name, :url, :sender_id
   belongs_to :event, serializer: EventSingleSerializer
   belongs_to :user, serializer: UserSingleSerializer
-  belongs_to :sender, serializer: UserSingleSerializer
   has_many :attendee_types, serializer: AttendeeTypeSerializer
 
   def status_name
