@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
+  before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
                                       :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
   before_action :authenticate_user!
