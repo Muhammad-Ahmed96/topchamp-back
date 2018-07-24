@@ -37,7 +37,7 @@ class InvitationsController < ApplicationController
           key :'$ref', :PaginateModel
           property :data do
             items do
-              key :'$ref', :Sport
+              key :'$ref', :Invitation
             end
           end
         end
@@ -139,7 +139,7 @@ class InvitationsController < ApplicationController
           key :'$ref', :PaginateModel
           property :data do
             items do
-              key :'$ref', :Sport
+              key :'$ref', :Invitation
             end
           end
         end
@@ -336,7 +336,30 @@ class InvitationsController < ApplicationController
       save :sing_up
     end
   end
-
+  swagger_path '/invitations/:id' do
+    operation :get do
+      key :summary, 'Invitations show details'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsShow'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :Invitation
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def show
     authorize Invitation
     json_response_serializer(@invitation, InvitationSerializer)
