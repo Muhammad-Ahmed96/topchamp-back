@@ -345,6 +345,13 @@ class EventsController < ApplicationController
         key :required, false
         key :type, :integer
       end
+      parameter do
+        key :name, :only_director
+        key :in, :query
+        key :description, 'show only events of current director {any} = no, 1 = yes'
+        key :required, false
+        key :type, :integer
+      end
       response 200 do
         key :description, ''
         schema do
@@ -374,6 +381,7 @@ class EventsController < ApplicationController
     column = params[:column].nil? ? 'title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
+    only_director = params[:only_director].nil? ? '1' : params[:only_director]
 
     title = params[:title]
 
@@ -394,8 +402,12 @@ class EventsController < ApplicationController
       column_venue = column
       column = nil
     end
+    director_id = nil
+    if only_director.to_s == "1"
+      director_id = @resource.id
+    end
     events = Event.upcoming.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
-                 .in_status("Active").state_like(state).city_like(city).in_visibility("Public")
+                 .in_status("Active").state_like(state).city_like(city).in_visibility("Public").only_directors(director_id)
     if paginate.to_s == "0"
       json_response_serializer_collection(events.all, EventSerializer)
     else
