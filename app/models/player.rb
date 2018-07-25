@@ -17,7 +17,7 @@ class Player < ApplicationRecord
   scope :email_like, lambda {|search| joins(:user).merge(User.where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :skill_level_like, lambda {|search| joins(user: [:association_information]).merge(AssociationInformation.where ["LOWER(raking) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
 
-  scope :sport_in, lambda {|search| joins(user: [:sports]).merge(Sport.where id: search) if search.present?}
+  scope :sport_in, lambda {|search| joins(event: [:sports]).merge(Sport.where id: search) if search.present?}
   scope :role_in, lambda {|search| joins(:user).merge(User.where role: search) if search.present?}
   scope :bracket_in, lambda {|search| joins(:event).merge(Event.where bracket_by: search) if search.present?}
   scope :category_in, lambda {|search| joins(brackets: [:category]).merge(Category.where id: search) if search.present?}
@@ -28,7 +28,7 @@ class Player < ApplicationRecord
   scope :first_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :last_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :email_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
-  scope :sports_order, lambda {|column, direction = "desc"| includes(user: [:sports]).order("sports.#{column} #{direction}") if column.present?}
+  scope :sports_order, lambda {|column, direction = "desc"| includes(event: [:sports]).order("sports.#{column} #{direction}") if column.present?}
   scope :skill_level_order, lambda {|column, direction = "desc"| includes(user: [:association_information]).order("association_informations.#{column} #{direction}") if column.present?}
   scope :categories_order, lambda {|column, direction = "desc"| joins(brackets: [:category]).order("categories.#{column} #{direction}") if column.present?}
 
@@ -108,7 +108,7 @@ class Player < ApplicationRecord
   end
 
   def sports
-    self.user.sports
+    self.event.sports
   end
   private
   def set_status
