@@ -92,7 +92,7 @@ Rails.application.routes.draw do
         post :event
         post :date
         post :sing_up
-        #post :partner
+        post :partner
       end
       member do
         post :resend_mail
