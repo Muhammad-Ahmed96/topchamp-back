@@ -381,7 +381,7 @@ class EventsController < ApplicationController
     column = params[:column].nil? ? 'title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
-    only_director = params[:only_director].nil? ? '1' : params[:only_director]
+    only_director = params[:only_director].nil? ? '0' : params[:only_director]
 
     title = params[:title]
 
