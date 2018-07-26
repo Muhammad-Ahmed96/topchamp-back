@@ -1,6 +1,6 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail, :enroll, :refuse]
+  before_action :set_resource, only: [:update, :destroy, :resend_mail]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll]
   swagger_path '/invitations' do
@@ -361,6 +361,7 @@ class InvitationsController < ApplicationController
     end
   end
   def show
+    @invitation = Invitation.find(params[:id])
     authorize Invitation
     json_response_serializer(@invitation, InvitationSerializer)
   end
@@ -450,6 +451,7 @@ class InvitationsController < ApplicationController
   end
 
   def enroll
+    @invitation = Invitation.find(params[:id])
     if @invitation.status != "role"
       event = @invitation.event
       if event.present?
@@ -571,6 +573,7 @@ class InvitationsController < ApplicationController
     end
   end
   def refuse
+    @invitation = Invitation.find(params[:id])
     @invitation.status = "refuse"
     @invitation.save!(:validate => false)
     json_response_success(t("refuse_success", model: Invitation.model_name.human), true)
