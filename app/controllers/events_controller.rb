@@ -403,7 +403,7 @@ class EventsController < ApplicationController
       column = nil
     end
     director_id = nil
-    if only_director.to_s == "1"
+    if only_director.to_s == "1" and  !(@resource.sysadmin? || @resource.agent?)
       director_id = @resource.id
     end
     events = Event.upcoming.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
