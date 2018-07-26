@@ -100,10 +100,10 @@ class EventPolicy < ApplicationPolicy
     def resolve
       if user.sysadmin? || user.agent?
         scope.all
-      elsif user.director? || user.member?
-        scope.where(creator_user_id: user.id).or(scope.where(invited_director_id: user.id))
+      elsif user.is_director
+        scope.joins(participants: [:attendee_types]).merge(Participant.where :user_id => user.id).merge(AttendeeType.where :id => AttendeeType.director_id)
       else
-        scope
+        scope.joins(participants: [:attendee_types]).merge(Participant.where :user_id => user.id)
       end
     end
   end

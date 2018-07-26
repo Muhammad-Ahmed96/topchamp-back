@@ -200,6 +200,7 @@ class InvitationsController < ApplicationController
     invitations = Invitation.my_order(column, direction).event_like(event)
                       .email_like(email).first_name_like(first_name).last_name_like(last_name).event_order(eventColumn, direction).user_order(userColumn, direction)
                       .in_status(status).phone_like(phone).phone_order(phoneColumn, direction).in_type(type).where(:user_id => @resource.id).where(:event_id => event_id)
+                      .where(:status => "pending_invitation")
     if paginate.to_s == "0"
       json_response_serializer_collection(invitations.all, InvitationSerializer)
     else
@@ -336,6 +337,7 @@ class InvitationsController < ApplicationController
       save :sing_up
     end
   end
+
   swagger_path '/invitations/:id' do
     operation :get do
       key :summary, 'Invitations show details'
@@ -360,6 +362,7 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def show
     @invitation = Invitation.find(params[:id])
     authorize Invitation
@@ -459,7 +462,7 @@ class InvitationsController < ApplicationController
         if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
           @invitation.status = :role
           @invitation.save!
-          return   json_response_success(t("edited_success", model: Invitation.model_name.human), true)
+          return json_response_success(t("edited_success", model: Invitation.model_name.human), true)
           #return json_response_error([t("attendee_types_required")], 401)
         end
         type_id = AttendeeType.player_id
@@ -532,6 +535,7 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def template_sing_up
     send_file("#{Rails.root}/app/assets/template/invitations_template_sign_up.xlsx",
               filename: "invitations_template_sign_up.xlsx",
@@ -572,12 +576,14 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def refuse
     @invitation = Invitation.find(params[:id])
     @invitation.status = "refuse"
     @invitation.save!(:validate => false)
     json_response_success(t("refuse_success", model: Invitation.model_name.human), true)
   end
+
   swagger_path '/invitations/partner' do
     operation :post do
       key :summary, 'Invitations partner'
@@ -627,10 +633,11 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def partner
-    to_user = User.find( partner_params[:partner_id])
-    event = Event.find( partner_params[:event_id])
-    type = ["partner_mixed","partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
+    to_user = User.find(partner_params[:partner_id])
+    event = Event.find(partner_params[:event_id])
+    type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
     unless event.present?
       return response_no_event
     end
