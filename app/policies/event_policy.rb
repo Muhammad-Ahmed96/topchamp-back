@@ -101,7 +101,7 @@ class EventPolicy < ApplicationPolicy
       if user.sysadmin? || user.agent?
         scope.all
       elsif user.is_director
-        scope.joins(participants: [:attendee_types]).merge(Participant.where :user_id => user.id).merge(AttendeeType.where :id => AttendeeType.director_id)
+        scope.merge(Event.only_directors(user.id))
       else
         scope.joins(participants: [:attendee_types]).merge(Participant.where :user_id => user.id)
       end

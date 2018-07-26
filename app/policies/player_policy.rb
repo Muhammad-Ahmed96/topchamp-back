@@ -41,8 +41,10 @@ class PlayerPolicy < ApplicationPolicy
     def resolve
       if user.sysadmin? || user.agent?
         scope.all
+      elsif user.is_director
+        scope.joins(:event).merge(Event.only_directors(user.id))
       else
-        scope.joins(:event).merge(Event.where :creator_user_id => user.id)
+        scope.joins(event: [:players]).merge(Player.where :user_id => user.id)
       end
 
     end
