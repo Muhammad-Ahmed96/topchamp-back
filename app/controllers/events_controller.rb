@@ -563,6 +563,8 @@ class EventsController < ApplicationController
     if !params[:regions].nil?
       @event.region_ids = params[:regions]
     end
+    participant = Participant.where(:user_id => @resource.id).where(:event_id => @event.id).first_or_create!
+    participant.attendee_type_ids = [AttendeeType.director_id]
     #@event.public_url
     json_response_serializer(@event, EventSerializer)
   end

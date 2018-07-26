@@ -13,6 +13,7 @@ class User < ApplicationRecord
   has_one :association_information, :dependent => :destroy
   has_one :medical_information, :dependent => :destroy
   has_many :players
+  has_many :participants
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
@@ -77,6 +78,15 @@ class User < ApplicationRecord
 
   def member?
     self.try(:role) == "Member"
+  end
+
+  def is_director
+    count  = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
+    if count > 0
+      return true
+    else
+      return false
+    end
   end
 
   swagger_schema :UserLogin do
