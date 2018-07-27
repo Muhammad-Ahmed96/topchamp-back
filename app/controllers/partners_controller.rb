@@ -106,8 +106,11 @@ class PartnersController < ApplicationController
     if type_users == "registered"
       users_in = event.players.pluck(:user_id)
     end
+    users =  User.my_order(column, direction).search(search).where.not(id: [not_in, @resource.id]).where(:gender => gender)
+    if users_in.present?
+      users = users.where(:id => users_in)
+    end
 
-    users =  User.my_order(column, direction).search(search).where.not(id: [not_in, @resource.id]).where(:gender => gender).where(:id => users_in)
     if paginate.to_s == "0"
       json_response_serializer_collection(users.all, UserSingleSerializer)
     else
