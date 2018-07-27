@@ -1,6 +1,7 @@
 include AuthorizeNet::API
 module Payments
   class PaymentProfile
+    include Swagger::Blocks
     def self.create(data, cardNumber, expirationDate)
       transaction = Conexion.get
       # Build the payment object
@@ -43,7 +44,7 @@ module Payments
           puts response.messages.messages[0].code
           puts response.messages.messages[0].text
           puts "Failed to create a new customer payment profile."
-          raise "Failed to create a new customer payment profile."
+          raise response.messages.messages[0].text
         end
       else
         puts "Response is null"
@@ -89,7 +90,7 @@ module Payments
       else
         puts response.messages.messages[0].code
         puts response.messages.messages[0].text
-        raise "Failed to get customer payment profile list"
+        raise response.messages.messages[0].text
       end
       return response
     end
@@ -104,6 +105,42 @@ module Payments
                  :customerType => item.customerType}
       end
       return data
+    end
+
+
+    def self.delete(customerProfileId, customerPaymentProfileId)
+      transaction = Conexion.get
+      request = DeleteCustomerPaymentProfileRequest.new
+      request.customerProfileId = customerProfileId
+      request.customerPaymentProfileId = customerPaymentProfileId
+
+      response = transaction.delete_customer_payment_profile(request)
+
+
+      if response.messages.resultCode == MessageTypeEnum::Ok
+        puts "Successfully deleted payment profile with customer payment profile ID #{request.customerPaymentProfileId}."
+      else
+        raise "Failed to delete payment profile with profile ID #{request.customerPaymentProfileId}: #{response.messages.messages[0].text}"
+      end
+      return response
+    end
+
+
+    swagger_schema :PaymentProfile do
+      property :defaultPaymentProfile do
+        key :type, :boolean
+      end
+      property :customerPaymentProfileId do
+        key :type, :string
+      end
+      property :payment do
+        property :creditCard do
+          key :'$ref', :CreditCard
+        end
+      end
+      property :customerType do
+        key :type, :string
+      end
     end
   end
 end

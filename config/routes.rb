@@ -124,7 +124,7 @@ Rails.application.routes.draw do
 
     namespace :payments do
       resources :profile, only: [:create, :destroy, :show]
-      resources :credit_cards, only: [:index, :create]
+      resources :credit_cards, only: [:index, :create, :destroy]
     end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html

@@ -1,6 +1,6 @@
 include AuthorizeNet::API
 module Payments
-  class Profile < ApplicationRecord
+  class Profile
     def self.create(data)
       transaction = Conexion.get
       # Build the payment object
@@ -99,7 +99,7 @@ module Payments
       request = GetCustomerProfileRequest.new
       request.customerProfileId = customerProfileId
       response = transaction.get_customer_profile(request)
-      if response.messages.resultCode == MessageTypeEnum::Ok
+      if response.present? and response.messages.resultCode == MessageTypeEnum::Ok
         return response
       else
         return nil

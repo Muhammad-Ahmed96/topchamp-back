@@ -1,29 +1,110 @@
 class Payments::CreditCardsController < ApplicationController
+  include Swagger::Blocks
   before_action :authenticate_user!
 
-
-  def index
-    json_response_data(Payments::PaymentProfile.getItemsFormat(customer.profile.paymentProfiles))
+  swagger_path '/payments/credit_cards' do
+    operation :get do
+      key :summary, 'Get credit cards list'
+      key :description, 'Credit Cards'
+      key :operationId, 'paymentsCreditCardsIndex'
+      key :produces, ['application/json',]
+      key :tags, ['payments credit cards']
+      response 200 do
+        schema do
+          property :data do
+            key :'$ref', :PaymentProfile
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
   end
-
+  def index
+    json_response_data(Payments::PaymentProfile.getItemsFormat(Payments::Customer.get(@resource).profile.paymentProfiles))
+  end
+  swagger_path '/payments/credit_cards' do
+    operation :post do
+      key :summary, 'Save credit card'
+      key :description, 'Credit Cards'
+      key :operationId, 'paymentsCreditCardsCreate'
+      key :produces, ['application/json',]
+      key :tags, ['payments credit cards']
+      parameter do
+        key :name, :card_number
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :expiration_date
+        key :in, :body
+        key :description, 'Use YYYY-MM Format'
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def create
-    customer
+    Payments::Customer.get(@resource)
     user = User.find(@resource.id)
     response = Payments::PaymentProfile.create(user, create_params[:card_number], create_params[:expiration_date])
     json_response_success(response.customerPaymentProfileId, 200)
+  end
+  swagger_path '/payments/credit_cards/:id' do
+    operation :delete do
+      key :summary, 'Delete credit card'
+      key :description, 'Credit Cards'
+      key :operationId, 'paymentsCreditCardsDestroy'
+      key :produces, ['application/json',]
+      key :tags, ['payments credit cards']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def destroy
+    Payments::PaymentProfile.delete(Payments::Customer.get(@resource).profile.customerProfileId, params[:id])
+    json_response_success(t("deleted_success", model: "Credit Card"), true)
   end
 
   private
 
   def create_params
     params.permit(:card_number, :expiration_date)
-  end
-
-  def customer
-    profile = Payments::Profile.get(@resource.customer_profile_id)
-    if profile.nil?
-      profile = Payments::Profile.create(@resource)
-    end
-    return profile
   end
 end

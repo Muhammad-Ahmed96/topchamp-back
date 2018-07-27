@@ -66,6 +66,7 @@ class ApidocsController < ApplicationController
       ParticipantsController,
       PlayersController,
       BusinessCategoriesController,
+      Payments::CreditCardsController,
       PartnersController,
       ErrorModel,
       SuccessModel,
@@ -101,6 +102,8 @@ class ApidocsController < ApplicationController
       BusinessCategory,
       PlayerBracket,
       EventBracket,
+      Payments::PaymentProfile,
+      Payments::CreditCard,
       self,
   ].freeze
 
