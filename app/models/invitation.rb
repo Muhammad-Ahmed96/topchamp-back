@@ -49,8 +49,11 @@ class Invitation < ApplicationRecord
     end
     params.delete :attendee_types
     data = params.merge(:user_id => userId, :sender_id => senderId, :invitation_type => type)
+=begin
     invitation = Invitation.where(:email => data[:email]).where(:invitation_type => type)
-                     .where(:event_id => data[:event_id]).first
+                     .where(:event_id => data[:event_id]).where(:sender_id => data[:sender_id]).first
+=end
+    invitation = nil
     if invitation.present?
       if invitation.attendee_type_ids.present? and invitation.attendee_type_ids != attendee_types
         data = data.merge(:send_at => nil)
