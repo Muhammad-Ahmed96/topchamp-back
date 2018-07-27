@@ -121,6 +121,11 @@ Rails.application.routes.draw do
     end
     resources :business_categories, only: [:index]
     resources :partners, only: [:index]
+
+    namespace :payments do
+      resources :profile, only: [:create, :destroy, :show]
+      resources :credit_cards, only: [:index, :create, :destroy]
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]
