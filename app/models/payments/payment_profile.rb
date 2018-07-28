@@ -2,6 +2,7 @@ include AuthorizeNet::API
 module Payments
   class PaymentProfile
     include Swagger::Blocks
+
     def self.create(data, cardNumber, expirationDate)
       transaction = Conexion.get
       # Build the payment object
@@ -44,11 +45,9 @@ module Payments
           puts response.messages.messages[0].code
           puts response.messages.messages[0].text
           puts "Failed to create a new customer payment profile."
-          raise response.messages.messages[0].text
         end
       else
         puts "Response is null"
-        raise "Failed to create a new customer payment profile."
       end
       return response
     end
@@ -97,12 +96,13 @@ module Payments
 
     def self.getItemsFormat(items)
       data = []
-
-      items.each do |item|
-        data << {:defaultPaymentProfile => item.defaultPaymentProfile, :customerPaymentProfileId => item.customerPaymentProfileId,
-                 :payment => {:creditCard => {:cardNumber => item.payment.creditCard.cardNumber, :expirationDate => item.payment.creditCard.expirationDate, :cardType => item.payment.creditCard.cardType,
-                                              :issuerNumber => item.payment.creditCard.issuerNumber, :isPaymentToken => item.payment.creditCard.isPaymentToken}},
-                 :customerType => item.customerType}
+      if items.kind_of?(Array)
+        items.each do |item|
+          data << {:defaultPaymentProfile => item.defaultPaymentProfile, :customerPaymentProfileId => item.customerPaymentProfileId,
+                   :payment => {:creditCard => {:cardNumber => item.payment.creditCard.cardNumber, :expirationDate => item.payment.creditCard.expirationDate, :cardType => item.payment.creditCard.cardType,
+                                                :issuerNumber => item.payment.creditCard.issuerNumber, :isPaymentToken => item.payment.creditCard.isPaymentToken}},
+                   :customerType => item.customerType}
+        end
       end
       return data
     end

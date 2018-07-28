@@ -1,4 +1,6 @@
 include AuthorizeNet::API
+require 'action_view'
+include ActionView::Helpers::NumberHelper
 module Payments
   class Charge
     def create
@@ -21,14 +23,14 @@ module Payments
         lineItemArr = Array.new
         items.each do |item|
           # Arguments for LineItemType.new are itemId, name, description, quanitity, unitPrice, taxable
-          lineItem = LineItemType.new(item[:id], item[:name], item[:description], item[:quantity], item[:unit_price], item[:taxable])
+          lineItem = LineItemType.new(item[:id], item[:name], item[:description], item[:quantity],number_with_precision(item[:unit_price], precision: 2), item[:taxable])
           lineItemArr.push(lineItem)
         end
         request.transactionRequest.lineItems = LineItems.new(lineItemArr)
       end
       if tax.present?
         # Arguments for ExtendedAmountType.new are amount, name, description
-        request.transactionRequest.tax = ExtendedAmountType.new(tax[:amount],tax[:name],tax[:description])
+        request.transactionRequest.tax = ExtendedAmountType.new(number_with_precision(tax[:amount], precision: 2),tax[:name],tax[:description])
       end
 
       response = transaction.create_transaction(request)

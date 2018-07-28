@@ -28,9 +28,11 @@ class Payments::CreditCardsController < ApplicationController
       end
     end
   end
+
   def index
     json_response_data(Payments::PaymentProfile.getItemsFormat(Payments::Customer.get(@resource).profile.paymentProfiles))
   end
+
   swagger_path '/payments/credit_cards' do
     operation :post do
       key :summary, 'Save credit card'
@@ -68,12 +70,21 @@ class Payments::CreditCardsController < ApplicationController
       end
     end
   end
+
   def create
     Payments::Customer.get(@resource)
     user = User.find(@resource.id)
     response = Payments::PaymentProfile.create(user, create_params[:card_number], create_params[:expiration_date])
+    if response != nil
+      if response.messages.resultCode != MessageTypeEnum::Ok
+        return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+      end
+    else
+      return json_response_error(["Failed to create a new customer payment profile"], 422)
+    end
     json_response_success(response.customerPaymentProfileId, 200)
   end
+
   swagger_path '/payments/credit_cards/:id' do
     operation :delete do
       key :summary, 'Delete credit card'
@@ -98,6 +109,7 @@ class Payments::CreditCardsController < ApplicationController
       end
     end
   end
+
   def destroy
     response = Payments::PaymentProfile.delete(Payments::Customer.get(@resource).profile.customerProfileId, params[:id])
     if response.messages.resultCode != MessageTypeEnum::Ok

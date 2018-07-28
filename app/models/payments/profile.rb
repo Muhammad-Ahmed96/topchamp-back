@@ -2,6 +2,7 @@ include AuthorizeNet::API
 module Payments
   class Profile
     def self.create(data)
+      #number_to_phone
       transaction = Conexion.get
       # Build the payment object
       payment = PaymentType.new(CreditCardType.new)
@@ -99,7 +100,7 @@ module Payments
       request = GetCustomerProfileRequest.new
       request.customerProfileId = customerProfileId
       response = transaction.get_customer_profile(request)
-      if response.present? and response.messages.resultCode == MessageTypeEnum::Ok
+      if response.present? and response.messages.present? and response.messages.resultCode == MessageTypeEnum::Ok
         return response
       else
         return nil

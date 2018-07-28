@@ -397,13 +397,17 @@ ActiveRecord::Schema.define(version: 2018_07_27_234655) do
   end
 
   create_table "payment_transactions", force: :cascade do |t|
-    t.string "transaction_id"
-    t.string "itemeable_type"
-    t.bigint "itemeable_id"
+    t.string "payment_transaction_id"
+    t.string "transactionable_type"
+    t.bigint "transactionable_id"
     t.integer "status", default: 1
+    t.bigint "user_id"
+    t.float "amount"
+    t.float "tax"
+    t.string "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["itemeable_type", "itemeable_id"], name: "index_payment_transactions_on_itemeable_type_and_itemeable_id"
+    t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 
   create_table "player_brackets", force: :cascade do |t|
