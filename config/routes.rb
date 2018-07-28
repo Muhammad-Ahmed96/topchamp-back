@@ -128,6 +128,7 @@ Rails.application.routes.draw do
       resources :check_out, only: [] do
         collection do
           post :event
+          post :subscribe
         end
       end
     end
