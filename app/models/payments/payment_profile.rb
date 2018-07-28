@@ -120,7 +120,7 @@ module Payments
       if response.messages.resultCode == MessageTypeEnum::Ok
         puts "Successfully deleted payment profile with customer payment profile ID #{request.customerPaymentProfileId}."
       else
-        raise "Failed to delete payment profile with profile ID #{request.customerPaymentProfileId}: #{response.messages.messages[0].text}"
+        puts "Failed to delete payment profile with profile ID #{request.customerPaymentProfileId}: #{response.messages.messages[0].text}"
       end
       return response
     end

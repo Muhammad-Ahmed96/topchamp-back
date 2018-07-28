@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_26_211004) do
+ActiveRecord::Schema.define(version: 2018_07_27_234655) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -330,6 +330,7 @@ ActiveRecord::Schema.define(version: 2018_07_26_211004) do
     t.string "awards_for"
     t.string "awards_through"
     t.string "awards_plus"
+    t.boolean "is_paid", default: false
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
@@ -393,6 +394,16 @@ ActiveRecord::Schema.define(version: 2018_07_26_211004) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_participants_on_deleted_at"
+  end
+
+  create_table "payment_transactions", force: :cascade do |t|
+    t.string "transaction_id"
+    t.string "itemeable_type"
+    t.bigint "itemeable_id"
+    t.integer "status", default: 1
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["itemeable_type", "itemeable_id"], name: "index_payment_transactions_on_itemeable_type_and_itemeable_id"
   end
 
   create_table "player_brackets", force: :cascade do |t|

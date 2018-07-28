@@ -1,5 +1,6 @@
 class Payments::CreditCardsController < ApplicationController
   include Swagger::Blocks
+  include AuthorizeNet::API
   before_action :authenticate_user!
 
   swagger_path '/payments/credit_cards' do
@@ -98,7 +99,10 @@ class Payments::CreditCardsController < ApplicationController
     end
   end
   def destroy
-    Payments::PaymentProfile.delete(Payments::Customer.get(@resource).profile.customerProfileId, params[:id])
+    response = Payments::PaymentProfile.delete(Payments::Customer.get(@resource).profile.customerProfileId, params[:id])
+    if response.messages.resultCode != MessageTypeEnum::Ok
+      return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+    end
     json_response_success(t("deleted_success", model: "Credit Card"), true)
   end
 
