@@ -29,6 +29,9 @@ class Event < ApplicationRecord
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
 
+
+  has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :itemeable
+
   has_many :brackets, -> {only_parent}, class_name: "EventBracket"
   has_many :internal_brackets, class_name: "EventBracket"
 
