@@ -9,6 +9,8 @@ class Player < ApplicationRecord
   has_many :brackets_enroll,-> {enroll}, class_name: "PlayerBracket"
   has_many :brackets_wait_list, -> {wait_list}, class_name: "PlayerBracket"
 
+  has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
+
   scope :status_in, lambda {|status| where status: status if status.present?}
   #scope :skill_level_like, lambda {|search| where ["to_char(skill_level,'9999999999') LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}

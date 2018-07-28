@@ -1,3 +1,5 @@
+require 'action_view'
+include ActionView::Helpers::NumberHelper
 class Payments::CheckOutController < ApplicationController
   include Swagger::Blocks
   include AuthorizeNet::API
@@ -82,7 +84,7 @@ class Payments::CheckOutController < ApplicationController
         end
       end
 
-      event.create_payment_transaction!({:transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => config[:unit_price], :tax => tax[:amount],
+      event.create_payment_transaction!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => config[:unit_price], :tax => tax[:amount],
                                          :description => "Event payment"})
       event.is_paid = true
       event.save!(:validate => false)
@@ -106,7 +108,7 @@ class Payments::CheckOutController < ApplicationController
     items << item
     brackets.each do |bracket|
       if bracket[:enroll_status] == :enroll
-        item = {id: "#{config[:id]}-#{bracet.id}", name: "Bracket-#{bracet.id}", description: "Subscribe to Bracket-#{bracet.id}", quantity: 1, unit_price: bracket_fee,
+        item = {id: "#{config[:id]}-#{bracket[:id]}", name: "Bracket-#{bracket[:id]}", description: "Subscribe to Bracket-#{bracket[:id]}", quantity: 1, unit_price: bracket_fee,
                 taxable: true}
         amount += bracket_fee
         items << item
@@ -117,6 +119,7 @@ class Payments::CheckOutController < ApplicationController
     tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax to enroll"}
     # no payment if items is empty
     if items.length > 0
+      amount=  number_with_precision(amount, precision: 2)
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
                                            amount, items, tax)
       if response.messages.resultCode == MessageTypeEnum::Ok
@@ -132,9 +135,10 @@ class Payments::CheckOutController < ApplicationController
       end
     end
     #save bracket on player
-    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets! brackets
-
+    player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),
+                                         :description => "Bracket subscribe payment"})
     json_response_success("Successful", true)
   end
 

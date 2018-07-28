@@ -397,7 +397,7 @@ ActiveRecord::Schema.define(version: 2018_07_27_234655) do
   end
 
   create_table "payment_transactions", force: :cascade do |t|
-    t.string "transaction_id"
+    t.string "payment_transaction_id"
     t.string "transactionable_type"
     t.bigint "transactionable_id"
     t.integer "status", default: 1
