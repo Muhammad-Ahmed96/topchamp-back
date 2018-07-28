@@ -108,7 +108,7 @@ class Payments::CheckOutController < ApplicationController
     items << item
     brackets.each do |bracket|
       if bracket[:enroll_status] == :enroll
-        item = {id: "#{config[:id]}-#{bracket[:id]}", name: "Bracket-#{bracket[:id]}", description: "Subscribe to Bracket-#{bracket[:id]}", quantity: 1, unit_price: bracket_fee,
+        item = {id: "#{config[:id]}-#{bracket[:event_bracket_id]}", name: "Bracket-#{bracket[:event_bracket_id]}", description: "Subscribe to Bracket-#{bracket[:event_bracket_id]}", quantity: 1, unit_price: bracket_fee,
                 taxable: true}
         amount += bracket_fee
         items << item
@@ -139,6 +139,15 @@ class Payments::CheckOutController < ApplicationController
     player.sync_brackets! brackets
     player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),
                                          :description => "Bracket subscribe payment"})
+    brackets.each do |bracket|
+      if bracket[:enroll_status] == :enroll
+        saved_bracket = player.brackets.where(:event_bracket_id => bracket[:event_bracket_id]).first
+        if saved_bracket.present?
+          saved_bracket.payment_transaction_id = response.transactionResponse.transId
+          saved_bracket.save!(:validate => false)
+        end
+      end
+    end
     json_response_success("Successful", true)
   end
 
