@@ -1759,7 +1759,7 @@ class EventsController < ApplicationController
   def payment_information_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee, :app_fee)
+      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee, :app_fee, :bank_routing_number)
     end
   end
 
