@@ -92,21 +92,24 @@ class PartnersController < ApplicationController
     type_users = params[:type_users]
     type = params[:type]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
-    not_in = nil;
+    not_in = [@resource.id]
     gender = nil
     player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
     if type == "doubles"
-      not_in = player.partner_double_id
+      not_in << player.partner_double_id
       gender = player.user.gender
     elsif type == "mixed"
-      not_in = player.partner_mixed_id
+      not_in << player.partner_mixed_id
       gender = player.user.gender == "Male" ? "Female" : "Male"
     end
     users_in = nil
     if type_users == "registered"
       users_in = event.players.pluck(:user_id)
+    else
+      in_event = event.players.pluck(:user_id)
+      #not_in << in_event
     end
-    users =  User.my_order(column, direction).search(search).where.not(id: [not_in, @resource.id]).where(:gender => gender)
+    users =  User.my_order(column, direction).search(search).where.not(id: not_in).where(:gender => gender)
     if users_in.present?
       users = users.where(:id => users_in)
     end
