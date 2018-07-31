@@ -11,9 +11,10 @@ class CategoriesEvent < ApplicationRecord
   def brackets
     brackets = []
     age = player.present? ? player.user.age : nil
+    not_in = player.brackets.where(:category_id => self.category.id).pluck(:event_bracket_id)
     #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
     skill = player.present? ? player.skill_level: nil
-     self.event.brackets.age_filter(age, self.event.sport_regulator.allow_age_range).skill_filter(skill).each do |bracket|
+     self.event.brackets.age_filter(age, self.event.sport_regulator.allow_age_range).skill_filter(skill).not_in(not_in).each do |bracket|
        bracket.user_age = age
        bracket.user_skill = skill
        bracket.category_id = self.category.id

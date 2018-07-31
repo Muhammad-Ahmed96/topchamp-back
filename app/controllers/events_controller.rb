@@ -1684,6 +1684,7 @@ class EventsController < ApplicationController
     end
     #validate bracket
     player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+
     age = player.present? ? player.user.age : nil
     #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
     skill = player.present? ? player.skill_level: nil
@@ -1691,15 +1692,15 @@ class EventsController < ApplicationController
       item.player = player
     end
     event_categories.to_a.each do |item|
-      valid = false
       if @event.bracket_by == "age" or @event.bracket_by == "skill"
         if item.brackets.length > 0
           response_data << item
         end
       elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
         if item.brackets.length > 0
+          not_in = player.brackets.where(:category_id => item[:id]).pluck(:event_bracket_id)
           item.brackets.each do |bra|
-            if bra.brackets.age_filter(age, @event.sport_regulator.allow_age_range).skill_filter(skill).length > 0
+            if bra.brackets.age_filter(age, @event.sport_regulator.allow_age_range).skill_filter(skill).not_in(not_in).length > 0
               response_data << item
             end
           end
