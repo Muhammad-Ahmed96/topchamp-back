@@ -604,6 +604,36 @@ class Event < ApplicationRecord
     brackets
   end
 
+  def get_discount
+    discount = 0
+    discounts = self.discount
+    total_players = self.players.count
+    if discounts.present?
+      if discounts.early_bird_date_start.present? and discounts.early_bird_date_end.present?
+        start_date = discounts.early_bird_date_start.to_date
+        end_date = discounts.early_bird_date_end.to_date
+        if Date.today >= start_date and Date.today <=end_date and (discounts.early_bird_players < total_players or total_players == 0)
+          discount = discounts.early_bird_registration
+        end
+      end
+      if discounts.late_date_start.present? and discounts.late_date_end.present?
+        start_date = discounts.late_date_start.to_date
+        end_date = discounts.late_date_end.to_date
+        if Date.today >= start_date and Date.today <=end_date and (discounts.late_players < total_players or total_players == 0)
+          discount = discounts.late_registration
+        end
+      end
+      if discounts.on_site_date_start.present? and discounts.on_site_date_end.present?
+        start_date = discounts.on_site_date_start.to_date
+        end_date = discounts.on_site_date_end.to_date
+        if Date.today >= start_date and Date.today <=end_date and (discounts.on_site_players < total_players or total_players == 0)
+          discount = discounts.on_site_registration
+        end
+      end
+    end
+    discount
+  end
+
   private
 
   #validate a url
