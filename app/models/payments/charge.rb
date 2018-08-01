@@ -13,11 +13,12 @@ module Payments
 
       request.transactionRequest = TransactionRequestType.new()
       request.transactionRequest.amount = amount
-      request.transactionRequest.transactionType = TransactionTypeEnum::AuthCaptureTransaction
+      request.transactionRequest.transactionType = TransactionTypeEnum::AuthOnlyTransaction
       #request.transactionRequest.order = OrderType.new("invoiceNumber#{(SecureRandom.random_number * 1000000).round(0)}", "Order Description")
       request.transactionRequest.profile = CustomerProfilePaymentType.new
       request.transactionRequest.profile.customerProfileId = customerProfileId
       request.transactionRequest.profile.paymentProfile = AuthorizeNet::API::PaymentProfile.new(customerPaymentProfileId, cardCode)
+      #request.validationMode = ValidationModeEnum::LiveMode
       if items.kind_of?(Array)
         # Build an array of line items
         lineItemArr = Array.new
@@ -67,6 +68,23 @@ module Payments
       end
 
       return response
+    end
+
+    def self.get_message(code, message = "")
+      my_message = ""
+      case code
+      when "N"
+        my_message = "CVV Does NOT Match"
+      when "P"
+        my_message = "CVV Is NOT Processed"
+      when "S"
+        my_message = "CVV Should be on card, but is not indicated"
+      when "U"
+        my_message = "CVV Issuer is not certified or has not provided encryption key"
+      else
+        my_message = message
+      end
+      my_message
     end
   end
 end
