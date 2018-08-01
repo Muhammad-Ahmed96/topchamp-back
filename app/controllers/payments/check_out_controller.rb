@@ -87,7 +87,9 @@ class Payments::CheckOutController < ApplicationController
       event.create_payment_transaction!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => config[:unit_price], :tax => tax[:amount],
                                          :description => "Event payment"})
       event.is_paid = true
+      event.status = :Active
       event.save!(:validate => false)
+      event.public_url
     end
     json_response_success("Successful", true)
   end
