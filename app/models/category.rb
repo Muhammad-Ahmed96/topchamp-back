@@ -14,6 +14,15 @@ class Category < ApplicationRecord
     [5]
   end
 
+
+  def self.doubles_categories
+    [2,4]
+  end
+
+  def self.single_categories
+    [1,3]
+  end
+
   swagger_schema :Category do
     property :id do
       key :type, :integer

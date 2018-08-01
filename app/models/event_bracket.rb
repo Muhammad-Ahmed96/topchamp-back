@@ -24,6 +24,7 @@ class EventBracket < ApplicationRecord
     end
   }
   scope :skill_filter, lambda {|skill| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill).or(EventBracket.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
+  scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
 
   def available_for_enroll(category_id)
     count  = PlayerBracket.where(:event_bracket_id => self.id).where(:category_id => category_id).where(:enroll_status => :enroll).count

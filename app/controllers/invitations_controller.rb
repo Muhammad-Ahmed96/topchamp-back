@@ -169,6 +169,7 @@ class InvitationsController < ApplicationController
     type = params[:type].nil? ? valid_types : [params[:type]]
     event_id = index_partners_params
 
+    invitatin_type = []
 
     unless type.included_in? valid_types
       return response_no_type
@@ -196,11 +197,22 @@ class InvitationsController < ApplicationController
       column = nil
     end
 
+    #check if category is paid
+    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
+    categories_ids = player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id)
+    if categories_ids.included_in? Category.doubles_categories
+      invitatin_type << "partner_double"
+    end
+
+    if categories_ids.included_in? Category.mixed_categories
+      invitatin_type << "partner_mixed"
+    end
+    #end check if category is paid
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     invitations = Invitation.my_order(column, direction).event_like(event)
                       .email_like(email).first_name_like(first_name).last_name_like(last_name).event_order(eventColumn, direction).user_order(userColumn, direction)
                       .in_status(status).phone_like(phone).phone_order(phoneColumn, direction).in_type(type).where(:user_id => @resource.id).where(:event_id => event_id)
-                      .where(:status => "pending_invitation")
+                      .where(:status => "pending_invitation").where(:invitation_type => invitatin_type)
     if paginate.to_s == "0"
       json_response_serializer_collection(invitations.all, InvitationSerializer)
     else
