@@ -80,6 +80,10 @@ class User < ApplicationRecord
     self.try(:role) == "Member"
   end
 
+  def customer?
+    self.try(:role) == "Customer"
+  end
+
   def is_director
     count  = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
     if count > 0

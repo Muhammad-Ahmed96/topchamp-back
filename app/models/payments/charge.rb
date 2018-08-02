@@ -13,7 +13,7 @@ module Payments
 
       request.transactionRequest = TransactionRequestType.new()
       request.transactionRequest.amount = amount
-      request.transactionRequest.transactionType = TransactionTypeEnum::AuthOnlyTransaction
+      request.transactionRequest.transactionType = TransactionTypeEnum::AuthCaptureTransaction
       #request.transactionRequest.order = OrderType.new("invoiceNumber#{(SecureRandom.random_number * 1000000).round(0)}", "Order Description")
       request.transactionRequest.profile = CustomerProfilePaymentType.new
       request.transactionRequest.profile.customerProfileId = customerProfileId
