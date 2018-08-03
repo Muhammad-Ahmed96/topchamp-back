@@ -13,6 +13,7 @@ class Invitation < ApplicationRecord
   accepts_nested_attributes_for :attendee_types
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :in_type, lambda {|type| where invitation_type: type if type.present?}
   scope :email_like, lambda {|search| Invitation.where ["LOWER(invitations.email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(events.title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
@@ -48,8 +49,11 @@ class Invitation < ApplicationRecord
     end
     params.delete :attendee_types
     data = params.merge(:user_id => userId, :sender_id => senderId, :invitation_type => type)
+=begin
     invitation = Invitation.where(:email => data[:email]).where(:invitation_type => type)
-                     .where(:event_id => data[:event_id]).first
+                     .where(:event_id => data[:event_id]).where(:sender_id => data[:sender_id]).first
+=end
+    invitation = nil
     if invitation.present?
       if invitation.attendee_type_ids.present? and invitation.attendee_type_ids != attendee_types
         data = data.merge(:send_at => nil)

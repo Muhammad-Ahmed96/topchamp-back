@@ -1,5 +1,5 @@
 class PlayerBracketSingleSerializer < ActiveModel::Serializer
-  attributes :id, :age, :lowest_skill, :highest_skill, :enroll_status
+  attributes :id, :age,:young_age,:old_age, :lowest_skill, :highest_skill, :enroll_status
   belongs_to :category, serializer: CategorySerializer
   has_one :parent_bracket, serializer: EventBracketSingleSerializer
 
@@ -12,6 +12,19 @@ class PlayerBracketSingleSerializer < ActiveModel::Serializer
   def age
     unless object.bracket.nil?
       object.bracket.age
+    end
+  end
+
+  def young_age
+    unless object.bracket.nil?
+      object.bracket.young_age
+    end
+  end
+
+
+  def old_age
+    unless object.bracket.nil?
+      object.bracket.old_age
     end
   end
 

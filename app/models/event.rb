@@ -29,6 +29,9 @@ class Event < ApplicationRecord
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
 
+
+  has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
+
   has_many :brackets, -> {only_parent}, class_name: "EventBracket"
   has_many :internal_brackets, class_name: "EventBracket"
 
@@ -45,7 +48,7 @@ class Event < ApplicationRecord
 
   has_attached_file :icon, :path => ":rails_root/public/images/event_icons/:to_param/:style/:basename.:extension",
                     :url => "/images/event_icons/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/event/:style/default_noevent.png"
   validates_attachment :icon
   validate :check_dimensions
   validates_with AttachmentSizeValidator, attributes: :icon, less_than: 2.megabytes
@@ -59,6 +62,7 @@ class Event < ApplicationRecord
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :only_directors, lambda {|id| joins(participants: [:attendee_types]).merge(Participant.where :user_id => id).merge(AttendeeType.where :id => AttendeeType.director_id)if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
   scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
@@ -152,14 +156,14 @@ class Event < ApplicationRecord
         #asing data of bracket
         data = {:event_bracket_id => bracket[:event_bracket_id], :age => bracket[:age],
                 :lowest_skill => bracket[:lowest_skill], :highest_skill => bracket[:highest_skill],
-                :quantity => bracket[:quantity]}
+                :quantity => bracket[:quantity], :young_age => bracket[:young_age], :old_age => bracket[:old_age]}
         parent_bracket = self.internal_brackets.where(id: bracket[:id]).update_or_create!(data)
         not_delete << parent_bracket.id
         if bracket[:brackets].kind_of? Array
           bracket[:brackets].each do |child_bracket|
             data = {:event_bracket_id => parent_bracket.id, :age => child_bracket[:age],
                     :lowest_skill => child_bracket[:lowest_skill], :highest_skill => child_bracket[:highest_skill],
-                    :quantity => child_bracket[:quantity]}
+                    :quantity => child_bracket[:quantity], :young_age => child_bracket[:young_age], :old_age => child_bracket[:old_age]}
             current_bracket = self.internal_brackets.where(id: child_bracket[:id]).update_or_create!(data)
             not_delete << current_bracket.id
           end
@@ -588,14 +592,46 @@ class Event < ApplicationRecord
     data.each do |bracket|
       current_bracket = EventBracket.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
       category = self.internal_categories.where(:id => bracket[:category_id]).count
+      allow_wait_list = self.registration_rule.present? ? self.registration_rule.allow_wait_list : false
       if current_bracket.present? and category > 0
         status = current_bracket.get_status(bracket[:category_id])
-        if status == :enroll or status == :waiting_list
+        if status == :enroll or (status == :waiting_list and allow_wait_list)
+          bracket[:enroll_status] = status
           brackets << bracket
         end
       end
     end
     brackets
+  end
+
+  def get_discount
+    discount = 0
+    discounts = self.discount
+    total_players = self.players.count
+    if discounts.present?
+      if discounts.early_bird_date_start.present? and discounts.early_bird_date_end.present?
+        start_date = discounts.early_bird_date_start.to_date
+        end_date = discounts.early_bird_date_end.to_date
+        if Date.today >= start_date and Date.today <=end_date and (discounts.early_bird_players < total_players or total_players == 0)
+          discount = discounts.early_bird_registration
+        end
+      end
+      if discounts.late_date_start.present? and discounts.late_date_end.present?
+        start_date = discounts.late_date_start.to_date
+        end_date = discounts.late_date_end.to_date
+        if Date.today >= start_date and Date.today <=end_date and (discounts.late_players < total_players or total_players == 0)
+          discount = discounts.late_registration
+        end
+      end
+      if discounts.on_site_date_start.present? and discounts.on_site_date_end.present?
+        start_date = discounts.on_site_date_start.to_date
+        end_date = discounts.on_site_date_end.to_date
+        if Date.today >= start_date and Date.today <=end_date and (discounts.on_site_players < total_players or total_players == 0)
+          discount = discounts.on_site_registration
+        end
+      end
+    end
+    discount
   end
 
   private

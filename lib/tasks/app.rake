@@ -68,5 +68,16 @@ namespace :app do
   end
 
 
+  desc 'Ceate director participants'
+  task create_directors: :environment do
+    Event.all.each do |event|
+      types = [AttendeeType.director_id]
+      participant = Participant.where(:user_id => event.creator_user_id).where(:event_id => event.id).first_or_create!
+      types |= participant.attendee_type_ids.to_a
+      participant.attendee_type_ids = types
+    end
+  end
+
+
 
 end

@@ -68,11 +68,11 @@ gem 'active_model_serializers', '~> 0.10.0'
 gem "paperclip", "~> 6.0.0"
 # authorization
 gem "pundit"
-
+#fake data in db
 gem 'faker', git: 'https://github.com/stympy/faker'
-
-
+#Excel file magnamnet
 gem 'roo'
-
-
+#SEO Google
 gem 'google-api-client', '~> 0.11'
+#authorizenet for payments
+gem "authorizenet"  , '~> 1.9.2'
