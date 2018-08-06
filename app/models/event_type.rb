@@ -10,9 +10,11 @@ class EventType < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with event type"
     end
     property :name do
       key :type, :string
+      key :description, "Name associated with event type"
     end
   end
 end

@@ -49,19 +49,19 @@ if AgendaType.count == 0
                        {name: 'VIP Event'}, {name: 'Workshop'}])
 end
 if Region.count == 0
-  Region.create([{name: 'Atlantic', base: 'State', territoy: 'Connecticut, Massachusetts, Maine, New Hampshire, New York, Rhode Island, Vermont'},
-                 {name: 'Atlantic South', base: 'Both', territoy: 'Alabama, Florida, Georgia, Mississippi, Puerto Rico'},
-                 {name: 'Canada', base: 'Country', territoy: 'Canada'},{name: 'Great Lakes', base: 'State', territoy: 'Indiana, Michigan, Ohio, Ontario'},
-                 {name: 'Great Plains', base: 'State', territoy: 'Colorado, Kansas, Montana, North Dakota, Nebraska, South Dakota, Wyoming'},
-                 {name: 'Italy', base: 'Country', territoy: 'Italy'},
-                 {name: 'LATAM', base: 'Country', territoy: 'Mexico, Argentina, Colombia, Costa Rica, Brazil'},
-                 {name: 'Mid Atlantic', base: 'State', territoy: 'District of Columbia, Delaware, Kentucky, Maryland, North Carolina, New Jersey, Pennsylvania, South Carolina, Tennessee, Virginia, West Virginia'},
-                 {name: 'Middle States', base: 'State', territoy: 'Illinois, Wisconsin, Iowa, Missouri, Minnesota'},
-                 {name: 'Mid South', base: 'State', territoy: 'Arkansas, Louisiana, Oklahoma, Texas'},
-                 {name: 'Mountain', base: 'State', territoy: 'Utah, Nevada'},{name: 'Netherlands', base: 'Country', territoy: 'Netherlands'},
-                 {name: 'Pacific Northwest', base: 'State', territoy: 'Alaska, Idaho, Oregon, Washington, British Columbia, Alberta'},
-                 {name: 'South West', base: 'State', territoy: 'Arizona, New Mexico, Costa Rica, Mexico'},
-                 {name: 'Spain', base: 'Country', territoy: 'Spain'},{name: 'West', base: 'State', territoy: 'California, Hawaii'}])
+  Region.create([{name: 'Atlantic', base: 'State', territory: 'Connecticut, Massachusetts, Maine, New Hampshire, New York, Rhode Island, Vermont'},
+                 {name: 'Atlantic South', base: 'Both', territory: 'Alabama, Florida, Georgia, Mississippi, Puerto Rico'},
+                 {name: 'Canada', base: 'Country', territory: 'Canada'},{name: 'Great Lakes', base: 'State', territory: 'Indiana, Michigan, Ohio, Ontario'},
+                 {name: 'Great Plains', base: 'State', territory: 'Colorado, Kansas, Montana, North Dakota, Nebraska, South Dakota, Wyoming'},
+                 {name: 'Italy', base: 'Country', territory: 'Italy'},
+                 {name: 'LATAM', base: 'Country', territory: 'Mexico, Argentina, Colombia, Costa Rica, Brazil'},
+                 {name: 'Mid Atlantic', base: 'State', territory: 'District of Columbia, Delaware, Kentucky, Maryland, North Carolina, New Jersey, Pennsylvania, South Carolina, Tennessee, Virginia, West Virginia'},
+                 {name: 'Middle States', base: 'State', territory: 'Illinois, Wisconsin, Iowa, Missouri, Minnesota'},
+                 {name: 'Mid South', base: 'State', territory: 'Arkansas, Louisiana, Oklahoma, Texas'},
+                 {name: 'Mountain', base: 'State', territory: 'Utah, Nevada'},{name: 'Netherlands', base: 'Country', territory: 'Netherlands'},
+                 {name: 'Pacific Northwest', base: 'State', territory: 'Alaska, Idaho, Oregon, Washington, British Columbia, Alberta'},
+                 {name: 'South West', base: 'State', territory: 'Arizona, New Mexico, Costa Rica, Mexico'},
+                 {name: 'Spain', base: 'Country', territory: 'Spain'},{name: 'West', base: 'State', territory: 'California, Hawaii'}])
 end
 
 if Language.count == 0

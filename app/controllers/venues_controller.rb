@@ -89,13 +89,18 @@ class VenuesController < ApplicationController
         key :type, :string
       end
       response 200 do
-        key :description, ''
+        key :description, 'Venue Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :Venue
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end
@@ -254,13 +259,15 @@ class VenuesController < ApplicationController
         key :name, :availability_date_start
         key :in, :body
         key :required, true
-        key :type, :date
+        key :type, :string
+        key :format, :date
       end
       parameter do
         key :name, :availability_date_end
         key :in, :body
         key :required, true
-        key :type, :date
+        key :type, :string
+        key :format, :date
       end
       parameter do
         key :name, :availability_time_zone
@@ -505,13 +512,15 @@ class VenuesController < ApplicationController
         key :name, :availability_date_start
         key :in, :body
         key :required, true
-        key :type, :date
+        key :type, :string
+        key :format, :date
       end
       parameter do
         key :name, :availability_date_end
         key :in, :body
         key :required, true
-        key :type, :date
+        key :type, :string
+        key :format, :date
       end
       parameter do
         key :name, :availability_time_zone

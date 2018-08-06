@@ -97,8 +97,11 @@ class Payments::CheckOutController < ApplicationController
       event.status = :Active
       event.save!(:validate => false)
       event.public_url
+      json_response_data([:transaction => response.transactionResponse.transId ], :ok)
+    else
+      json_response_error(["event is already paid"], 401)
     end
-    json_response_data([:transaction => response.transactionResponse.transId ], true)
+
   end
   swagger_path '/payments/check_out/subscribe' do
     operation :post do

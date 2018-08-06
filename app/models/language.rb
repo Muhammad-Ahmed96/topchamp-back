@@ -11,12 +11,15 @@ class Language < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with language"
     end
     property :name do
       key :type, :string
+      key :description, "Name associated with language"
     end
     property :locale do
       key :type, :string
+      key :description, "locale associated with language"
     end
   end
 

@@ -13,27 +13,31 @@ class Region < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of Region"
     end
     property :name do
       key :type, :string
+      key :description, "Name string"
     end
     property :base do
       key :type, :string
+      key :description, "Base of region\nExample: Both, State, Country"
     end
-    property :territoy do
+    property :territory do
       key :type, :string
+      key :description, "Description of territory"
     end
   end
 
   swagger_schema :RegionInput do
-    key :required, [:name, :base, :territoy]
+    key :required, [:name, :base, :territory]
     property :name do
       key :type, :string
     end
     property :base do
       key :type, :string
     end
-    property :territoy do
+    property :territory do
       key :type, :string
     end
   end

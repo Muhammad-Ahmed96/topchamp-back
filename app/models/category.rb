@@ -27,9 +27,11 @@ class Category < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of Category"
     end
     property :name do
       key :type, :string
+      key :description, "Name string"
     end
   end
 
@@ -37,15 +39,18 @@ class Category < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of Category Brackets"
     end
     property :name do
       key :type, :string
+      key :description, "Name of Category Brackets"
     end
     property :brackets do
       key :type, :array
       items do
         key :'$ref', :EventBracket
       end
+      key :description, "Brackets of Category Brackets"
     end
   end
 
@@ -53,6 +58,7 @@ class Category < ApplicationRecord
     key :required, [:name]
     property :name do
       key :type, :string
+      key :description, "Brackets of Category"
     end
   end
 end
