@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :create_venue, :payment_information,
+  before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
                                       :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
   before_action :authenticate_user!
@@ -86,13 +86,18 @@ class EventsController < ApplicationController
         key :type, :string
       end
       response 200 do
-        key :description, ''
+        key :description, 'Event Respone'
         schema do
-          key :'$ref', :Event
+          key :type, :object
           property :data do
+            key :type, :array
             items do
-              key :'$ref', :User
+              key :'$ref', :Event
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end
@@ -218,13 +223,18 @@ class EventsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :description, ''
+        key :description, 'Event Respone'
         schema do
-          key :'$ref', :Event
+          key :type, :object
           property :data do
+            key :type, :array
             items do
-              key :'$ref', :User
+              key :'$ref', Event
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', PaginateModel
           end
         end
       end
@@ -345,14 +355,26 @@ class EventsController < ApplicationController
         key :required, false
         key :type, :integer
       end
+      parameter do
+        key :name, :only_director
+        key :in, :query
+        key :description, 'show only events of current director {any} = no, 1 = yes'
+        key :required, false
+        key :type, :integer
+      end
       response 200 do
-        key :description, ''
+        key :description, 'Event Respone'
         schema do
-          key :'$ref', :Event
+          key :type, :object
           property :data do
+            key :type, :array
             items do
-              key :'$ref', :User
+              key :'$ref', :Event
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end
@@ -374,6 +396,7 @@ class EventsController < ApplicationController
     column = params[:column].nil? ? 'title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
+    only_director = params[:only_director].nil? ? '0' : params[:only_director]
 
     title = params[:title]
 
@@ -394,8 +417,12 @@ class EventsController < ApplicationController
       column_venue = column
       column = nil
     end
+    director_id = nil
+    if only_director.to_s == "1" and  !(@resource.sysadmin? || @resource.agent?)
+      director_id = @resource.id
+    end
     events = Event.upcoming.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
-                 .in_status("Active").state_like(state).city_like(city).in_visibility("Public")
+                 .in_status("Active").state_like(state).city_like(city).in_visibility("Public").only_directors(director_id)
     if paginate.to_s == "0"
       json_response_serializer_collection(events.all, EventSerializer)
     else
@@ -551,6 +578,8 @@ class EventsController < ApplicationController
     if !params[:regions].nil?
       @event.region_ids = params[:regions]
     end
+    participant = Participant.where(:user_id => @resource.id).where(:event_id => @event.id).first_or_create!
+    participant.attendee_type_ids = [AttendeeType.director_id]
     #@event.public_url
     json_response_serializer(@event, EventSerializer)
   end
@@ -562,8 +591,16 @@ class EventsController < ApplicationController
       key :operationId, 'eventsShow'
       key :produces, ['application/json',]
       key :tags, ['events']
+      parameter do
+        key :name, :id
+        key :in, :path
+        key :description, 'ID of event to fetch'
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
       response 200 do
-        key :required, [:data]
+        key :description, 'Event Respone'
         schema do
           property :data do
             key :'$ref', :Event
@@ -1670,6 +1707,7 @@ class EventsController < ApplicationController
     end
     #validate bracket
     player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+
     age = player.present? ? player.user.age : nil
     #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
     skill = player.present? ? player.skill_level: nil
@@ -1677,15 +1715,15 @@ class EventsController < ApplicationController
       item.player = player
     end
     event_categories.to_a.each do |item|
-      valid = false
       if @event.bracket_by == "age" or @event.bracket_by == "skill"
         if item.brackets.length > 0
           response_data << item
         end
       elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
         if item.brackets.length > 0
+          not_in = player.brackets.where(:category_id => item[:id]).pluck(:event_bracket_id)
           item.brackets.each do |bra|
-            if bra.brackets.age_filter(age).skill_filter(skill).length > 0
+            if bra.brackets.age_filter(age, @event.sport_regulator.allow_age_range).skill_filter(skill).not_in(not_in).length > 0
               response_data << item
             end
           end
@@ -1745,7 +1783,7 @@ class EventsController < ApplicationController
   def payment_information_params
     # whitelist params
     unless params[:payment_information].nil?
-      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee, :app_fee)
+      params.require(:payment_information).permit(:bank_name, :bank_account, :refund_policy, :service_fee, :app_fee, :bank_routing_number)
     end
   end
 
@@ -1843,8 +1881,8 @@ class EventsController < ApplicationController
     # whitelist params
     unless params[:brackets].nil?
       params[:brackets].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity,
-                                                               brackets: [:id, :event_bracket_id, :age, :lowest_skill, :highest_skill, :quantity])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :event_bracket_id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity,
+                                                               brackets: [:id, :event_bracket_id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity])
       end
     end
   end

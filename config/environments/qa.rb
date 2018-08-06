@@ -82,8 +82,8 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-  config.action_mailer.asset_host = 'ec2-54-218-95-3.us-west-2.compute.amazonaws.com:444'
-  config.action_mailer.default_url_options = { host: 'ec2-54-218-95-3.us-west-2.compute.amazonaws.com:444' }
+  config.action_mailer.asset_host = 'topchamptest.tk'
+  config.action_mailer.default_url_options = { host: 'topchamptest.tk', port: 444 }
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
       tls: true,

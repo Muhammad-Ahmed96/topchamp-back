@@ -6,6 +6,7 @@ class EventPaymentInformation < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with payment information"
     end
     property :event_id do
       key :type, :integer
@@ -13,18 +14,21 @@ class EventPaymentInformation < ApplicationRecord
     end
     property :bank_name do
       key :type, :string
+      key :description, "Bank name associated with payment information"
     end
     property :bank_account do
       key :type, :string
+      key :description, "Bank account associated with payment information"
     end
     property :service_fee do
       key :type, :number
       key :format, :float
+      key :description, "Service fee associated with payment information"
     end
-
     property :app_fee do
       key :type, :number
       key :format, :float
+      key :description, "App fee associated with payment information"
     end
   end
 

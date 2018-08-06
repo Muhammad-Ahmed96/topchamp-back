@@ -13,6 +13,7 @@ class Invitation < ApplicationRecord
   accepts_nested_attributes_for :attendee_types
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :in_type, lambda {|type| where invitation_type: type if type.present?}
   scope :email_like, lambda {|search| Invitation.where ["LOWER(invitations.email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(events.title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
@@ -48,8 +49,11 @@ class Invitation < ApplicationRecord
     end
     params.delete :attendee_types
     data = params.merge(:user_id => userId, :sender_id => senderId, :invitation_type => type)
+=begin
     invitation = Invitation.where(:email => data[:email]).where(:invitation_type => type)
-                     .where(:event_id => data[:event_id]).first
+                     .where(:event_id => data[:event_id]).where(:sender_id => data[:sender_id]).first
+=end
+    invitation = nil
     if invitation.present?
       if invitation.attendee_type_ids.present? and invitation.attendee_type_ids != attendee_types
         data = data.merge(:send_at => nil)
@@ -84,29 +88,41 @@ class Invitation < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with invitation"
     end
     property :event_id do
       key :type, :integer
       key :format, :int64
+      key :description, "Event id associated with invitation"
     end
-    property :attendee_type_id do
+    property :user_id do
       key :type, :integer
       key :format, :int64
+      key :description, "User id associated with invitation"
+    end
+    property :sender_id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Sender id associated with invitation"
     end
     property :email do
       key :type, :string
+      key :description, "Email associated with invitation"
     end
     property :status do
       key :type, :string
+      key :description, "Status associated with invitation"
     end
     property :url do
       key :type, :string
+      key :description, "Url associated with invitation"
     end
     property :attendee_types do
       key :type, :array
       items do
         key :'$ref', :AttendeeType
       end
+      key :description, "Attendee types associated with invitation"
     end
   end
 

@@ -21,21 +21,26 @@ class Participant < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with participant"
     end
     property :status do
       key :type, :string
+      key :description, "Status associated with participant"
     end
     property :attendee_types do
       key :type, :array
       items do
         key :'$ref', :AttendeeType
       end
+      key :description, "Attendee types associated with participant"
     end
     property :user do
       key :'$ref', :User
+      key :description, "User associated with participant"
     end
     property :event do
       key :'$ref', :EventSingle
+      key :description, "Event associated with participant"
     end
   end
   private

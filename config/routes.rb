@@ -87,6 +87,8 @@ Rails.application.routes.draw do
     resources :invitations, only: [:index, :show, :update, :destroy] do
       collection do
         get :download_template
+        get :template_sing_up
+        get :index_partner,  :path => "partner"
         post :event
         post :date
         post :sing_up
@@ -119,6 +121,17 @@ Rails.application.routes.draw do
     end
     resources :business_categories, only: [:index]
     resources :partners, only: [:index]
+
+    namespace :payments do
+      resources :profile, only: [:create, :destroy, :show]
+      resources :credit_cards, only: [:index, :create, :destroy]
+      resources :check_out, only: [] do
+        collection do
+          post :event
+          post :subscribe
+        end
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

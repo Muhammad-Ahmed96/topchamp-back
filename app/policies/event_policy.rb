@@ -2,7 +2,7 @@ class EventPolicy < ApplicationPolicy
   attr_reader :user
 
   def index?
-    user.sysadmin? || user.agent? || user.director? || user.member?
+    user.sysadmin? || user.agent? || user.director? || user.member? || user.customer?
   end
 
   def update?
@@ -15,7 +15,7 @@ class EventPolicy < ApplicationPolicy
 
 
   def show?
-    user.sysadmin? || user.agent? || user.director? || user.member?
+    user.sysadmin? || user.agent? || user.director? || user.member? || user.customer?
   end
 
   def destroy?
@@ -71,7 +71,7 @@ class EventPolicy < ApplicationPolicy
   end
 
   def details?
-    user.sysadmin? || user.agent? || user.director? || user.member?
+    user.sysadmin? || user.agent? || user.director? || user.member? || user.customer?
   end
 
   def agendas?
@@ -79,11 +79,11 @@ class EventPolicy < ApplicationPolicy
   end
 
   def coming_soon?
-    true
+    user.sysadmin? || user.agent? || user.director? || user.member? || user.customer?
   end
 
   def upcoming?
-    true
+    user.sysadmin? || user.agent? || user.director? || user.member? || user.customer?
   end
 
   def categories?
@@ -98,12 +98,12 @@ class EventPolicy < ApplicationPolicy
   end
   class Scope < Scope
     def resolve
-      if user.sysadmin? || user.agent?
+      if user.sysadmin? || user.agent? || user.customer?
         scope.all
-      elsif user.director? || user.member?
-        scope.where(creator_user_id: user.id).or(scope.where(invited_director_id: user.id))
+      elsif user.is_director
+        scope.merge(Event.only_directors(user.id))
       else
-        scope
+        scope.joins(participants: [:attendee_types]).merge(Participant.where :user_id => user.id)
       end
     end
   end

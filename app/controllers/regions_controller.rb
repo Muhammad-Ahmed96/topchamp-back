@@ -46,13 +46,18 @@ class RegionsController < ApplicationController
       end
 
       response 200 do
-        key :description, ''
+        key :description, 'Region Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :Region
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end

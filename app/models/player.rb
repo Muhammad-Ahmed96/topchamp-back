@@ -9,6 +9,8 @@ class Player < ApplicationRecord
   has_many :brackets_enroll,-> {enroll}, class_name: "PlayerBracket"
   has_many :brackets_wait_list, -> {wait_list}, class_name: "PlayerBracket"
 
+  has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
+
   scope :status_in, lambda {|status| where status: status if status.present?}
   #scope :skill_level_like, lambda {|search| where ["to_char(skill_level,'9999999999') LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
@@ -17,7 +19,7 @@ class Player < ApplicationRecord
   scope :email_like, lambda {|search| joins(:user).merge(User.where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :skill_level_like, lambda {|search| joins(user: [:association_information]).merge(AssociationInformation.where ["LOWER(raking) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
 
-  scope :sport_in, lambda {|search| joins(user: [:sports]).merge(Sport.where id: search) if search.present?}
+  scope :sport_in, lambda {|search| joins(event: [:sports]).merge(Sport.where id: search) if search.present?}
   scope :role_in, lambda {|search| joins(:user).merge(User.where role: search) if search.present?}
   scope :bracket_in, lambda {|search| joins(:event).merge(Event.where bracket_by: search) if search.present?}
   scope :category_in, lambda {|search| joins(brackets: [:category]).merge(Category.where id: search) if search.present?}
@@ -28,7 +30,7 @@ class Player < ApplicationRecord
   scope :first_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :last_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :email_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
-  scope :sports_order, lambda {|column, direction = "desc"| includes(user: [:sports]).order("sports.#{column} #{direction}") if column.present?}
+  scope :sports_order, lambda {|column, direction = "desc"| includes(event: [:sports]).order("sports.#{column} #{direction}") if column.present?}
   scope :skill_level_order, lambda {|column, direction = "desc"| includes(user: [:association_information]).order("association_informations.#{column} #{direction}") if column.present?}
   scope :categories_order, lambda {|column, direction = "desc"| joins(brackets: [:category]).order("categories.#{column} #{direction}") if column.present?}
 
@@ -66,18 +68,22 @@ class Player < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with player"
     end
     property :skill_level do
       key :type, :string
+      key :description, "Skill level associated with player"
     end
     property :status do
       key :type, :string
+      key :description, "status associated with player"
     end
     property :categories do
       key :type, :array
       items do
         key :'$ref', :Category
       end
+      key :description, "Categories associated with player"
     end
 
     property :brackets do
@@ -85,6 +91,7 @@ class Player < ApplicationRecord
       items do
         key :'$ref', :EventBracketAge
       end
+      key :description, "Brackets associated with player"
     end
 
     property :sports do
@@ -92,12 +99,15 @@ class Player < ApplicationRecord
       items do
         key :'$ref', :Sport
       end
+      key :description, "Sports associated with player"
     end
     property :user do
       key :'$ref', :User
+      key :description, "User associated with player"
     end
     property :event do
       key :'$ref', :EventSingle
+      key :description, "Event associated with player"
     end
   end
 
@@ -108,7 +118,7 @@ class Player < ApplicationRecord
   end
 
   def sports
-    self.user.sports
+    self.event.sports
   end
   private
   def set_status

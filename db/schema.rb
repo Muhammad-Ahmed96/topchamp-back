@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_12_232406) do
+ActiveRecord::Schema.define(version: 2018_08_03_220147) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -165,6 +165,8 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.float "young_age"
+    t.float "old_age"
     t.index ["deleted_at"], name: "index_event_brackets_on_deleted_at"
   end
 
@@ -175,6 +177,7 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.integer "limited"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "applied", default: 0
   end
 
   create_table "event_discount_personalizeds", force: :cascade do |t|
@@ -234,6 +237,7 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.text "refund_policy"
     t.float "service_fee"
     t.float "app_fee"
+    t.string "bank_routing_number"
   end
 
   create_table "event_payment_methods", force: :cascade do |t|
@@ -328,6 +332,7 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.string "awards_for"
     t.string "awards_through"
     t.string "awards_plus"
+    t.boolean "is_paid", default: false
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
@@ -393,6 +398,20 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.index ["deleted_at"], name: "index_participants_on_deleted_at"
   end
 
+  create_table "payment_transactions", force: :cascade do |t|
+    t.string "payment_transaction_id"
+    t.string "transactionable_type"
+    t.bigint "transactionable_id"
+    t.integer "status", default: 1
+    t.bigint "user_id"
+    t.float "amount"
+    t.float "tax"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
+  end
+
   create_table "player_brackets", force: :cascade do |t|
     t.bigint "player_id"
     t.bigint "category_id"
@@ -400,6 +419,7 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "event_bracket_id"
+    t.string "payment_transaction_id"
   end
 
   create_table "players", force: :cascade do |t|
@@ -419,7 +439,7 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
   create_table "regions", force: :cascade do |t|
     t.string "name"
     t.string "base"
-    t.string "territoy"
+    t.string "territory"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
@@ -485,6 +505,7 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.boolean "allow_age_range", default: false
     t.index ["deleted_at"], name: "index_sport_regulators_on_deleted_at"
   end
 
@@ -548,6 +569,7 @@ ActiveRecord::Schema.define(version: 2018_07_12_232406) do
     t.boolean "is_receive_text", default: false
     t.string "pin"
     t.string "membership_id"
+    t.string "customer_profile_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true
