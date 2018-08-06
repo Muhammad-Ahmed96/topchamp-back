@@ -1745,6 +1745,37 @@ class EventsController < ApplicationController
     json_response_serializer_collection(response_data, EventCategorySerializer)
   end
 
+
+  swagger_path '/events/downloads/discounts_template.xlsx' do
+    operation :get do
+      key :summary, 'Discounts download template'
+      key :description, 'Invitations'
+      key :operationId, 'eventsDownloadDiscountsTemplate'
+      key :produces, ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',]
+      key :tags, ['events']
+      response 200 do
+        key :description, 'template'
+        key :type, :string
+        key :format, :binary
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def download_discounts_template
+    send_file("#{Rails.root}/app/assets/template/discounts-template.xlsx",
+              filename: "discounts-template.xlsx",
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  end
+
   private
 
   def resource_params

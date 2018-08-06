@@ -49,6 +49,10 @@ Rails.application.routes.draw do
       collection do
         get :coming_soon
         get :upcoming
+        scope :downloads do
+          get :download_discounts_template, :path => :discounts_template
+        end
+
       end
       member do
         put :create_venue
