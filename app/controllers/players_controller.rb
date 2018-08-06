@@ -2,7 +2,7 @@ class PlayersController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner, :wait_list, :enrolled]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:update, :create, :partner]
+  around_action :transactions_filter, only: [:update, :create, :partner, :signature]
   swagger_path '/players' do
     operation :get do
       key :summary, 'List players'
@@ -606,6 +606,50 @@ class PlayersController < ApplicationController
     json_response_serializer_collection(@player.brackets_enroll, PlayerBracketSingleSerializer)
   end
 
+  swagger_path '/players/signature' do
+    operation :post do
+      key :summary, 'Signature associated with player'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersSignature'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :signature
+        key :in, :body
+        key :required, true
+        key :type, :string
+        key :format, :binary
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def signature
+    player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first_or_create!
+    player.signature = signature_param[:signature]
+    player.save!(:validate => false)
+    json_response_success(t("edited_success", model: Player.model_name.human), true)
+  end
 
   private
 
@@ -632,5 +676,12 @@ class PlayersController < ApplicationController
 
   def response_no_event
     json_response_error([t("not_event")], 422)
+  end
+
+  def signature_param
+    # whitelist params
+    params.required(:event_id)
+    params.required(:signature)
+    params.permit(:signature, :event_id)
   end
 end

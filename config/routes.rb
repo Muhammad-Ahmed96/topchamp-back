@@ -111,6 +111,7 @@ Rails.application.routes.draw do
       collection do
         post :partner_mixed
         post :partner_double
+        post :signature
       end
       member do
         put :activate

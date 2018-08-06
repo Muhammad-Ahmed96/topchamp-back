@@ -1,5 +1,5 @@
 class PlayerSerializer < ActiveModel::Serializer
-  attributes :id, :skill_level, :status
+  attributes :id, :skill_level, :status, :signature
   belongs_to :user, serializer: UserSingleSerializer
   belongs_to :event, serializer: EventSingleSerializer
 

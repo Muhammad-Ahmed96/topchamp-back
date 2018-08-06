@@ -26,6 +26,10 @@ class ApidocsController < ApplicationController
       key :name, 'users'
       key :description, 'Users operations'
     end
+    tag do
+      key :name, 'players'
+      key :description, 'Players operations'
+    end
   end
 
   # A list of all classes that have swagger_* declarations.
