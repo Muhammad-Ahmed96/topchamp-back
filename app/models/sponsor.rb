@@ -49,69 +49,90 @@ class Sponsor < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with sponsor"
     end
     property :company_name do
       key :type, :string
+      key :description, "Company name associated with sponsor"
     end
 
     property :logo do
       key :type, :string
+      key :description, "Logo associated with sponsor"
     end
 
     property :product do
       key :type, :string
+      key :description, "Product associated with sponsor"
     end
     property :franchise_brand do
       key :type, :string
+      key :description, "Franchise brand associated with sponsor"
     end
     property :business_category_id do
       key :type, :string
+      key :description, "Business category id associated with sponsor"
     end
     property :geography do
       key :type, :string
+      key :description, "Geography associated with sponsor"
     end
     property :description do
       key :type, :string
+      key :description, "Description associated with sponsor"
     end
     property :contact_name do
       key :type, :string
+      key :description, "Contact name associated with sponsor"
     end
     property :country_code do
       key :type, :string
+      key :description, "Country code associated with sponsor"
     end
     property :phone do
       key :type, :integer
+      key :description, "Phone associated with sponsor"
     end
     property :email do
       key :type, :string
+      key :description, "Email associated with sponsor"
     end
     property :address_line_1 do
       key :type, :string
+      key :description, "Address line 1 associated with sponsor"
     end
     property :address_line_2 do
       key :type, :string
+      key :description, "Address line 2 associated with sponsor"
     end
     property :postal_code do
       key :type, :string
+      key :description, "Postal code associated with sponsor"
     end
     property :state do
       key :type, :string
+      key :description, "State associated with sponsor"
     end
     property :city do
       key :type, :string
+      key :description, "City associated with sponsor"
     end
     property :work_country_code do
       key :type, :string
+      key :description, "Work country code associated with sponsor"
     end
     property :work_phone do
       key :type, :integer
+      key :description, "Work phone associated with sponsor"
     end
     property :status do
       key :type, :string
+      key :description, "Status associated with sponsor"
     end
 
     property :business_category do
       key :'$ref', :BusinessCategory
+      key :description, "Business category associated with sponsor"
     end
   end
 

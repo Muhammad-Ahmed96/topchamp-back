@@ -32,13 +32,18 @@ class InvitationsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :description, ''
+        key :description, 'Invitation Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :Invitation
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end
@@ -134,13 +139,18 @@ class InvitationsController < ApplicationController
         key :type, :string
       end
       response 200 do
-        key :description, ''
+        key :description, 'Invitation Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :Invitation
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end

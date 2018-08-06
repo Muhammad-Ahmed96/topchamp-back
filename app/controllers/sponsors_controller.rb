@@ -80,13 +80,18 @@ class SponsorsController < ApplicationController
         key :type, :string
       end
       response 200 do
-        key :description, ''
+        key :description, 'Sponsor Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :Sponsor
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end

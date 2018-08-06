@@ -128,7 +128,7 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
       key :produces, ['application/json',]
       key :tags, ['security']
       parameter do
-        key :name, :password
+        key :name, "password"
         key :in, :body
         key :description, 'Password'
         key :required, true

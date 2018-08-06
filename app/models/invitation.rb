@@ -88,29 +88,41 @@ class Invitation < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with invitation"
     end
     property :event_id do
       key :type, :integer
       key :format, :int64
+      key :description, "Event id associated with invitation"
     end
-    property :attendee_type_id do
+    property :user_id do
       key :type, :integer
       key :format, :int64
+      key :description, "User id associated with invitation"
+    end
+    property :sender_id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Sender id associated with invitation"
     end
     property :email do
       key :type, :string
+      key :description, "Email associated with invitation"
     end
     property :status do
       key :type, :string
+      key :description, "Status associated with invitation"
     end
     property :url do
       key :type, :string
+      key :description, "Url associated with invitation"
     end
     property :attendee_types do
       key :type, :array
       items do
         key :'$ref', :AttendeeType
       end
+      key :description, "Attendee types associated with invitation"
     end
   end
 

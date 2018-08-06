@@ -12,13 +12,16 @@ class SportRegulator < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with sport regulator"
     end
     property :name do
       key :type, :string
+      key :description, "Name associated with sport regulator"
     end
     property :index do
       key :type, :integer
       key :format, :int64
+      key :description, "Index associated with sport regulator"
     end
   end
 
