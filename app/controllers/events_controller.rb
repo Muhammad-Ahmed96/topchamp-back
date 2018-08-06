@@ -86,13 +86,18 @@ class EventsController < ApplicationController
         key :type, :string
       end
       response 200 do
-        key :description, ''
+        key :description, 'Event Respone'
         schema do
-          key :'$ref', :Event
+          key :type, :object
           property :data do
+            key :type, :array
             items do
-              key :'$ref', :User
+              key :'$ref', :Event
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end
@@ -218,13 +223,18 @@ class EventsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :description, ''
+        key :description, 'Event Respone'
         schema do
-          key :'$ref', :Event
+          key :type, :object
           property :data do
+            key :type, :array
             items do
-              key :'$ref', :User
+              key :'$ref', Event
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', PaginateModel
           end
         end
       end
@@ -353,13 +363,18 @@ class EventsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :description, ''
+        key :description, 'Event Respone'
         schema do
-          key :'$ref', :Event
+          key :type, :object
           property :data do
+            key :type, :array
             items do
-              key :'$ref', :User
+              key :'$ref', :Event
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end
@@ -576,8 +591,16 @@ class EventsController < ApplicationController
       key :operationId, 'eventsShow'
       key :produces, ['application/json',]
       key :tags, ['events']
+      parameter do
+        key :name, :id
+        key :in, :path
+        key :description, 'ID of event to fetch'
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
       response 200 do
-        key :required, [:data]
+        key :description, 'Event Respone'
         schema do
           property :data do
             key :'$ref', :Event

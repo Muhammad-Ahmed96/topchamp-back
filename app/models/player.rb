@@ -68,18 +68,22 @@ class Player < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with player"
     end
     property :skill_level do
       key :type, :string
+      key :description, "Skill level associated with player"
     end
     property :status do
       key :type, :string
+      key :description, "status associated with player"
     end
     property :categories do
       key :type, :array
       items do
         key :'$ref', :Category
       end
+      key :description, "Categories associated with player"
     end
 
     property :brackets do
@@ -87,6 +91,7 @@ class Player < ApplicationRecord
       items do
         key :'$ref', :EventBracketAge
       end
+      key :description, "Brackets associated with player"
     end
 
     property :sports do
@@ -94,12 +99,15 @@ class Player < ApplicationRecord
       items do
         key :'$ref', :Sport
       end
+      key :description, "Sports associated with player"
     end
     property :user do
       key :'$ref', :User
+      key :description, "User associated with player"
     end
     property :event do
       key :'$ref', :EventSingle
+      key :description, "Event associated with player"
     end
   end
 

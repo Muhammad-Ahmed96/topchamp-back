@@ -75,4 +75,4 @@ gem 'roo'
 #SEO Google
 gem 'google-api-client', '~> 0.11'
 #authorizenet for payments
-gem "authorizenet"  , '~> 1.9.2'
+gem "authorizenet"  , '~> 1.9.5'

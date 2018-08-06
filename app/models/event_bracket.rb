@@ -44,35 +44,90 @@ class EventBracket < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :integer
+      key :description, "Unique identifier associated with bracket"
     end
     property :event_id do
       key :type, :integer
       key :format, :integer
+      key :description, "Event id associated with bracket"
     end
     property :event_bracket_id do
       key :type, :integer
       key :format, :integer
+      key :description, "Belong to bracket id associated with bracket"
     end
     property :lowest_skill do
       key :type, :number
+      key :description, "Lowest skill associated with bracket"
     end
     property :highest_skill do
       key :type, :number
+      key :description, "Highest skill associated with bracket"
     end
     property :age do
       key :type, :number
+      key :description, "Age associated with bracket"
+    end
+    property :young_age do
+      key :type, :number
+      key :description, "Young age associated with bracket"
+    end
+    property :old_age do
+      key :type, :number
+      key :description, "Old age associated with bracket"
     end
     property :quantity do
       key :type, :number
-    end
-    property :status do
-      key :type, :boolean
+      key :description, "Quantity of players associated with bracket"
     end
     property :brackets do
       key :type, :array
       items do
-        key :'$ref', :EventBracket
+        key :'$ref', :EventBracketChild
       end
+      key :description, "Nested brackets associated with bracket"
+    end
+  end
+
+  swagger_schema :EventBracketChild do
+    property :id do
+      key :type, :integer
+      key :format, :integer
+      key :description, "Unique identifier associated with bracket"
+    end
+    property :event_id do
+      key :type, :integer
+      key :format, :integer
+      key :description, "Event id associated with bracket"
+    end
+    property :event_bracket_id do
+      key :type, :integer
+      key :format, :integer
+      key :description, "Belong to bracket id associated with bracket"
+    end
+    property :lowest_skill do
+      key :type, :number
+      key :description, "Lowest skill associated with bracket"
+    end
+    property :highest_skill do
+      key :type, :number
+      key :description, "Highest skill associated with bracket"
+    end
+    property :age do
+      key :type, :number
+      key :description, "Age associated with bracket"
+    end
+    property :young_age do
+      key :type, :number
+      key :description, "Young age associated with bracket"
+    end
+    property :old_age do
+      key :type, :number
+      key :description, "Old age associated with bracket"
+    end
+    property :quantity do
+      key :type, :number
+      key :description, "Quantity of players associated with bracket"
     end
   end
 

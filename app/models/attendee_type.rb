@@ -28,9 +28,11 @@ class AttendeeType < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with attendee type"
     end
     property :name do
       key :type, :string
+      key :description, "name associated with attendee type"
     end
   end
 
