@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_06_212227) do
+ActiveRecord::Schema.define(version: 2018_08_07_171508) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -269,6 +269,13 @@ ActiveRecord::Schema.define(version: 2018_08_06_212227) do
     t.boolean "allow_waiver"
     t.text "waiver"
     t.boolean "allow_wait_list"
+    t.boolean "is_share", default: false
+    t.boolean "add_to_my_calendar", default: false
+    t.boolean "enable_map", default: false
+    t.boolean "share_my_cell_phone", default: false
+    t.boolean "share_my_email", default: false
+    t.date "player_cancel_start_date"
+    t.date "player_cancel_start_end"
   end
 
   create_table "event_rules", force: :cascade do |t|

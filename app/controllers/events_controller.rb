@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories, :get_registration_fee]
+                                      :service_fee, :venue, :details, :agendas, :categories, :get_registration_fee]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
@@ -1437,53 +1437,6 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
-  swagger_path '/events/:id/registration_rule' do
-    operation :put do
-      key :summary, 'Events registration rule'
-      key :description, 'Events Catalog'
-      key :operationId, 'eventsRegistrationRule'
-      key :produces, ['application/json',]
-      key :tags, ['events']
-      parameter do
-        key :name, :registration_rule
-        key :in, :body
-        key :description, 'Registration rule'
-        key :required, true
-        schema do
-          key :'$ref', :EventRegistrationRuleInput
-        end
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :Event
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-
-  def registration_rule
-    authorize Event
-    if registration_rule_params.present?
-      registration_rule = @event.registration_rule
-      if registration_rule.present?
-        registration_rule.update! registration_rule_params
-      else
-        @event.create_registration_rule! registration_rule_params
-      end
-    end
-    json_response_serializer(@event, EventSerializer)
-  end
-
   swagger_path '/events/:id/details' do
     operation :put do
       key :summary, 'Events details'
@@ -1958,16 +1911,6 @@ class EventsController < ApplicationController
     # whitelist params
     unless params[:payment_information].nil?
       params.require(:payment_information).permit(:service_fee, :app_fee)
-    end
-  end
-
-  def registration_rule_params
-    # whitelist params
-    unless params[:registration_rule].nil?
-      params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
-                                                :password, :require_director_approval, :allow_players_cancel, :use_link_home_page,
-                                                :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app,
-                                                :allow_attendees_change, :allow_waiver, :waiver, :allow_wait_list)
     end
   end
 

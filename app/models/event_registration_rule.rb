@@ -69,6 +69,43 @@ class EventRegistrationRule < ApplicationRecord
       key :type, :boolean
       key :description, "Determine if allow wait list associated with registration rule"
     end
+
+    property :is_share do
+      key :type, :boolean
+      key :description, "Determine if share event associated with registration rule"
+    end
+
+    property :add_to_my_calendar do
+      key :type, :boolean
+      key :description, "Determine if add to my calendar with registration rule"
+    end
+
+    property :enable_map do
+      key :type, :boolean
+      key :description, "Determine if show map event associated with registration rule"
+    end
+
+    property :share_my_cell_phone do
+      key :type, :boolean
+      key :description, "Determine if share my cell phone associated with registration rule"
+    end
+
+
+    property :share_my_email do
+      key :type, :boolean
+      key :description, "Determine if share my email associated with registration rule"
+    end
+
+
+    property :player_cancel_start_date do
+      key :type, :boolean
+      key :description, "Player cancel start date associated with registration rule"
+    end
+
+    property :player_cancel_start_end do
+      key :type, :boolean
+      key :description, "Player cancel start end associated with registration rule"
+    end
   end
 
   swagger_schema :EventRegistrationRuleInput do
@@ -116,6 +153,37 @@ class EventRegistrationRule < ApplicationRecord
 
     property :allow_wait_list do
       key :type, :boolean
+    end
+
+    property :is_share do
+      key :type, :boolean
+      key :description, "Determine if share event associated with registration rule"
+    end
+    property :add_to_my_calendar do
+      key :type, :boolean
+      key :description, "Determine if add to my calendar with registration rule"
+    end
+
+    property :share_my_cell_phone do
+      key :type, :boolean
+      key :description, "Determine if share my cell phone associated with registration rule"
+    end
+
+
+    property :share_my_email do
+      key :type, :boolean
+      key :description, "Determine if share my email associated with registration rule"
+    end
+
+
+    property :player_cancel_start_date do
+      key :type, :boolean
+      key :description, "Player cancel start date associated with registration rule"
+    end
+
+    property :player_cancel_start_end do
+      key :type, :boolean
+      key :description, "Player cancel start end associated with registration rule"
     end
   end
 end

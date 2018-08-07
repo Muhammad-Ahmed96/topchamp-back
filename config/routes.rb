@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'event_registration_rules/create'
   get 'players/Index'
   mount_devise_token_auth_for 'User', at: 'api', controllers: {sessions: 'application_sessions',
                                                                passwords: 'application_password',
@@ -66,7 +67,6 @@ Rails.application.routes.draw do
         put :tax
         put :refund_policy
         put :service_fee
-        put :registration_rule
         put :details
         put :agendas
         get :categories
@@ -77,6 +77,11 @@ Rails.application.routes.draw do
         collection do
           post :user_cancel
           post :change_attendees
+        end
+      end
+      resources :event_registration_rules, only: [:create], :path => "" do
+        collection do
+          put :create, :path => :registration_rule
         end
       end
     end

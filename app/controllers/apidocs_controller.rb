@@ -64,6 +64,7 @@ class ApidocsController < ApplicationController
       ScoringOptionsController,
       SkillLevelsController,
       EventEnrollsController,
+      EventRegistrationRulesController,
       ParticipantsController,
       PlayersController,
       BusinessCategoriesController,
