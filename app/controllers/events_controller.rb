@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   include Swagger::Blocks
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
+                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories, :get_registration_fee]
   before_action :authenticate_user!
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
@@ -1776,6 +1776,83 @@ class EventsController < ApplicationController
               type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
   end
 
+  swagger_path '/events/:id/registration_fee' do
+    operation :get do
+      key :summary, 'Events registratiosn fee '
+      key :description, 'Get current registration fee'
+      key :operationId, 'eventsGetRegistrationFee'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :discount_code
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :brackets_count
+        key :in, :body
+        key :required, false
+        key :type, :integer
+      end
+      response 200 do
+        key :name, :categories
+        key :description, 'categories'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :CategoryBrackets
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def get_registration_fee
+    #set tax of event
+    tax = @event.tax
+    brackets_count = subscribe_params[:brackets_count].present? ? subscribe_params[:brackets_count] : 1
+    payment_method = @event.payment_method
+    enroll_fee = payment_method.present? ? payment_method.enrollment_fee : 0
+    bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
+    bracket_fee = bracket_fee *  brackets_count
+    tax_amount = 0
+
+    if tax.present?
+      if event.tax.is_percent
+        tax_amount = (tax.tax * amount) / 100
+      else
+        tax_amount = tax.tax
+      end
+
+    end
+
+    #apply discounts
+    event_discount = @event.get_discount
+    personalized_discount = @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first
+    general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first: nil
+
+    enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
+    #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
+
+    if personalized_discount.present?
+      enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
+      #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+    elsif general_discount.present? and general_discount.limit < general_discount.applied
+      enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
+      #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+    end
+    json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount})
+  end
+
   private
 
   def resource_params
@@ -1936,5 +2013,9 @@ class EventsController < ApplicationController
 
   def response_message_error(message, code)
     json_response_error(message, 422, code)
+  end
+
+  def subscribe_params
+    params.permit(:discount_code, :brackets_count)
   end
 end

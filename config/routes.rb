@@ -71,6 +71,7 @@ Rails.application.routes.draw do
         put :agendas
         get :categories
         get :available_categories
+        get :get_registration_fee, :path => :registration_fee
       end
       resources :event_enrolls,only: [:create, :index], :path => :enrolls do
         collection do
