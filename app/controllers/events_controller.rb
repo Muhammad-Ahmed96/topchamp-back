@@ -1791,7 +1791,7 @@ class EventsController < ApplicationController
 
     #apply discounts
     #event_discount = @event.get_discount
-    personalized_discount = @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first
+    personalized_discount = subscribe_params[:discount_code].present? ? @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first : nil
     general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first : nil
 
     #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
