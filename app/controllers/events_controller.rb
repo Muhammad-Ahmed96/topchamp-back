@@ -1749,7 +1749,7 @@ class EventsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :name, :categories
+        key :name, :registration_fee
         key :description, 'Current fees'
         schema do
           key :type, :object
