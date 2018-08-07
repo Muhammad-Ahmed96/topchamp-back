@@ -1821,7 +1821,7 @@ class EventsController < ApplicationController
     tax = @event.tax
     brackets_count = subscribe_params[:brackets_count].present? ? subscribe_params[:brackets_count] : 1
     payment_method = @event.payment_method
-    enroll_fee = payment_method.present? ? payment_method.enrollment_fee : 0
+    enroll_fee = @event.registration_fee
     bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
     bracket_fee = bracket_fee *  brackets_count
     tax_amount = 0
@@ -1836,11 +1836,11 @@ class EventsController < ApplicationController
     end
 
     #apply discounts
-    event_discount = @event.get_discount
+    #event_discount = @event.get_discount
     personalized_discount = @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first
     general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first: nil
 
-    enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
+    #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
     #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
 
     if personalized_discount.present?

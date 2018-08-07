@@ -695,6 +695,13 @@ class Event < ApplicationRecord
     discount
   end
 
+
+  def registration_fee
+    enroll_fee = self.payment_method.present? ? self.payment_method.enrollment_fee : 0
+    discount = self.get_discount
+    return  enroll_fee - ((discount * enroll_fee) / 100)
+  end
+
   private
 
   #validate a url
