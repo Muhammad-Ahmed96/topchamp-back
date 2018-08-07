@@ -51,7 +51,7 @@ module Payments
       # Add the payment profile and shipping profile defined previously
       request.profile.paymentProfiles = [paymentProfile]
       request.profile.shipToList = [shippingAddress]
-      request.validationMode = ValidationModeEnum::LiveMode
+      request.validationMode = ValidationModeEnum::TestMode
 
       response = transaction.create_customer_profile(request)
       puts response.messages.resultCode
