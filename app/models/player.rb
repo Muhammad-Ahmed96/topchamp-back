@@ -11,6 +11,11 @@ class Player < ApplicationRecord
 
   has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 
+  has_attached_file :signature, :path => ":rails_root/public/images/player/:to_param/:style/:basename.:extension",
+                    :url => "/images/player/:to_param/:style/:basename.:extension",
+                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
+  validates_attachment_content_type :signature, content_type: /\Aimage\/.*\z/
+
   scope :status_in, lambda {|status| where status: status if status.present?}
   #scope :skill_level_like, lambda {|search| where ["to_char(skill_level,'9999999999') LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
@@ -108,6 +113,10 @@ class Player < ApplicationRecord
     property :event do
       key :'$ref', :EventSingle
       key :description, "Event associated with player"
+    end
+    property :signature do
+      key :type, :string
+      key :description, "Url signature associated with player"
     end
   end
 

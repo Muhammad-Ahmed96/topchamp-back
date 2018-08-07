@@ -171,22 +171,23 @@ class Payments::CheckOutController < ApplicationController
     config = Payments::ItemsConfig.get_bracket
     items = []
     amount = 0
-    enroll_fee = event.payment_method.present? ? event.payment_method.enrollment_fee : 0
+    enroll_fee = event.registration_fee
     bracket_fee = event.payment_method.present? ? event.payment_method.bracket_fee : 0
     #aply discounts
-    event_discount = event.get_discount
+    #event_discount = event.get_discount
     personalized_discount = event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first
     general_discount = event.discount_generals.where(:code => subscribe_params[:discount_code]).first
 
-    enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
-    bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
+    #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
+    #todo discount
+    #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
 
     if personalized_discount.present?
       enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
-      bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+      #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
     elsif general_discount.present? and general_discount.limit < general_discount.applied
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
-      bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+      #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
       general_discount.applied = general_discount.applied + 1
       general_discount.save!(:validate => false)
     end

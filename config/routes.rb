@@ -49,6 +49,10 @@ Rails.application.routes.draw do
       collection do
         get :coming_soon
         get :upcoming
+        scope :downloads do
+          get :download_discounts_template, :path => :discounts_template
+        end
+
       end
       member do
         put :create_venue
@@ -67,6 +71,7 @@ Rails.application.routes.draw do
         put :agendas
         get :categories
         get :available_categories
+        get :get_registration_fee, :path => :registration_fee
       end
       resources :event_enrolls,only: [:create, :index], :path => :enrolls do
         collection do
@@ -111,6 +116,7 @@ Rails.application.routes.draw do
       collection do
         post :partner_mixed
         post :partner_double
+        post :signature
       end
       member do
         put :activate
