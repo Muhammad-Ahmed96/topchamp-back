@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'event_schedulers/create'
   get 'event_registration_rules/create'
   get 'players/Index'
   mount_devise_token_auth_for 'User', at: 'api', controllers: {sessions: 'application_sessions',
@@ -84,6 +85,8 @@ Rails.application.routes.draw do
           put :create, :path => :registration_rule
         end
       end
+
+      resources :event_schedulers, only: [:create], :path => :schedules
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]

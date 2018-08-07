@@ -43,17 +43,17 @@ class EventBracket < ApplicationRecord
   swagger_schema :EventBracket do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Unique identifier associated with bracket"
     end
     property :event_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Event id associated with bracket"
     end
     property :event_bracket_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Belong to bracket id associated with bracket"
     end
     property :lowest_skill do
@@ -92,17 +92,17 @@ class EventBracket < ApplicationRecord
   swagger_schema :EventBracketChild do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Unique identifier associated with bracket"
     end
     property :event_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Event id associated with bracket"
     end
     property :event_bracket_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Belong to bracket id associated with bracket"
     end
     property :lowest_skill do
@@ -134,7 +134,7 @@ class EventBracket < ApplicationRecord
   swagger_schema :EventBracketInput do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :age do
       key :type, :number
@@ -168,7 +168,7 @@ class EventBracket < ApplicationRecord
   swagger_schema :EventBracketInputAlone do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :age do
       key :type, :number
@@ -196,7 +196,7 @@ class EventBracket < ApplicationRecord
   swagger_schema :EventBracketSingle do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :age do
       key :type, :number

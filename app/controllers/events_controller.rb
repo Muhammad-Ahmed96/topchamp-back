@@ -1780,7 +1780,7 @@ class EventsController < ApplicationController
     tax_amount = 0
 
     if tax.present?
-      if event.tax.is_percent
+      if tax.is_percent
         tax_amount = (tax.tax * amount) / 100
       else
         tax_amount = tax.tax

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_07_171508) do
+ActiveRecord::Schema.define(version: 2018_08_07_191230) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -284,6 +284,23 @@ ActiveRecord::Schema.define(version: 2018_08_07_171508) do
     t.string "bracket_by"
     t.bigint "scoring_option_match_1_id"
     t.bigint "scoring_option_match_2_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_schedules", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "agenda_type_id"
+    t.bigint "venue_id"
+    t.string "title"
+    t.string "instructor"
+    t.text "description"
+    t.date "start_date"
+    t.date "end_date"
+    t.time "start_time"
+    t.time "end_time"
+    t.float "cost"
+    t.integer "capacity"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

@@ -60,15 +60,15 @@ class EventBracketSkill < ApplicationRecord
   swagger_schema :EventBracketSkill do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :event_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :event_bracket_age_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :lowest_skill do
       key :type, :number
@@ -93,7 +93,7 @@ class EventBracketSkill < ApplicationRecord
   swagger_schema :EventBracketSkillInput do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :lowest_skill do
       key :type, :number
@@ -115,7 +115,7 @@ class EventBracketSkill < ApplicationRecord
   swagger_schema :EventBracketSkillInputAlone do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :lowest_skill do
       key :type, :number
