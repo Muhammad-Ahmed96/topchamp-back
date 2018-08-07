@@ -125,6 +125,6 @@ class EventSchedulersController < ApplicationController
   # search current resource of id
   def set_resource
     #apply policy scope
-    @event = EventPolicy::Scope.new(current_user, Event).resolve.find(params[:event_id])
+    @event = Event.find(params[:event_id])
   end
 end
