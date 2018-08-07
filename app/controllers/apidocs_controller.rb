@@ -64,6 +64,8 @@ class ApidocsController < ApplicationController
       ScoringOptionsController,
       SkillLevelsController,
       EventEnrollsController,
+      EventRegistrationRulesController,
+      EventSchedulersController,
       ParticipantsController,
       PlayersController,
       BusinessCategoriesController,
@@ -115,6 +117,7 @@ class ApidocsController < ApplicationController
       MedicalInformation,
       EventType,
       AttendeeType,
+      EventSchedule,
       self,
   ].freeze
 

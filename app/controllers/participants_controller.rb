@@ -1,7 +1,7 @@
 class ParticipantsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update_attendee_types, :activate, :inactive]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:show, :update_attendee_types, :activate, :inactive]
   swagger_path '/participants' do
     operation :get do
       key :summary, 'List participants'

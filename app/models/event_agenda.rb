@@ -9,22 +9,22 @@ class EventAgenda < ApplicationRecord
   swagger_schema :EventAgenda do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Unique identifier associated with agenda"
     end
     property :event_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Event id associated with agenda"
     end
     property :agenda_type_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Agenda type id associated with agenda"
     end
     property :category_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Category id associated with agenda"
     end
     property :start_date do
@@ -56,17 +56,17 @@ class EventAgenda < ApplicationRecord
   swagger_schema :EventAgendaInput do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Unique identifier associated with agenda"
     end
     property :agenda_type_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Agenda type id associated with agenda"
     end
     property :category_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
       key :description, "Category id associated with agenda"
     end
     property :start_date do

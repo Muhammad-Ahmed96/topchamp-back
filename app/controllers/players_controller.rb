@@ -1,7 +1,7 @@
 class PlayersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner, :wait_list, :enrolled]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner, :wait_list, :enrolled]
   around_action :transactions_filter, only: [:update, :create, :partner, :signature]
   swagger_path '/players' do
     operation :get do

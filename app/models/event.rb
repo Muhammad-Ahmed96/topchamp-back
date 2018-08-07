@@ -34,6 +34,7 @@ class Event < ApplicationRecord
 
   has_many :brackets, -> {only_parent}, class_name: "EventBracket"
   has_many :internal_brackets, class_name: "EventBracket"
+  has_many :schedules, class_name: "EventSchedule"
 
 
   belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
@@ -145,6 +146,30 @@ class Event < ApplicationRecord
     end
     unless deleteIds.nil?
       self.agendas.where.not(id: deleteIds).destroy_all
+    end
+  end
+
+  def sync_schedules!(data)
+    deleteIds = []
+    if data.present?
+      schedule = nil
+      data.each {|item|
+        if item[:id].present?
+          schedule = self.schedules.where(id: item[:id]).first
+          if schedule.present?
+            schedule.update! item
+          else
+            item[:id] = nil
+            schedule = self.schedules.create! item
+          end
+        else
+          schedule = self.schedules.create! item
+        end
+        deleteIds << schedule.id
+      }
+    end
+    unless deleteIds.nil?
+      self.schedules.where.not(id: deleteIds).destroy_all
     end
   end
 
@@ -395,6 +420,14 @@ class Event < ApplicationRecord
         key :'$ref', :Region
       end
       key :description, "Regions associated with event"
+    end
+
+    property :schedules do
+      key :type, :array
+      items do
+        key :'$ref', :EventSchedule
+      end
+      key :description, "Schedules associated with event"
     end
     property :categories do
       key :type, :array

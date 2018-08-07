@@ -1,7 +1,7 @@
 class EventEnrollsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:create, :index, :user_cancel, :change_attendees]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:create, :index, :user_cancel, :change_attendees]
   around_action :transactions_filter, only: [:create, :user_cancel, :change_attendees]
 
   def index

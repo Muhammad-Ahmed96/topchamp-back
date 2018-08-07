@@ -1,9 +1,9 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
+  before_action :authenticate_user!
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories, :get_registration_fee]
-  before_action :authenticate_user!
+                                      :service_fee, :venue, :details, :agendas, :categories]
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
 
@@ -1437,53 +1437,6 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
-  swagger_path '/events/:id/registration_rule' do
-    operation :put do
-      key :summary, 'Events registration rule'
-      key :description, 'Events Catalog'
-      key :operationId, 'eventsRegistrationRule'
-      key :produces, ['application/json',]
-      key :tags, ['events']
-      parameter do
-        key :name, :registration_rule
-        key :in, :body
-        key :description, 'Registration rule'
-        key :required, true
-        schema do
-          key :'$ref', :EventRegistrationRuleInput
-        end
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :Event
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-
-  def registration_rule
-    authorize Event
-    if registration_rule_params.present?
-      registration_rule = @event.registration_rule
-      if registration_rule.present?
-        registration_rule.update! registration_rule_params
-      else
-        @event.create_registration_rule! registration_rule_params
-      end
-    end
-    json_response_serializer(@event, EventSerializer)
-  end
-
   swagger_path '/events/:id/details' do
     operation :put do
       key :summary, 'Events details'
@@ -1796,12 +1749,29 @@ class EventsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :name, :categories
-        key :description, 'categories'
+        key :name, :registration_fee
+        key :description, 'Current fees'
         schema do
-          key :type, :array
-          items do
-            key :'$ref', :CategoryBrackets
+          key :type, :object
+          property :enroll_fee do
+            key :type, :number
+            key :format, :float
+            key :description, "Enroll fee"
+          end
+          property :bracket_fee do
+            key :type, :number
+            key :format, :float
+            key :description, "Bracket fee"
+          end
+          property :tax do
+            key :type, :number
+            key :format, :float
+            key :description, "tax"
+          end
+          property :total do
+            key :type, :number
+            key :format, :float
+            key :description, "Total without tax"
           end
         end
       end
@@ -1817,17 +1787,18 @@ class EventsController < ApplicationController
     end
   end
   def get_registration_fee
+    @event = Event.find(params[:id])
     #set tax of event
     tax = @event.tax
-    brackets_count = subscribe_params[:brackets_count].present? ? subscribe_params[:brackets_count] : 1
+    brackets_count = subscribe_params[:brackets_count].present? ? subscribe_params[:brackets_count].to_i : 1
     payment_method = @event.payment_method
     enroll_fee = @event.registration_fee
     bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
     bracket_fee = bracket_fee *  brackets_count
     tax_amount = 0
-
+    amount = enroll_fee + bracket_fee
     if tax.present?
-      if event.tax.is_percent
+      if tax.is_percent
         tax_amount = (tax.tax * amount) / 100
       else
         tax_amount = tax.tax
@@ -1837,8 +1808,8 @@ class EventsController < ApplicationController
 
     #apply discounts
     #event_discount = @event.get_discount
-    personalized_discount = @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first
-    general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first: nil
+    personalized_discount = subscribe_params[:discount_code].present? ? @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first : nil
+    general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first : nil
 
     #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
     #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
@@ -1850,7 +1821,7 @@ class EventsController < ApplicationController
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
     end
-    json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount})
+    json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount, :total => amount})
   end
 
   private
@@ -1958,16 +1929,6 @@ class EventsController < ApplicationController
     # whitelist params
     unless params[:payment_information].nil?
       params.require(:payment_information).permit(:service_fee, :app_fee)
-    end
-  end
-
-  def registration_rule_params
-    # whitelist params
-    unless params[:registration_rule].nil?
-      params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
-                                                :password, :require_director_approval, :allow_players_cancel, :use_link_home_page,
-                                                :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app,
-                                                :allow_attendees_change, :allow_waiver, :waiver, :allow_wait_list)
     end
   end
 
