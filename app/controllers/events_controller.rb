@@ -1750,11 +1750,28 @@ class EventsController < ApplicationController
       end
       response 200 do
         key :name, :categories
-        key :description, 'categories'
+        key :description, 'Current fees'
         schema do
-          key :type, :array
-          items do
-            key :'$ref', :CategoryBrackets
+          key :type, :object
+          property :enroll_fee do
+            key :type, :number
+            key :format, :float
+            key :description, "Enroll fee"
+          end
+          property :bracket_fee do
+            key :type, :number
+            key :format, :float
+            key :description, "Bracket fee"
+          end
+          property :tax do
+            key :type, :number
+            key :format, :float
+            key :description, "tax"
+          end
+          property :total do
+            key :type, :number
+            key :format, :float
+            key :description, "Total without tax"
           end
         end
       end
