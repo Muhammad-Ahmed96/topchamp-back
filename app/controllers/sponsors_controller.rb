@@ -1,7 +1,7 @@
 class SponsorsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
   swagger_path '/sponsors' do
     operation :get do
       key :summary, 'Get sponsor list'

@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
   before_action :authenticate_user!, except: [:sing_up_information]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
   around_action :transactions_filter, only: [:update, :create]
 # Update password
   swagger_path '/users' do

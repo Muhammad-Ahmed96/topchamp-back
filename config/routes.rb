@@ -86,7 +86,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :event_schedulers, only: [:create], :path => :schedules
+      resources :event_schedulers, only: [:create, :index, :show], :path => :schedules
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]

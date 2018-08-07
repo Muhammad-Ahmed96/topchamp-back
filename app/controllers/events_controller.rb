@@ -1,9 +1,9 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
+  before_action :authenticate_user!
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :venue, :details, :agendas, :categories, :get_registration_fee]
-  before_action :authenticate_user!
+                                      :service_fee, :venue, :details, :agendas, :categories]
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate, :agendas]
 
@@ -1770,6 +1770,7 @@ class EventsController < ApplicationController
     end
   end
   def get_registration_fee
+    @event = Event.find(params[:id])
     #set tax of event
     tax = @event.tax
     brackets_count = subscribe_params[:brackets_count].present? ? subscribe_params[:brackets_count] : 1

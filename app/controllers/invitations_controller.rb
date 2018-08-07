@@ -1,7 +1,7 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:update, :destroy, :resend_mail]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:update, :destroy, :resend_mail]
   around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll]
   swagger_path '/invitations' do
     operation :get do

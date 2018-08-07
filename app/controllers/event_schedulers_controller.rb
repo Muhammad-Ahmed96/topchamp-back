@@ -1,10 +1,45 @@
 class EventSchedulersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:create]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:create, :index, :show]
   around_action :transactions_filter, only: [:create]
 
-  swagger_path '/events/:id/schedules' do
+  swagger_path '/events/:event_id/schedules' do
+    operation :get do
+      key :summary, 'Events schedules list'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsSchedulesList'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :description, 'Event Schedule response'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :EventSchedule
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def index
+    json_response_serializer_collection( @event.schedules, EventScheduleSerializer)
+  end
+
+  swagger_path '/events/:event_id/schedules' do
     operation :post do
       key :summary, 'Events schedules'
       key :description, 'Events Catalog'
@@ -45,6 +80,36 @@ class EventSchedulersController < ApplicationController
     authorize Event
     @event.sync_schedules! schedules_params
     json_response_serializer(@event, EventSerializer)
+  end
+
+
+  swagger_path '/events/:event_id/schedules/:id' do
+    operation :get do
+      key :summary, 'Events schedules show'
+      key :description, 'Events Catalog'
+      key :operationId, 'eventsSchedulesShow'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      response 200 do
+        key :description, 'Event Schedule response'
+        schema do
+          key :type, :object
+          key :'$ref', :EventSchedule
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def show
+    json_response_serializer( @event.schedules.where(:id => params[:id]).first!, EventScheduleSerializer)
   end
 
   private

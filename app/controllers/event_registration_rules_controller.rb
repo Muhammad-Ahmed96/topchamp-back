@@ -1,7 +1,7 @@
 class EventRegistrationRulesController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:create]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:create]
   around_action :transactions_filter, only: [:create]
 
   swagger_path '/events/:id/registration_rule' do
