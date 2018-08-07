@@ -45,7 +45,7 @@ if AttendeeType.count == 0
 end
 
 if AgendaType.count == 0
-  AgendaType.create([{name: 'Class will be now Clinic'}, {name: 'Competition', enabled:true}, {name: 'Social'}, {name: 'Exhibition/Tradeshow'}])
+  AgendaType.create([{name: 'Clinic'}, {name: 'Competition', enabled:true}, {name: 'Social'}, {name: 'Exhibition/Tradeshow'}])
 end
 if Region.count == 0
   Region.create([{name: 'Atlantic', base: 'State', territory: 'Connecticut, Massachusetts, Maine, New Hampshire, New York, Rhode Island, Vermont'},
