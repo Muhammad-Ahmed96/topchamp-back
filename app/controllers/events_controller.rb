@@ -3,9 +3,9 @@ class EventsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :venue, :details, :agendas, :categories]
+                                      :service_fee, :venue, :details, :categories]
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
-                                             :details, :activate, :agendas]
+                                             :details, :activate]
 
 
   swagger_path '/events' do
@@ -1536,46 +1536,6 @@ class EventsController < ApplicationController
     end
     @event.update! details_params
     @event.sync_brackes! bracket_params
-    json_response_serializer(@event, EventSerializer)
-  end
-
-  swagger_path '/events/:id/agendas' do
-    operation :put do
-      key :summary, 'Events agendas '
-      key :description, 'Events Catalog'
-      key :operationId, 'eventsAgendas'
-      key :produces, ['application/json',]
-      key :tags, ['events']
-      parameter do
-        key :name, :agendas
-        key :in, :body
-        key :description, 'Agendas'
-        key :type, :array
-        items do
-          key :'$ref', :EventAgendaInput
-        end
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :Event
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-
-  def agendas
-    authorize Event
-      @event.sync_agendas! agenda_params
     json_response_serializer(@event, EventSerializer)
   end
 

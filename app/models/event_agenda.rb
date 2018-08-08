@@ -1,3 +1,4 @@
+#todo delete model
 class EventAgenda < ApplicationRecord
   include Swagger::Blocks
   belongs_to :agenda_type, optional: true
