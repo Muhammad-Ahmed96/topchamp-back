@@ -651,6 +651,50 @@ class PlayersController < ApplicationController
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
+
+  swagger_path '/players/schedules' do
+    operation :get do
+      key :summary, 'Schedules associated with player'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersSchedules'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Schedules Response'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', EventSchedule
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def get_schedules
+    player = Player.where(user_id: @resource.id).where(event_id: schedules_param[:event_id]).first_or_create!
+    json_response_serializer_collection(player.schedules, EventScheduleSerializer)
+  end
+
   private
 
   def create_params
@@ -683,5 +727,11 @@ class PlayersController < ApplicationController
     params.required(:event_id)
     params.required(:signature)
     params.permit(:signature, :event_id)
+  end
+
+  def schedules_param
+    # whitelist params
+    params.required(:event_id)
+    params.permit(:event_id)
   end
 end

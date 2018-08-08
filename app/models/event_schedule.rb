@@ -4,6 +4,7 @@ class EventSchedule < ApplicationRecord
   belongs_to :event
   belongs_to :agenda_type
   belongs_to :venue
+  belongs_to :category,  optional: true
 
   validates :cost, numericality: true
   validates :capacity, numericality: {only_integer: true}
@@ -62,6 +63,10 @@ class EventSchedule < ApplicationRecord
       key :type, :integer
       key :description, "Capacity associated with event schedule"
     end
+    property :category do
+      key :'$ref', :Category
+      key :description, "Category associated with event schedule"
+    end
   end
 
   swagger_schema :EventScheduleInput do
@@ -87,6 +92,11 @@ class EventSchedule < ApplicationRecord
       key :type, :integer
       key :format, :int64
       key :description, "Venue id associated with event schedule"
+    end
+    property :category_id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Category id associated with event schedule"
     end
     property :title do
       key :type, :string

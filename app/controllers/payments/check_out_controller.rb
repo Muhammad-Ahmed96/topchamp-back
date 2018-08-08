@@ -4,6 +4,7 @@ class Payments::CheckOutController < ApplicationController
   include Swagger::Blocks
   include AuthorizeNet::API
   before_action :authenticate_user!
+  around_action :transactions_filter, only: [:subscribe]
   swagger_path '/payments/check_out/event' do
     operation :post do
       key :summary, 'Check out event'

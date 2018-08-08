@@ -3,6 +3,12 @@ class AgendaType < ApplicationRecord
   acts_as_paranoid
   validates :name, presence: true
   scope :search, lambda{ |search| where ["LOWER(name) LIKE LOWER(?)", "%#{search}%"] if search.present? }
+
+
+  def self.competition_id
+    return 2
+  end
+
   swagger_schema :AgendaType do
     key :required, [:id, :name]
     property :id do

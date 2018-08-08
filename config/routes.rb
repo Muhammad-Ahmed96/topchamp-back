@@ -130,6 +130,7 @@ Rails.application.routes.draw do
         post :partner_mixed
         post :partner_double
         post :signature
+        get :get_schedules, :path => :schedules
       end
       member do
         put :activate
