@@ -24,7 +24,7 @@ class Event < ApplicationRecord
   has_many :players
   has_many :participants
   has_one :registration_rule, class_name: 'EventRegistrationRule'
-  has_many :agendas, class_name: 'EventAgenda'
+  #has_many :agendas, class_name: 'EventAgenda'
   #has_one :rule, class_name: 'EventRule'
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
@@ -511,6 +511,7 @@ class Event < ApplicationRecord
       end
       key :description, "Scoring option match 2 associated with event"
     end
+=begin
     property :agendas do
       key :type, :array
       items do
@@ -518,6 +519,7 @@ class Event < ApplicationRecord
       end
       key :description, "Agendas associated with event"
     end
+=end
   end
   swagger_schema :EventInput do
     key :required, [:event_type_id, :title, :description]
