@@ -10,6 +10,13 @@ class EventDiscountsController < ApplicationController
       key :operationId, 'eventsDiscountsValidate'
       key :produces, ['application/json',]
       key :tags, ['events']
+      parameter do
+        key :name, :code
+        key :in, :query
+        key :description, 'Discount code'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, 'Event discounts response'
         schema do
