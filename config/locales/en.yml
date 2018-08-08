@@ -226,3 +226,8 @@ en:
   not_type: "Type required"
   payments:
     declined: "Your card was declined. In order to resolve the issue, you will need to contact your bank"
+  events:
+    discounts:
+      invalid: "Invalid discount code"
+      limit_reached: "Your discount code has reached its usage limit"
+      valid: "Valid"
