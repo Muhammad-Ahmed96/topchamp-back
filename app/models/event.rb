@@ -701,7 +701,7 @@ class Event < ApplicationRecord
   end
 
   def get_discount
-    discount = 0
+    discount = nil
     discounts = self.discount
     total_players = self.players.count
     if discounts.present?
@@ -732,9 +732,13 @@ class Event < ApplicationRecord
 
 
   def registration_fee
-    enroll_fee = self.payment_method.present? ? self.payment_method.enrollment_fee : 0
     discount = self.get_discount
-    return  enroll_fee - ((discount * enroll_fee) / 100)
+    if discount.present?
+      return discount
+    else
+      return self.payment_method.present? ? self.payment_method.enrollment_fee : 0
+    end
+    #return  enroll_fee - ((discount * enroll_fee) / 100)
   end
 
   private
