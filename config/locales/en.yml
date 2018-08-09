@@ -224,6 +224,11 @@ en:
   refuse_success: "%{model} refuse success"
   not_brackets_to_enrroll: "No brackets to enroll"
   not_type: "Type required"
+  player:
+    partner:
+      validation:
+        invalid_inforamtion: "Invalid information partner"
+        valid: "Valid partner"
   payments:
     declined: "Your card was declined. In order to resolve the issue, you will need to contact your bank"
   events:

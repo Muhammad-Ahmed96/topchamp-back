@@ -155,21 +155,32 @@ class Player < ApplicationRecord
   end
 
   #validate partner complete information
-  def validate_partner_information
+  def validate_partner(partner_id, bracket_id)
     total = 4
     current = 0
-    invitation = Invitation.where(:status => :enroll).first
-    #Complete requiered fields in their profiles
-    if self.user.first_name.present? and self.user.last_name.present?
-      current = current + 1
+    invitation = Invitation.where(:user_id => partner_id, :sender_id => self.user_id, :status => :enroll)
+                     .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket_id)).first
+    partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
+    if partner_player.present?
+      #Complete requiered fields in their profiles
+      if partner_player.user.first_name.present? and partner_player.user.last_name.present?
+        current = current + 1
+      end
+      #Event fee paid
+      if partner_player.event.is_paid
+        current = current + 1
+      end
+      #Brackets fee paid
+      partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id).first
+      if partner_bracket.present? and partner_bracket.payment_transaction_id.present?
+        current = current + 1
+      end
     end
-    #Event fee paid
-    if self.event.is_paid
-      current = current + 1
-    end
-    #Brackets fee paid
-
     #Invitation accepted
+    if invitation.present?
+      current = current + 1
+    end
+    return current == total
   end
 
   private
