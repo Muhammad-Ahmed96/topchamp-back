@@ -695,6 +695,60 @@ class PlayersController < ApplicationController
     json_response_serializer_collection(player.schedules, EventScheduleSerializer)
   end
 
+  swagger_path '/players/schedules' do
+    operation :get do
+      key :summary, 'Schedules associated with player'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersSchedules'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :partner_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :bracket_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def validate_partner
+    player = Player.where(user_id: @resource.id).where(event_id: validate_partner_params[:event_id]).first_or_create!
+    result = player.validate_partner(validate_partner_params[:partner_id], validate_partner_params[:bracket_id])
+    if result != true
+      return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+    end
+    json_response_success(t("player.partner.validation.valid"), response)
+  end
+
   private
 
   def create_params
@@ -733,5 +787,13 @@ class PlayersController < ApplicationController
     # whitelist params
     params.required(:event_id)
     params.permit(:event_id)
+  end
+
+  def validate_partner_params
+    # whitelist params
+    params.required(:event_id)
+    params.required(:partner_id)
+    params.required(:bracket_id)
+    params.permit(:partner_id, :event_id, :bracket_id)
   end
 end
