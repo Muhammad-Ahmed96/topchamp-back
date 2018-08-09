@@ -154,6 +154,24 @@ class Player < ApplicationRecord
     self.event.sports
   end
 
+  #validate partner complete information
+  def validate_partner_information
+    total = 4
+    current = 0
+    invitation = Invitation.where(:status => :enroll).first
+    #Complete requiered fields in their profiles
+    if self.user.first_name.present? and self.user.last_name.present?
+      current = current + 1
+    end
+    #Event fee paid
+    if self.event.is_paid
+      current = current + 1
+    end
+    #Brackets fee paid
+
+    #Invitation accepted
+  end
+
   private
 
   def set_status

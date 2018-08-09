@@ -3,7 +3,6 @@ class EventSchedule < ApplicationRecord
 
   belongs_to :event
   belongs_to :agenda_type
-  belongs_to :venue
   belongs_to :category,  optional: true
 
   validates :cost, numericality: true
@@ -49,7 +48,7 @@ class EventSchedule < ApplicationRecord
       key :description, "Agenda type associated with event schedule"
     end
     property :venue do
-      key :'$ref', :Venue
+      key :type, :string
       key :description, "Venue associated with event schedule"
     end
 
@@ -88,10 +87,9 @@ class EventSchedule < ApplicationRecord
       key :description, "Agenda type id associated with event schedule"
     end
 
-    property :venue_id do
-      key :type, :integer
-      key :format, :int64
-      key :description, "Venue id associated with event schedule"
+    property :venue do
+      key :type, :string
+      key :description, "Venue associated with event schedule"
     end
     property :category_id do
       key :type, :integer

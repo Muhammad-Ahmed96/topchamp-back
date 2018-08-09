@@ -3,6 +3,7 @@ class Invitation < ApplicationRecord
   before_create :generate_token
 
   has_and_belongs_to_many :attendee_types
+  has_many :brackets, :class_name => "InvitationBracket"
   belongs_to :event, optional: true
   belongs_to :user, optional: true
   #belongs_to :attendee_type, optional: true

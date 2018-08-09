@@ -117,7 +117,7 @@ class EventSchedulersController < ApplicationController
     #validate presence and type
     unless params[:schedules].nil? and !params[:schedules].kind_of?(Array)
       params[:schedules].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :venue_id, :title, :instructor, :description, :start_date, :end_date, :start_time,
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :venue, :title, :instructor, :description, :start_date, :end_date, :start_time,
                                                                :end_time, :cost, :capacity, :category_id)
       end
     end

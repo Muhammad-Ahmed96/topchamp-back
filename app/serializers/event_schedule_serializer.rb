@@ -1,8 +1,8 @@
 class EventScheduleSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :start_date, :end_date, :start_time, :end_time, :cost, :capacity, :instructor
+  attributes :id, :title, :description, :start_date, :end_date, :start_time, :end_time, :cost, :capacity, :instructor,
+             :venue
 
   belongs_to :agenda_type, serializer: AgendaTypeSerializer
-  belongs_to :venue, serializer: VenueSerializer
 
   def start_time
     if object.start_time.present?
