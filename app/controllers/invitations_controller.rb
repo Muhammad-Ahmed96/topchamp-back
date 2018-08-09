@@ -2,7 +2,7 @@ class InvitationsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
   before_action :set_resource, only: [:update, :destroy, :resend_mail]
-  around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll]
+  around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll, :partner]
   swagger_path '/invitations' do
     operation :get do
       key :summary, 'Get invitations list'
@@ -673,6 +673,21 @@ class InvitationsController < ApplicationController
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
       @invitation.send_mail(true)
+      #set brackets
+      category_ids = []
+      if type == "partner_mixed"
+        category_ids = Category.mixed_categories
+      elsif type == "partner_double"
+        category_ids = Category.doubles_categories
+      end
+      player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
+      brackets =  player.brackets.where(:category_id => category_ids).all
+      brackets.each do |item|
+        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id ).first
+        if saved.nil?
+          @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id})
+        end
+      end
     else
       return json_response_error([t("no_player")], 422)
     end
