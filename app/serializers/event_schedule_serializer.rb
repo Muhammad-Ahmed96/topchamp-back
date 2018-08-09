@@ -3,6 +3,7 @@ class EventScheduleSerializer < ActiveModel::Serializer
              :venue
 
   belongs_to :agenda_type, serializer: AgendaTypeSerializer
+  belongs_to :category, serializer: CategorySerializer
 
   def start_time
     if object.start_time.present?

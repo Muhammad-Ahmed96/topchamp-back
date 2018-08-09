@@ -5,8 +5,8 @@ class EventSchedule < ApplicationRecord
   belongs_to :agenda_type
   belongs_to :category,  optional: true
 
-  validates :cost, numericality: true
-  validates :capacity, numericality: {only_integer: true}
+  validates :cost, numericality: true, :allow_nil => true
+  validates :capacity, numericality: {only_integer: true}, :allow_nil => true
 
 
   swagger_schema :EventSchedule do
