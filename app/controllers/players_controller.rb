@@ -695,11 +695,11 @@ class PlayersController < ApplicationController
     json_response_serializer_collection(player.schedules, EventScheduleSerializer)
   end
 
-  swagger_path '/players/schedules' do
+  swagger_path '/players/validate_partner' do
     operation :get do
-      key :summary, 'Schedules associated with player'
+      key :summary, 'Validate partner information associated with player'
       key :description, 'Players Catalog'
-      key :operationId, 'playersSchedules'
+      key :operationId, 'playersValidatePartner'
       key :produces, ['application/json',]
       key :tags, ['players']
       parameter do
