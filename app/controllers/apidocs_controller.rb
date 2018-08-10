@@ -69,6 +69,7 @@ class ApidocsController < ApplicationController
       EventDiscountsController,
       ParticipantsController,
       PlayersController,
+      PlayerPartnerController,
       BusinessCategoriesController,
       PartnersController,
       Payments::CreditCardsController,

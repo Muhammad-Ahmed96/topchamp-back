@@ -9,6 +9,7 @@ class Player < ApplicationRecord
   has_many :brackets_enroll, -> {enroll}, class_name: "PlayerBracket"
   has_many :brackets_wait_list, -> {wait_list}, class_name: "PlayerBracket"
   has_and_belongs_to_many :schedules, :class_name => "EventSchedule"
+  has_and_belongs_to_many :teams
 
   has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 

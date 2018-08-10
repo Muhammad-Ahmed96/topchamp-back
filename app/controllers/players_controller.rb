@@ -704,21 +704,21 @@ class PlayersController < ApplicationController
       key :tags, ['players']
       parameter do
         key :name, :event_id
-        key :in, :body
+        key :in, :query
         key :required, true
         key :type, :integer
         key :format, :int64
       end
       parameter do
         key :name, :partner_id
-        key :in, :body
+        key :in, :query
         key :required, true
         key :type, :integer
         key :format, :int64
       end
       parameter do
         key :name, :bracket_id
-        key :in, :body
+        key :in, :query
         key :required, true
         key :type, :integer
         key :format, :int64
