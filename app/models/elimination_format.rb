@@ -12,13 +12,16 @@ class EliminationFormat < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with elimination format"
     end
     property :name do
       key :type, :string
+      key :description, "Name associated with elimination format"
     end
     property :index do
       key :type, :integer
       key :format, :int64
+      key :description, "Index associated with elimination format"
     end
   end
 

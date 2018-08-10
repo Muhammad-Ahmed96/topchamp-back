@@ -1,7 +1,7 @@
 class RegionsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:show, :update, :destroy]
   swagger_path '/regions' do
     operation :get do
       key :summary, 'Get region list'
@@ -46,13 +46,18 @@ class RegionsController < ApplicationController
       end
 
       response 200 do
-        key :description, ''
+        key :description, 'Region Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :Region
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end

@@ -1,7 +1,7 @@
 class AgendaTypesController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:show, :update, :destroy]
   swagger_path '/agenda_types' do
     operation :get do
       key :summary, 'Get agenda type list'
@@ -31,13 +31,18 @@ class AgendaTypesController < ApplicationController
         key :type, :string
       end
       response 200 do
-        key :description, ''
+        key :description, 'Agenda Type Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :AgendaType
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end

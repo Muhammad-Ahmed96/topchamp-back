@@ -13,6 +13,7 @@ class User < ApplicationRecord
   has_one :association_information, :dependent => :destroy
   has_one :medical_information, :dependent => :destroy
   has_many :players
+  has_many :participants
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
@@ -79,42 +80,66 @@ class User < ApplicationRecord
     self.try(:role) == "Member"
   end
 
+  def customer?
+    self.try(:role) == "Customer"
+  end
+
+  def is_director
+    count  = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
+    if count > 0
+      return true
+    else
+      return false
+    end
+  end
+
   swagger_schema :UserLogin do
     key :required, [:id, :email, :provider, :uid, :first_name, :middle_initial,
                     :last_name, :gender, :role, :birth_date, :image, :badge_name]
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with user"
     end
     property :email do
       key :type, :string
+      key :description, "Email associated with user"
     end
     property :provider do
       key :type, :string
+      key :description, "Provider associated with user"
     end
     property :uid do
       key :type, :string
+      key :description, "Uid associated with user"
     end
     property :first_name do
       key :type, :string
+      key :description, "First name associated with user"
     end
     property :middle_initial do
       key :type, :string
+      key :description, "Middle initial associated with user"
     end
     property :last_name do
       key :type, :string
+      key :description, "Last name associated with user"
     end
     property :gender do
       key :type, :string
+      key :description, "Gender associated with user"
     end
     property :role do
       key :type, :string
+      key :description, "Role associated with user"
     end
     property :birth_date do
       key :type, :string
+      key :description, "Birth date associated with user"
     end
     property :badge_name do
       key :type, :string
+      key :description, "Badge name associated with user"
     end
   end
 
@@ -126,46 +151,60 @@ class User < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with user"
     end
     property :first_name do
       key :type, :string
+      key :description, "First name associated with user"
     end
     property :last_name do
       key :type, :string
+      key :description, "Last name associated with user"
     end
     property :gender do
       key :type, :string
+      key :description, "Gender associated with user"
     end
     property :email do
       key :type, :string
+      key :description, "Email associated with user"
     end
     property :badge_name do
       key :type, :string
+      key :description, "Badge name associated with user"
     end
     property :birth_date do
       key :type, :string
+      key :description, "Birth date associated with user"
     end
     property :middle_initial do
       key :type, :string
+      key :description, "Middle initial associated with user"
     end
     property :role do
       key :type, :string
+      key :description, "Role associated with user"
     end
     property :profile do
       key :type, :string
+      key :description, "Profile associated with user"
     end
     property :status do
       key :type, :string
+      key :description, "Status associated with user"
     end
     property :last_sign_in_at do
       key :type, :string
+      key :description, "Last sign in at associated with user"
     end
 
     property :is_receive_text do
       key :type, :boolean
+      key :description, "is receive text associated with user"
     end
     property :membership_id do
       key :type, :string
+      key :description, "Membership id associated with user"
     end
 
     property :sports do
@@ -173,22 +212,27 @@ class User < ApplicationRecord
       items do
         key :'$ref', :Sport
       end
+      key :description, "Sports associated with user"
     end
     property :contact_information do
       key :'$ref', :ContactInformation
+      key :description, "Contact information associated with user"
     end
 
     property :shipping_address do
       key :'$ref', :ShippingAddress
+      key :description, "Shipping address associated with user"
     end
 
     property :association_information do
       key :'$ref', :AssociationInformation
+      key :description, "Association information associated with user"
     end
 
 
     property :medical_information do
       key :'$ref', :MedicalInformation
+      key :description, "Medical information associated with user"
     end
 
     property :players do
@@ -196,6 +240,7 @@ class User < ApplicationRecord
       items do
         key :'$ref', :Player
       end
+      key :description, "Players associated with user"
     end
   end
 

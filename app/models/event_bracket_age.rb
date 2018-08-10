@@ -64,15 +64,15 @@ class EventBracketAge < ApplicationRecord
   swagger_schema :EventBracketAge do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :event_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :event_bracket_skill_id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :age do
       key :type, :number
@@ -94,7 +94,7 @@ class EventBracketAge < ApplicationRecord
   swagger_schema :EventBracketAgeInput do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :age do
       key :type, :number
@@ -113,7 +113,7 @@ class EventBracketAge < ApplicationRecord
   swagger_schema :EventBracketAgeInputAlone do
     property :id do
       key :type, :integer
-      key :format, :integer
+      key :format, :int64
     end
     property :age do
       key :type, :number

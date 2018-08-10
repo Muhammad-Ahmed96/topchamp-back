@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_17_162512) do
+ActiveRecord::Schema.define(version: 2018_08_09_155551) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -177,6 +177,7 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.integer "limited"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "applied", default: 0
   end
 
   create_table "event_discount_personalizeds", force: :cascade do |t|
@@ -236,6 +237,7 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.text "refund_policy"
     t.float "service_fee"
     t.float "app_fee"
+    t.string "bank_routing_number"
   end
 
   create_table "event_payment_methods", force: :cascade do |t|
@@ -267,6 +269,13 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.boolean "allow_waiver"
     t.text "waiver"
     t.boolean "allow_wait_list"
+    t.boolean "is_share", default: false
+    t.boolean "add_to_my_calendar", default: false
+    t.boolean "enable_map", default: false
+    t.boolean "share_my_cell_phone", default: false
+    t.boolean "share_my_email", default: false
+    t.date "player_cancel_start_date"
+    t.date "player_cancel_start_end"
   end
 
   create_table "event_rules", force: :cascade do |t|
@@ -277,6 +286,32 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.bigint "scoring_option_match_2_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "event_schedules", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "agenda_type_id"
+    t.bigint "venue_id"
+    t.string "title"
+    t.string "instructor"
+    t.text "description"
+    t.date "start_date"
+    t.date "end_date"
+    t.time "start_time"
+    t.time "end_time"
+    t.float "cost"
+    t.integer "capacity"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "category_id"
+    t.string "venue"
+  end
+
+  create_table "event_schedules_players", id: false, force: :cascade do |t|
+    t.bigint "player_id", null: false
+    t.bigint "event_schedule_id", null: false
+    t.index ["event_schedule_id"], name: "index_event_schedules_players_on_event_schedule_id"
+    t.index ["player_id"], name: "index_event_schedules_players_on_player_id"
   end
 
   create_table "event_taxes", force: :cascade do |t|
@@ -330,6 +365,7 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.string "awards_for"
     t.string "awards_through"
     t.string "awards_plus"
+    t.boolean "is_paid", default: false
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
@@ -345,6 +381,14 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.bigint "sport_id", null: false
     t.index ["event_id"], name: "index_events_sports_on_event_id"
     t.index ["sport_id"], name: "index_events_sports_on_sport_id"
+  end
+
+  create_table "invitation_brackets", force: :cascade do |t|
+    t.bigint "invitation_id"
+    t.bigint "event_bracket_id"
+    t.boolean "accepted", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -395,6 +439,20 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.index ["deleted_at"], name: "index_participants_on_deleted_at"
   end
 
+  create_table "payment_transactions", force: :cascade do |t|
+    t.string "payment_transaction_id"
+    t.string "transactionable_type"
+    t.bigint "transactionable_id"
+    t.integer "status", default: 1
+    t.bigint "user_id"
+    t.float "amount"
+    t.float "tax"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
+  end
+
   create_table "player_brackets", force: :cascade do |t|
     t.bigint "player_id"
     t.bigint "category_id"
@@ -402,6 +460,7 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "event_bracket_id"
+    t.string "payment_transaction_id"
   end
 
   create_table "players", force: :cascade do |t|
@@ -415,13 +474,17 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.bigint "partner_double_id"
     t.bigint "partner_mixed_id"
     t.bigint "attendee_type_id"
+    t.string "signature_file_name"
+    t.string "signature_content_type"
+    t.integer "signature_file_size"
+    t.datetime "signature_updated_at"
     t.index ["deleted_at"], name: "index_players_on_deleted_at"
   end
 
   create_table "regions", force: :cascade do |t|
     t.string "name"
     t.string "base"
-    t.string "territoy"
+    t.string "territory"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
@@ -551,6 +614,7 @@ ActiveRecord::Schema.define(version: 2018_07_17_162512) do
     t.boolean "is_receive_text", default: false
     t.string "pin"
     t.string "membership_id"
+    t.string "customer_profile_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true

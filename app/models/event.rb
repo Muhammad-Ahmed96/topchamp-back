@@ -24,13 +24,17 @@ class Event < ApplicationRecord
   has_many :players
   has_many :participants
   has_one :registration_rule, class_name: 'EventRegistrationRule'
-  has_many :agendas, class_name: 'EventAgenda'
+  #has_many :agendas, class_name: 'EventAgenda'
   #has_one :rule, class_name: 'EventRule'
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
 
+
+  has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
+
   has_many :brackets, -> {only_parent}, class_name: "EventBracket"
   has_many :internal_brackets, class_name: "EventBracket"
+  has_many :schedules, class_name: "EventSchedule"
 
 
   belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
@@ -59,6 +63,7 @@ class Event < ApplicationRecord
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :only_directors, lambda {|id| joins(participants: [:attendee_types]).merge(Participant.where :user_id => id).merge(AttendeeType.where :id => AttendeeType.director_id) if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
   scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
@@ -141,6 +146,30 @@ class Event < ApplicationRecord
     end
     unless deleteIds.nil?
       self.agendas.where.not(id: deleteIds).destroy_all
+    end
+  end
+
+  def sync_schedules!(data)
+    deleteIds = []
+    if data.present?
+      schedule = nil
+      data.each {|item|
+        if item[:id].present?
+          schedule = self.schedules.where(id: item[:id]).first
+          if schedule.present?
+            schedule.update! item
+          else
+            item[:id] = nil
+            schedule = self.schedules.create! item
+          end
+        else
+          schedule = self.schedules.create! item
+        end
+        deleteIds << schedule.id
+      }
+    end
+    unless deleteIds.nil?
+      self.schedules.where.not(id: deleteIds).destroy_all
     end
   end
 
@@ -261,169 +290,236 @@ class Event < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of event"
     end
     property :venue_id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of venue"
     end
     property :event_type_id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of  event type"
     end
     property :title do
       key :type, :string
+      key :description, "Title string"
     end
     property :icon do
       key :type, :string
+      key :description, "Uri to icon image\nExample. https://topchamp.tk/ + icon"
     end
     property :description do
       key :type, :string
+      key :description, "Text to description"
     end
     property :start_date do
-      key :type, :date
+      key :type, :string
+      key :format, :date
+      key :description, "Start date of event\nformat 'YYYY-MM-DD'"
     end
     property :end_date do
-      key :type, :date
+      key :type, :string
+      key :format, :date
+      key :description, "End date of event\nformat 'YYYY-MM-DD'"
     end
     property :visibility do
       key :type, :string
+      key :description, "Visibility of event\nExample. Private or Public"
     end
     property :requires_access_code do
       key :type, :boolean
+      key :description, "Indicate if event require access code"
     end
     property :event_url do
       key :type, :string
+      key :description, "Url to even"
     end
     property :is_event_sanctioned do
       key :type, :boolean
+      key :description, "Indicate if event is sanctioned"
     end
     property :sanctions do
       key :type, :string
+      key :description, "List of sanctions"
     end
     property :organization_name do
       key :type, :string
+      key :description, "Name of my organization"
     end
     property :organization_url do
       key :type, :string
+      key :description, "Url of my organization"
     end
     property :is_determine_later_venue do
       key :type, :boolean
+      key :description, "Indicate if event later venue"
     end
-
     property :access_code do
       key :type, :string
+      key :description, "Code to acces to a event"
     end
     property :status do
       key :type, :string
+      key :description, "Status of event associated with event\nExample: Inactive or Active"
+    end
+    property :creator_user_id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Creator user id associated with event"
+    end
+    property :valid_to_activate do
+      key :type, :boolean
+      key :description, "Indicate if is valid to activate"
+    end
+    property :sport_regulator_id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Unique identifier of sport regulator associated with event"
+    end
+    property :elimination_format_id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Unique identifier of elimination format associated with event"
+    end
+    property :bracket_by do
+      key :type, :string
+      key :description, "Type of bracket associated with event\nExample: Age, Skill, Age/Skill or SkillAge"
+    end
+    property :scoring_option_match_1_id do
+      key :type, :string
+      key :description, "Unique identifier of scoring option of match 1 associated with event"
+    end
+    property :scoring_option_match_2_id do
+      key :type, :string
+      key :description, "Unique identifier of scoring option of match 2 associated with event"
+    end
+    property :awards_for do
+      key :type, :string
+      key :description, "Defines awards for associated with event"
+    end
+    property :awards_through do
+      key :type, :string
+      key :description, "Defines awards through associated with event"
+    end
+    property :awards_plus do
+      key :type, :string
+      key :description, "Defines a awards plus associated with event"
     end
     property :sports do
       key :type, :array
       items do
         key :'$ref', :Sport
       end
-    end
-    property :event_type do
-      key :'$ref', :EventType
-    end
-    property :venue do
-      key :'$ref', :Venue
+      key :description, "Sports associated with event"
     end
     property :regions do
       key :type, :array
       items do
         key :'$ref', :Region
       end
+      key :description, "Regions associated with event"
     end
 
+    property :schedules do
+      key :type, :array
+      items do
+        key :'$ref', :EventSchedule
+      end
+      key :description, "Schedules associated with event"
+    end
+    property :categories do
+      key :type, :array
+      items do
+        key :'$ref', :Category
+      end
+      key :description, "Categories associated with event"
+    end
+    property :venue do
+      key :'$ref', :Venue
+      key :description, "Venue associated with event"
+    end
+
+    property :event_type do
+      key :'$ref', :EventType
+      key :description, "Event type associated with event"
+    end
     property :payment_information do
       key :'$ref', :EventPaymentInformation
+      key :description, "Payment information associated with event"
     end
 
     property :payment_method do
       key :'$ref', :EventPaymentMethod
+      key :description, "Payment method associated with event"
     end
     property :discount do
       key :'$ref', :EventDiscount
+      key :description, "Discount associated with event"
     end
     property :discount_generals do
       key :'$ref', :EventDiscountGeneral
+      key :description, "Discount general associated with event"
     end
     property :discount_personalizeds do
       key :'$ref', :EventDiscountPersonalized
+      key :description, "Discount personalized associated with event"
     end
 
     property :tax do
       key :'$ref', :EventTax
-    end
-    property :registration_rule do
-      key :'$ref', :EventRegistrationRule
-    end
-    property :brackets do
-      key :type, :array
-      items do
-        key :'$ref', :EventBracket
-      end
-    end
-    property :sport_regulator_id do
-      key :type, :integer
-      key :format, :int64
-    end
-    property :elimination_format_id do
-      key :type, :integer
-      key :format, :int64
-    end
-    property :bracket_by do
-      key :type, :string
-    end
-    property :scoring_option_match_1_id do
-      key :type, :integer
-      key :format, :int64
-    end
-    property :scoring_option_match_2_id do
-      key :type, :integer
-      key :format, :int64
+      key :description, "Tax associated with event"
     end
 
+    property :registration_rule do
+      key :'$ref', :EventRegistrationRule
+      key :description, "Registration rule associated with event"
+    end
     property :sport_regulator do
       key :type, :array
       items do
         key :'$ref', :SportRegulator
       end
+      key :description, "Sport regulators associated with event"
     end
     property :elimination_format do
       key :type, :array
       items do
         key :'$ref', :EliminationFormat
       end
+      key :description, "Elimination formats associated with event"
+    end
+    property :brackets do
+      key :type, :array
+      items do
+        key :'$ref', :EventBracket
+      end
+      key :description, "Brackets associated with event"
     end
     property :scoring_option_match_1 do
       key :type, :array
       items do
         key :'$ref', :ScoringOption
       end
+      key :description, "Scoring option match 1 associated with event"
     end
     property :scoring_option_match_1 do
       key :type, :array
       items do
         key :'$ref', :ScoringOption
       end
+      key :description, "Scoring option match 2 associated with event"
     end
-
-    property :awards_for do
-      key :type, :string
-    end
-    property :awards_through do
-      key :type, :string
-    end
-    property :awards_plus do
-      key :type, :string
-    end
+=begin
     property :agendas do
       key :type, :array
       items do
         key :'$ref', :EventAgenda
       end
+      key :description, "Agendas associated with event"
     end
+=end
   end
   swagger_schema :EventInput do
     key :required, [:event_type_id, :title, :description]
@@ -445,10 +541,12 @@ class Event < ApplicationRecord
       key :type, :string
     end
     property :start_date do
-      key :type, :date
+      key :type, :string
+      key :format, :date
     end
     property :end_date do
-      key :type, :date
+      key :type, :string
+      key :format, :date
     end
     property :visibility do
       key :type, :string
@@ -518,10 +616,12 @@ class Event < ApplicationRecord
       key :type, :string
     end
     property :start_date do
-      key :type, :date
+      key :type, :string
+      key :format, :date
     end
     property :end_date do
-      key :type, :date
+      key :type, :string
+      key :format, :date
     end
     property :visibility do
       key :type, :string
@@ -588,14 +688,57 @@ class Event < ApplicationRecord
     data.each do |bracket|
       current_bracket = EventBracket.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
       category = self.internal_categories.where(:id => bracket[:category_id]).count
+      allow_wait_list = self.registration_rule.present? ? self.registration_rule.allow_wait_list : false
       if current_bracket.present? and category > 0
         status = current_bracket.get_status(bracket[:category_id])
-        if status == :enroll or status == :waiting_list
+        if status == :enroll or (status == :waiting_list and allow_wait_list)
+          bracket[:enroll_status] = status
           brackets << bracket
         end
       end
     end
     brackets
+  end
+
+  def get_discount
+    discount = nil
+    discounts = self.discount
+    total_players = self.players.count
+    if discounts.present?
+      if discounts.early_bird_date_start.present? and discounts.early_bird_date_end.present?
+        start_date = discounts.early_bird_date_start.to_date
+        end_date = discounts.early_bird_date_end.to_date
+        if Date.today >= start_date and Date.today <= end_date and (discounts.early_bird_players > total_players or total_players == 0)
+          discount = discounts.early_bird_registration
+        end
+      end
+      if discounts.late_date_start.present? and discounts.late_date_end.present?
+        start_date = discounts.late_date_start.to_date
+        end_date = discounts.late_date_end.to_date
+        if Date.today >= start_date and Date.today <= end_date and (discounts.late_players > total_players or total_players == 0)
+          discount = discounts.late_registration
+        end
+      end
+      if discounts.on_site_date_start.present? and discounts.on_site_date_end.present?
+        start_date = discounts.on_site_date_start.to_date
+        end_date = discounts.on_site_date_end.to_date
+        if Date.today >= start_date and Date.today <= end_date and (discounts.on_site_players > total_players or total_players == 0)
+          discount = discounts.on_site_registration
+        end
+      end
+    end
+    discount
+  end
+
+
+  def registration_fee
+    discount = self.get_discount
+    if discount.present?
+      return discount
+    else
+      return self.payment_method.present? ? self.payment_method.enrollment_fee : 0
+    end
+    #return  enroll_fee - ((discount * enroll_fee) / 100)
   end
 
   private

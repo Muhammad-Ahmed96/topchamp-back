@@ -1,7 +1,7 @@
 class AttendeeTypeController < ApplicationController
   include Swagger::Blocks
+  before_action :authenticate_user!
     before_action :set_resource, only: [:show, :update, :destroy]
-    before_action :authenticate_user!
     swagger_path '/attendee_type' do
       operation :get do
         key :summary, 'Get attendee type list'
@@ -31,13 +31,18 @@ class AttendeeTypeController < ApplicationController
           key :type, :string
         end
         response 200 do
-          key :description, ''
+          key :description, 'Attendee Type Respone'
           schema do
-            key :'$ref', :PaginateModel
+            key :type, :object
             property :data do
+              key :type, :array
               items do
                 key :'$ref', :AttendeeType
               end
+              key :description, "Information container"
+            end
+            property :meta do
+              key :'$ref', :PaginateModel
             end
           end
         end

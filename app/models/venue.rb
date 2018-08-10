@@ -76,90 +76,118 @@ class Venue < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of Venue"
     end
     property :name do
       key :type, :string
+      key :description, "Name string"
     end
 
     property :abbreviation do
       key :type, :string
+      key :description, "Abbreviation of name"
     end
     property :country_code do
       key :type, :string
+      key :description, "Country code associated with venue"
     end
     property :phone_number do
       key :type, :string
+      key :description, "Phone number associated with venue"
     end
     property :link do
       key :type, :string
+      key :description, "Url associated with venue"
     end
     property :facility do
       key :type, :string
+      key :description, "Facility associated with venue"
     end
     property :description do
       key :type, :string
+      key :description, "Description associated with venue"
     end
     property :space do
       key :type, :string
+      key :description, "Space associated with venue"
     end
     property :latitude do
       key :type, :string
+      key :description, "Latitude associated with venue"
     end
     property :longitude do
       key :type, :string
+      key :description, "Longitude associated with venue"
     end
     property :address_line_1 do
       key :type, :string
+      key :description, "Address line 1 associated with venue"
     end
     property :address_line_2 do
       key :type, :string
+      key :description, "Address line 2 associated with venue"
     end
     property :postal_code do
       key :type, :string
+      key :description, "Postal code associated with venue"
     end
     property :city do
       key :type, :string
+      key :description, "City associated with venue"
     end
     property :state do
       key :type, :string
+      key :description, "State associated with venue"
     end
     property :country do
       key :type, :string
+      key :description, "Country associated with venue"
     end
     property :availability_date_start do
-      key :type, :date
+      key :type, :string
+      key :format, :date
+      key :description, "Availability start date associated with venue\nFormat: 'YYYY-MM-DD'"
     end
     property :availability_date_end do
-      key :type, :date
+      key :type, :string
+      key :format, :date
+      key :description, "Availability end date associated with venue\nFormat: 'YYYY-MM-DD'"
     end
     property :availability_time_zone do
       key :type, :string
+      key :description, "Time zone associated with venue"
     end
     property :restrictions do
       key :type, :string
+      key :description, "Restrinccions associated with venue"
     end
     property :is_insurance_requirements do
       key :type, :boolean
+      key :description, "Determine insurance requirements needs"
     end
-
-
     property :insurance_requirements do
       key :type, :string
+      key :description, "Insurance requirements associated with venue"
     end
     property :is_decorations do
       key :type, :boolean
+      key :description, "Determine decorations requirements needs"
     end
     property :decorations do
       key :type, :string
+      key :description, "Decorations associated with venue"
     end
     property :is_vehicles do
       key :type, :boolean
+      key :description, "Determine vehicles requirements needs"
     end
     property :vehicles do
       key :type, :integer
+      key :description, "Number of vehicles associated with venue"
     end
     property :status do
       key :type, :string
+      key :description, "Status associated with venue\nExample: Active, Inactive"
     end
 
     property :facility_management do
@@ -182,13 +210,8 @@ class Venue < ApplicationRecord
       items do
         key :'$ref', :VenuePicture
       end
+      key :description, "Pictures associated with venue\nExample: root_url/picture"
     end
-
-=begin
-    property :availability_time_zone_obj do
-      key :'$ref', :Region
-    end
-=end
 
   end
 
@@ -245,10 +268,12 @@ class Venue < ApplicationRecord
       key :type, :string
     end
     property :availability_date_start do
-      key :type, :date
+      key :type, :string
+      key :format, :date
     end
     property :availability_date_end do
-      key :type, :date
+      key :type, :string
+      key :format, :date
     end
     property :availability_time_zone do
       key :type, :string

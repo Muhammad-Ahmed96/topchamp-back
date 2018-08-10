@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
   before_action :authenticate_user!, except: [:sing_up_information]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
   around_action :transactions_filter, only: [:update, :create]
 # Update password
   swagger_path '/users' do
@@ -117,13 +117,18 @@ class UsersController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :description, ''
+        key :description, 'User Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :User
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', PaginateModel
           end
         end
       end

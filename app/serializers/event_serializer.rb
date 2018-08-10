@@ -6,6 +6,7 @@ class EventSerializer < ActiveModel::Serializer
              :awards_for, :awards_through, :awards_plus
   has_many :sports, serializer: SportSerializer
   has_many :regions, serializer: RegionSerializer
+  has_many :schedules, serializer: EventScheduleSerializer
   has_many :categories, serializer: EventCategorySingleSerializer
   has_one :venue, serializer: VenueSerializer
   has_one :event_type, serializer: EventTypeSerializer
@@ -25,7 +26,7 @@ class EventSerializer < ActiveModel::Serializer
   belongs_to :scoring_option_match_1, serializer: ScoringOptionSerializer
   belongs_to :scoring_option_match_2, serializer: ScoringOptionSerializer
 
-  has_many :agendas,  serializer:EventAgendaSerializer
+  #has_many :agendas,  serializer:EventAgendaSerializer
 
   def valid_to_activate
     object.valid_to_activate?

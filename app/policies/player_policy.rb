@@ -5,7 +5,7 @@ class PlayerPolicy < ApplicationPolicy
   end
 
   def update?
-    user.sysadmin? || user.agent?  || user.member?|| user.director? || user.id == record.id
+    user.sysadmin? || user.agent?  || user.member?|| user.director? || user.id == record.user_id
   end
 
   def create?
@@ -14,11 +14,11 @@ class PlayerPolicy < ApplicationPolicy
 
 
   def show?
-    user.sysadmin? || user.agent? || user.director? || user.member? || user.id == record.id
+    user.sysadmin? || user.agent? || user.director? || user.member? || user.id == record.user_id
   end
 
   def destroy?
-    user.sysadmin? || user.agent? || user.director? || user.member? || user.id == record.id
+    user.sysadmin? || user.agent? || user.director? || user.member? || user.id == record.user_id
   end
 
   def activate?
@@ -39,7 +39,14 @@ class PlayerPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      scope.joins(:event).merge(Event.where :creator_user_id => user.id)
+      if user.sysadmin? || user.agent?
+        scope.all
+      elsif user.is_director
+        scope.joins(:event).merge(Event.only_directors(user.id))
+      else
+        scope.joins(event: [:players]).merge(Player.where :user_id => user.id)
+      end
+
     end
   end
 end

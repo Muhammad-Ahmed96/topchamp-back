@@ -11,9 +11,11 @@ class Sport < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier of Sport"
     end
     property :name do
       key :type, :string
+      key :description, "String of name"
     end
 
   end

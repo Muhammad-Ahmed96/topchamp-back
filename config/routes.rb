@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'event_schedulers/create'
+  get 'event_registration_rules/create'
   get 'players/Index'
   mount_devise_token_auth_for 'User', at: 'api', controllers: {sessions: 'application_sessions',
                                                                passwords: 'application_password',
@@ -49,6 +51,10 @@ Rails.application.routes.draw do
       collection do
         get :coming_soon
         get :upcoming
+        scope :downloads do
+          get :download_discounts_template, :path => :discounts_template
+        end
+
       end
       member do
         put :create_venue
@@ -62,16 +68,28 @@ Rails.application.routes.draw do
         put :tax
         put :refund_policy
         put :service_fee
-        put :registration_rule
         put :details
         put :agendas
         get :categories
         get :available_categories
+        get :get_registration_fee, :path => :registration_fee
       end
       resources :event_enrolls,only: [:create, :index], :path => :enrolls do
         collection do
           post :user_cancel
           post :change_attendees
+        end
+      end
+      resources :event_registration_rules, only: [:create], :path => "" do
+        collection do
+          put :create, :path => :registration_rule
+        end
+      end
+
+      resources :event_schedulers, only: [:create, :index, :show], :path => :schedules
+      resources :event_discounts, only: [], :path => :discounts do
+        collection do
+          get :validate
         end
       end
     end
@@ -88,6 +106,7 @@ Rails.application.routes.draw do
       collection do
         get :download_template
         get :template_sing_up
+        get :index_partner,  :path => "partner"
         post :event
         post :date
         post :sing_up
@@ -110,6 +129,9 @@ Rails.application.routes.draw do
       collection do
         post :partner_mixed
         post :partner_double
+        post :signature
+        get :get_schedules, :path => :schedules
+        get :validate_partner
       end
       member do
         put :activate
@@ -120,6 +142,17 @@ Rails.application.routes.draw do
     end
     resources :business_categories, only: [:index]
     resources :partners, only: [:index]
+
+    namespace :payments do
+      resources :profile, only: [:create, :destroy, :show]
+      resources :credit_cards, only: [:index, :create, :destroy]
+      resources :check_out, only: [] do
+        collection do
+          post :event
+          post :subscribe
+        end
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

@@ -6,19 +6,25 @@ class EventDiscountPersonalized < ApplicationRecord
     property :id do
       key :type, :integer
       key :format, :int64
+      key :description, "Unique identifier associated with discount personalized"
     end
     property :event_id do
       key :type, :integer
       key :format, :int64
+      key :description, "Event id associated with discount personalized"
     end
     property :discount do
-      key :type, :float
+      key :type, :number
+      key :format, :float
+      key :description, "Discount associated with discount personalized"
     end
     property :email do
       key :type, :string
+      key :description, "Email associated with discount personalized"
     end
     property :code do
       key :type, :string
+      key :description, "Code associated with discount personalized"
     end
   end
 
@@ -28,7 +34,8 @@ class EventDiscountPersonalized < ApplicationRecord
       key :format, :int64
     end
     property :discount do
-      key :type, :float
+      key :type, :number
+      key :format, :float
     end
     property :email do
       key :type, :string

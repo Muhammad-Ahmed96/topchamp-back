@@ -37,16 +37,23 @@ class SportsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :description, ''
+        key :description, 'Sport Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
               key :'$ref', :Sport
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', PaginateModel
           end
         end
       end
+
+
       response 401 do
         key :description, 'not authorized'
         schema do

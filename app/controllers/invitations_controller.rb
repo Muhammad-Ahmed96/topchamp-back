@@ -1,8 +1,8 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :resend_mail, :enroll, :refuse]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll]
+  before_action :set_resource, only: [:update, :destroy, :resend_mail]
+  around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll, :partner]
   swagger_path '/invitations' do
     operation :get do
       key :summary, 'Get invitations list'
@@ -32,13 +32,18 @@ class InvitationsController < ApplicationController
         key :type, :integer
       end
       response 200 do
-        key :description, ''
+        key :description, 'Invitation Respone'
         schema do
-          key :'$ref', :PaginateModel
+          key :type, :object
           property :data do
+            key :type, :array
             items do
-              key :'$ref', :Sport
+              key :'$ref', :Invitation
             end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
           end
         end
       end
@@ -90,6 +95,134 @@ class InvitationsController < ApplicationController
     invitations = InvitationPolicy::Scope.new(current_user, Invitation).resolve.my_order(column, direction).event_like(event)
                       .email_like(email).first_name_like(first_name).last_name_like(last_name).event_order(eventColumn, direction).user_order(userColumn, direction)
                       .in_status(status).phone_like(phone).phone_order(phoneColumn, direction)
+    if paginate.to_s == "0"
+      json_response_serializer_collection(invitations.all, InvitationSerializer)
+    else
+      paginate invitations, per_page: 50, root: :data
+    end
+  end
+
+
+  swagger_path '/invitations/partners' do
+    operation :get do
+      key :summary, 'Get invitations partner list'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsIndexPartner'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      parameter do
+        key :name, :column
+        key :in, :query
+        key :description, 'Column to order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :direction
+        key :in, :query
+        key :description, 'Direction to order, (ASC or DESC)'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
+      parameter do
+        key :name, :type
+        key :in, :query
+        key :description, "partner_mixed or partner_double"
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, 'Invitation Respone'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :Invitation
+            end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', :PaginateModel
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def index_partner
+    valid_types = ["partner_mixed", "partner_double"]
+    column = params[:column].nil? ? 'email' : params[:column]
+    direction = params[:direction].nil? ? 'asc' : params[:direction]
+    email = params[:email]
+    status = params[:status]
+    phone = params[:phone]
+    event = params[:event]
+    first_name = params[:first_name]
+    last_name = params[:last_name]
+    type = params[:type].nil? ? valid_types : [params[:type]]
+    event_id = index_partners_params
+
+    invitatin_type = []
+
+    unless type.included_in? valid_types
+      return response_no_type
+    end
+    eventColumn = nil
+    userColumn = nil
+    phoneColumn = nil
+    if column.to_s == "event"
+      eventColumn = "title"
+      column = nil
+    end
+
+    if column.to_s == "first_name"
+      userColumn = column
+      column = nil
+    end
+
+    if column.to_s == "last_name"
+      userColumn = column
+      column = nil
+    end
+
+    if column.to_s == "phone"
+      phoneColumn = "cell_phone"
+      column = nil
+    end
+
+    #check if category is paid
+    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
+    categories_ids = player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id)
+    if categories_ids.included_in? Category.doubles_categories
+      invitatin_type << "partner_double"
+    end
+
+    if categories_ids.included_in? Category.mixed_categories
+      invitatin_type << "partner_mixed"
+    end
+    #end check if category is paid
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
+    invitations = Invitation.my_order(column, direction).event_like(event)
+                      .email_like(email).first_name_like(first_name).last_name_like(last_name).event_order(eventColumn, direction).user_order(userColumn, direction)
+                      .in_status(status).phone_like(phone).phone_order(phoneColumn, direction).in_type(type).where(:user_id => @resource.id).where(:event_id => event_id)
+                      .where(:status => "pending_invitation").where(:invitation_type => invitatin_type)
     if paginate.to_s == "0"
       json_response_serializer_collection(invitations.all, InvitationSerializer)
     else
@@ -227,7 +360,33 @@ class InvitationsController < ApplicationController
     end
   end
 
+  swagger_path '/invitations/:id' do
+    operation :get do
+      key :summary, 'Invitations show details'
+      key :description, 'Invitations'
+      key :operationId, 'invitationsShow'
+      key :produces, ['application/json',]
+      key :tags, ['invitations']
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :Invitation
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
   def show
+    @invitation = Invitation.find(params[:id])
     authorize Invitation
     json_response_serializer(@invitation, InvitationSerializer)
   end
@@ -317,6 +476,7 @@ class InvitationsController < ApplicationController
   end
 
   def enroll
+    @invitation = Invitation.find(params[:id])
     if @invitation.status != "role"
       event = @invitation.event
       if event.present?
@@ -324,7 +484,7 @@ class InvitationsController < ApplicationController
         if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
           @invitation.status = :role
           @invitation.save!
-          return   json_response_success(t("edited_success", model: Invitation.model_name.human), true)
+          return json_response_success(t("edited_success", model: Invitation.model_name.human), true)
           #return json_response_error([t("attendee_types_required")], 401)
         end
         type_id = AttendeeType.player_id
@@ -397,6 +557,7 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def template_sing_up
     send_file("#{Rails.root}/app/assets/template/invitations_template_sign_up.xlsx",
               filename: "invitations_template_sign_up.xlsx",
@@ -437,11 +598,14 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def refuse
+    @invitation = Invitation.find(params[:id])
     @invitation.status = "refuse"
     @invitation.save!(:validate => false)
     json_response_success(t("refuse_success", model: Invitation.model_name.human), true)
   end
+
   swagger_path '/invitations/partner' do
     operation :post do
       key :summary, 'Invitations partner'
@@ -491,10 +655,11 @@ class InvitationsController < ApplicationController
       end
     end
   end
+
   def partner
-    to_user = User.find( partner_params[:partner_id])
-    event = Event.find( partner_params[:event_id])
-    type = ["partner_mixed","partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
+    to_user = User.find(partner_params[:partner_id])
+    event = Event.find(partner_params[:event_id])
+    type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
     unless event.present?
       return response_no_event
     end
@@ -508,6 +673,21 @@ class InvitationsController < ApplicationController
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
       @invitation.send_mail(true)
+      #set brackets
+      category_ids = []
+      if type == "partner_mixed"
+        category_ids = Category.mixed_categories
+      elsif type == "partner_double"
+        category_ids = Category.doubles_categories
+      end
+      player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
+      brackets =  player.brackets.where(:category_id => category_ids).all
+      brackets.each do |item|
+        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id ).first
+        if saved.nil?
+          @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id})
+        end
+      end
     else
       return json_response_error([t("no_player")], 422)
     end
@@ -586,5 +766,9 @@ class InvitationsController < ApplicationController
 
   def response_no_type
     json_response_error([t("not_type")], 422)
+  end
+
+  def index_partners_params
+    params.required(:event_id)
   end
 end
