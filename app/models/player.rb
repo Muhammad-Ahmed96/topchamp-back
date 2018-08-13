@@ -9,6 +9,7 @@ class Player < ApplicationRecord
   has_many :brackets_enroll, -> {enroll}, class_name: "PlayerBracket"
   has_many :brackets_wait_list, -> {wait_list}, class_name: "PlayerBracket"
   has_and_belongs_to_many :schedules, :class_name => "EventSchedule"
+  has_and_belongs_to_many :teams
 
   has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 
@@ -48,7 +49,6 @@ class Player < ApplicationRecord
   def sync_brackets!(data)
     brackets_ids = []
     schedules_ids = self.schedule_ids
-    logger::info(schedules_ids)
     any_one = false
     event = self.event
     if data.present? and data.kind_of?(Array)
@@ -155,10 +155,16 @@ class Player < ApplicationRecord
   end
 
   #validate partner complete information
-  def validate_partner(partner_id, bracket_id)
+  def validate_partner(partner_id, bracket_id, category_id)
     total = 4
     current = 0
-    invitation = Invitation.where(:user_id => partner_id, :sender_id => self.user_id, :status => :enroll)
+    category_type = ""
+    if  [category_id.to_i].included_in? Category.doubles_categories
+      category_type = "partner_double"
+    elsif [category_id.to_i].included_in? Category.mixed_categories
+      category_type = "partner_mixed"
+    end
+    invitation = Invitation.where(:user_id => partner_id, :sender_id => self.user_id, :status => :role).where(:invitation_type => category_type)
                      .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket_id)).first
     partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
     if partner_player.present?
@@ -171,7 +177,7 @@ class Player < ApplicationRecord
         current = current + 1
       end
       #Brackets fee paid
-      partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id).first
+      partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id, :category_id => category_id).first
       if partner_bracket.present? and partner_bracket.payment_transaction_id.present?
         current = current + 1
       end
@@ -180,7 +186,11 @@ class Player < ApplicationRecord
     if invitation.present?
       current = current + 1
     end
-    return current == total
+    if current == total
+      return invitation
+    else
+      nil
+    end
   end
 
   private

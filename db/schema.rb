@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_09_155551) do
+ActiveRecord::Schema.define(version: 2018_08_13_190332) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -481,6 +481,13 @@ ActiveRecord::Schema.define(version: 2018_08_09_155551) do
     t.index ["deleted_at"], name: "index_players_on_deleted_at"
   end
 
+  create_table "players_teams", id: false, force: :cascade do |t|
+    t.bigint "team_id", null: false
+    t.bigint "player_id", null: false
+    t.index ["player_id"], name: "index_players_teams_on_player_id"
+    t.index ["team_id"], name: "index_players_teams_on_team_id"
+  end
+
   create_table "regions", force: :cascade do |t|
     t.string "name"
     t.string "base"
@@ -572,6 +579,17 @@ ActiveRecord::Schema.define(version: 2018_08_09_155551) do
     t.bigint "venue_id", null: false
     t.index ["sport_id"], name: "index_sports_venues_on_sport_id"
     t.index ["venue_id"], name: "index_sports_venues_on_venue_id"
+  end
+
+  create_table "teams", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_id"
+    t.bigint "creator_user_id"
+    t.string "name"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "category_id"
   end
 
   create_table "users", force: :cascade do |t|

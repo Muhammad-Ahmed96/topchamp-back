@@ -704,21 +704,28 @@ class PlayersController < ApplicationController
       key :tags, ['players']
       parameter do
         key :name, :event_id
-        key :in, :body
+        key :in, :query
         key :required, true
         key :type, :integer
         key :format, :int64
       end
       parameter do
         key :name, :partner_id
-        key :in, :body
+        key :in, :query
         key :required, true
         key :type, :integer
         key :format, :int64
       end
       parameter do
         key :name, :bracket_id
-        key :in, :body
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
         key :required, true
         key :type, :integer
         key :format, :int64
@@ -742,8 +749,8 @@ class PlayersController < ApplicationController
   end
   def validate_partner
     player = Player.where(user_id: @resource.id).where(event_id: validate_partner_params[:event_id]).first_or_create!
-    result = player.validate_partner(validate_partner_params[:partner_id], validate_partner_params[:bracket_id])
-    if result != true
+    result = player.validate_partner(validate_partner_params[:partner_id], validate_partner_params[:bracket_id], validate_partner_params[:category_id])
+    if result.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
     json_response_success(t("player.partner.validation.valid"), response)
@@ -794,6 +801,7 @@ class PlayersController < ApplicationController
     params.required(:event_id)
     params.required(:partner_id)
     params.required(:bracket_id)
-    params.permit(:partner_id, :event_id, :bracket_id)
+    params.required(:category_id)
+    params.permit(:partner_id, :event_id, :bracket_id, category_id)
   end
 end

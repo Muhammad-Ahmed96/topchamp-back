@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
+  attr_accessor :is_my_partner
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable, :validatable
   devise :database_authenticatable, :registerable,
@@ -85,7 +86,7 @@ class User < ApplicationRecord
   end
 
   def is_director
-    count  = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
+    count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
     if count > 0
       return true
     else
@@ -360,11 +361,33 @@ class User < ApplicationRecord
 
   def age
     if self.birth_date.present?
-      (Time.now.to_s(:number).to_i - self.birth_date.to_time.to_s(:number).to_i)/10e9.to_i
+      (Time.now.to_s(:number).to_i - self.birth_date.to_time.to_s(:number).to_i) / 10e9.to_i
     else
       0
     end
 
+  end
+
+  def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id)
+    player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
+    result = player.validate_partner(partner_id, event_bracket_id, category_id)
+    if result.nil?
+      return nil
+    end
+    partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first_or_create!
+    team = Team.where(event_id: player.event_id).where(event_bracket_id: event_bracket_id)
+               .where(:creator_user_id => user_root_id, :category_id => category_id).first_or_create!
+    team.player_ids = [player.id, partner_player.id]
+  end
+
+
+  def is_my_partner
+    #get my partners ids
+    my_players_ids = Current.user.players.pluck(:id)
+    teams_ids = Team.joins(:players).merge(Player.where(:id => my_players_ids)).pluck(:id)
+    players_ids = Player.where.not(:id => my_players_ids).joins(:teams).merge(Team.where(:id => teams_ids)).pluck(:id)
+    partners_ids = User.joins(:players).merge(Player.where(:id => players_ids)).pluck(:id)
+    return [self.id].included_in? partners_ids
   end
 
   private
