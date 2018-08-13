@@ -30,6 +30,13 @@ class PlayerPartnerController < ApplicationController
         key :type, :integer
         key :format, :int64
       end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
       response 200 do
         key :description, ''
         schema do
@@ -48,15 +55,11 @@ class PlayerPartnerController < ApplicationController
     end
   end
   def add_partner
-    player = Player.where(user_id: @resource.id).where(event_id: add_partner_params[:event_id]).first_or_create!
-    valid  = player.validate_partner(add_partner_params[:partner_id], add_partner_params[:bracket_id])
-    if !valid
+    result = User.create_partner(@resource.id, add_partner_params[:event_id], add_partner_params[:partner_id],  add_partner_params[:bracket_id],
+                                 add_partner_params[:category_id])
+    if result.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
-    partner_player = Player.where(user_id: add_partner_params[:partner_id]).where(event_id: add_partner_params[:event_id]).first_or_create!
-    team = Team.where(event_id: player.event_id).where(event_bracket_id: add_partner_params[:bracket_id])
-               .where(:creator_user_id => @resource.id).first_or_create!
-    team.player_ids = [player.id, partner_player.id]
     json_response_success(t("created_success", model: Team.model_name.human), true )
   end
 
@@ -200,10 +203,6 @@ class PlayerPartnerController < ApplicationController
     end
   end
   def get_my_partners
-    #get my partners ids
-    my_players_ids = @resource.players.pluck(:id)
-    teams_ids = Team.joins(:players).merge(Player.where(:id => my_players_ids)).pluck(:id)
-    players_ids = Player.where.not(:id => my_players_ids).joins(:teams).merge(Team.where(:id => teams_ids)).pluck(:id)
     #filter of my partners
     search = params[:search].strip unless params[:search].nil?
     column = params[:column].nil? ? 'first_name' : params[:column]
@@ -231,14 +230,15 @@ class PlayerPartnerController < ApplicationController
       column = nil
     end
 
-    users =  User.joins(:players).merge(Player.where(:id => players_ids)).my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
+    users =  User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
                  .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
                  .email_like(email).last_sign_in_at_like(last_sign_in_at).state_like(state).city_like(city)
                  .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction)
+
     if paginate.to_s == "0"
-      json_response_serializer_collection(users.all, UserSerializer)
+      json_response_serializer_collection(users.all, UserWithIsMayPartnerSerializer)
     else
-      paginate users, per_page: 50, root: :data
+      paginate users, per_page: 50, root: :data,  each_serializer: UserWithIsMayPartnerSerializer
     end
   end
 
@@ -249,6 +249,7 @@ class PlayerPartnerController < ApplicationController
     params.required(:event_id)
     params.required(:partner_id)
     params.required(:bracket_id)
-    params.permit(:partner_id, :event_id, :bracket_id)
+    params.required(:category_id)
+    params.permit(:partner_id, :event_id, :bracket_id, :category_id)
   end
 end

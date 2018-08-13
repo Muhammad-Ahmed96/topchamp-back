@@ -482,10 +482,7 @@ class InvitationsController < ApplicationController
       if event.present?
         types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
         if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
-          @invitation.status = :role
-          @invitation.save!
-          return json_response_success(t("edited_success", model: Invitation.model_name.human), true)
-          #return json_response_error([t("attendee_types_required")], 401)
+          types = []
         end
         type_id = AttendeeType.player_id
         is_player = types.detect {|w| w == type_id}
@@ -501,6 +498,23 @@ class InvitationsController < ApplicationController
         end
         @invitation.status = :role
         @invitation.save!
+        category_id = nil
+        if @invitation.invitation_type == "partner_mixed"
+          category_id = Category.single_mixed_category
+        elsif @invitation.invitation_type == "partner_double"
+          user = User.find(@invitation.user_id)
+          if user.present?
+            if user.gender == "Male"
+              category_id = Category.single_men_double_category
+            elsif user.gender == "Female"
+              category_id = Category.single_women_double_category
+            end
+          end
+        end
+        #ckeck partner brackets
+        @invitation.brackets.each do |item|
+          result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
+        end
       end
     end
     json_response_success(t("edited_success", model: Invitation.model_name.human), true)
@@ -681,9 +695,9 @@ class InvitationsController < ApplicationController
         category_ids = Category.doubles_categories
       end
       player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
-      brackets =  player.brackets.where(:category_id => category_ids).all
+      brackets = player.brackets.where(:category_id => category_ids).all
       brackets.each do |item|
-        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id ).first
+        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id).first
         if saved.nil?
           @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id})
         end
