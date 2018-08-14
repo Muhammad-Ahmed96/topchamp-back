@@ -39,13 +39,13 @@ class TournamentsController < ApplicationController
         key :format, :int64
       end
       response 200 do
-        key :description, 'User Respone'
+        key :description, 'Player Respone'
         schema do
           key :type, :object
           property :data do
             key :type, :array
             items do
-              key :'$ref', :User
+              key :'$ref', :Player
             end
             key :description, "Information container"
           end
