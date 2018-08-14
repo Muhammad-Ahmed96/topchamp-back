@@ -17,6 +17,27 @@ class TournamentsController < ApplicationController
         key :required, false
         key :type, :integer
       end
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :bracket_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
       response 200 do
         key :description, 'User Respone'
         schema do
