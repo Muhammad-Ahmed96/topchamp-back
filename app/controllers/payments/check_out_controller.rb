@@ -256,22 +256,6 @@ class Payments::CheckOutController < ApplicationController
         end
       end
     end
-
-    #ckeck partner brackets
-    brackets.each do |item|
-      category_type = ""
-      if  [item[:category_id].to_i].included_in? Category.doubles_categories
-        category_type = "partner_double"
-      elsif [item[:category_id].to_i].included_in? Category.mixed_categories
-        category_type = "partner_mixed"
-      end
-      invitation = Invitation.where(:event_id => event.id).where(:user_id => @resource.id).where(:status => :role).where(:invitation_type => category_type)
-                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
-      if invitation.present?
-        result = User.create_partner(invitation.sender_id, event.id, invitation.user_id,  item[:event_bracket_id], item[:category_id])
-      end
-
-    end
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 

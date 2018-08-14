@@ -67,6 +67,7 @@ class ApidocsController < ApplicationController
       EventRegistrationRulesController,
       EventSchedulersController,
       EventDiscountsController,
+      TournamentsController,
       ParticipantsController,
       PlayersController,
       PlayerPartnerController,

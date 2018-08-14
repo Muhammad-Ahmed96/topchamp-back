@@ -68,22 +68,19 @@ class Player < ApplicationRecord
           brackets_ids << saved_bracket.id
           #save schedule on player
           shedules = event.schedules.where(:category_id => bracket[:category_id]).where(:agenda_type_id => AgendaType.competition_id).pluck(:id)
-          logger::info("JODERDERDER")
-          logger::info(shedules)
           schedules_ids = schedules_ids + shedules
           if any_one == false and shedules.length > 0
             any_one = true
           end
         end
       end
-      logger::info("JODERDERDER")
-      logger::info(schedules_ids)
       if any_one
         self.schedule_ids = schedules_ids
       end
     end
     #delete other brackets
     self.brackets.where.not(:id => brackets_ids).destroy_all
+    User.create_teams(self.brackets, self.user_id, event.id)
   end
 
   swagger_schema :Player do
@@ -159,7 +156,7 @@ class Player < ApplicationRecord
     total = 4
     current = 0
     category_type = ""
-    if  [category_id.to_i].included_in? Category.doubles_categories
+    if [category_id.to_i].included_in? Category.doubles_categories
       category_type = "partner_double"
     elsif [category_id.to_i].included_in? Category.mixed_categories
       category_type = "partner_mixed"
