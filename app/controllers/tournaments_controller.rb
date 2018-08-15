@@ -1,7 +1,7 @@
 class TournamentsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_event, only: [:players_list, :create, :teams_list]
+  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list]
 
   swagger_path '/events/:event_id/tournaments/players' do
     operation :get do
@@ -221,6 +221,13 @@ class TournamentsController < ApplicationController
     end
 
     json_response_serializer(tournament, TournamentSerializer)
+  end
+
+
+  def rounds_list
+    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
+                     .where(:category_id => players_list_params[:category_id]).first_or_create!
+    json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
   end
   private
   def set_event

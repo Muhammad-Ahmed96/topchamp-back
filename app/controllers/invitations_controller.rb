@@ -680,12 +680,12 @@ class InvitationsController < ApplicationController
     unless type.present?
       return response_no_type
     end
-    if params[:url].nil?
-      params[:url] = "localhost/test"
-    end
+    my_url = Rails.configuration.front_url
     if to_user.present?
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
+      @invitation.url = Invitation.short_url((my_url.gsub '{id}', @invitation.id.to_s))
+      @invitation.save!
       @invitation.send_mail(true)
       #set brackets
       category_ids = []
@@ -722,10 +722,14 @@ class InvitationsController < ApplicationController
   end
 
   def save_array(type)
+    my_url = Rails.configuration.front_url
     if is_array_save?
       @invitations = []
       array_params[:invitations].each {|invitation|
-        @invitations << Invitation.get_invitation(invitation, @resource.id, type)
+        invitation_save = Invitation.get_invitation(invitation, @resource.id, type)
+        invitation_save.url = Invitation.short_url((my_url.gsub '{id}', invitation_save.id.to_s))
+        invitation_save.save!
+        @invitations << invitation_save
       }
       @invitations.each {|invitation|
         event = invitation.event
