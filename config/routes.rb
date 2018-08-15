@@ -92,6 +92,14 @@ Rails.application.routes.draw do
           get :validate
         end
       end
+
+      resources :tournaments, only: [:create]do
+        collection do
+          get :players_list, :path => :players
+          get :teams_list, :path => :teams
+          get :rounds_list, :path => :rounds
+        end
+      end
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]

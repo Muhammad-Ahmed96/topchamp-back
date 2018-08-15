@@ -1,3 +1,6 @@
+require 'google/apis/firebasedynamiclinks_v1'
+require "erb"
+include ERB::Util
 class Invitation < ApplicationRecord
   include Swagger::Blocks
   before_create :generate_token
@@ -9,7 +12,7 @@ class Invitation < ApplicationRecord
   #belongs_to :attendee_type, optional: true
   belongs_to :sender, foreign_key: "sender_id", class_name: "User", optional: true
   #validates :attendee_type_id, :presence => true
-  validates :url, :presence => true
+  #validates :url, :presence => true
   validates :email, :presence => true, email: true
   accepts_nested_attributes_for :attendee_types
 
@@ -146,6 +149,24 @@ class Invitation < ApplicationRecord
     property :url do
       key :type, :string
     end
+  end
+
+  def self.short_url(url)
+    link = ""
+    begin
+    webmaster = Google::Apis::FirebasedynamiclinksV1::FirebaseDynamicLinksService.new # Alias the module
+    request = Google::Apis::FirebasedynamiclinksV1::CreateShortDynamicLinkRequest.new # Alias the module
+    webmaster.key = "AIzaSyCDRA6uidVRErwHJqFkiV8vh4wwmKj6WyY"
+    logger::info("dadaddada")
+    logger::info url_encode(url)
+    request.long_dynamic_link = "https://topchamp.page.link/?link=" + url_encode(url)
+    response =  webmaster.create_short_link_short_dynamic_link(request)
+    link =  response.short_link
+    rescue Google::Apis::ClientError => e
+      logger::info("dadaddada")
+      logger::info(e.to_json)
+    end
+    link
   end
   protected
   def generate_token

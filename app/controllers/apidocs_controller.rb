@@ -67,6 +67,7 @@ class ApidocsController < ApplicationController
       EventRegistrationRulesController,
       EventSchedulersController,
       EventDiscountsController,
+      TournamentsController,
       ParticipantsController,
       PlayersController,
       PlayerPartnerController,
@@ -120,6 +121,10 @@ class ApidocsController < ApplicationController
       EventType,
       AttendeeType,
       EventSchedule,
+      Team,
+      Match,
+      Round,
+      Tournament,
       self,
   ].freeze
 

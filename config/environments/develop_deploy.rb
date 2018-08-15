@@ -93,4 +93,5 @@ Rails.application.configure do
       user_name:            'testomator@amplemind.com',
       password:             'Password01',
       authentication:       :login  }
+  config.front_url = "http://topchampdev.tk:444/mail/events/wizard/detail/{id}/basics/?type=event&id={id}"
 end

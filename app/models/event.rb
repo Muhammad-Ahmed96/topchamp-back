@@ -28,6 +28,8 @@ class Event < ApplicationRecord
   #has_one :rule, class_name: 'EventRule'
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
+  has_many :tournaments
+  has_many :teams
 
 
   has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable

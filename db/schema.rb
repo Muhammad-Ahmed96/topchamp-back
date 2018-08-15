@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_13_190332) do
+ActiveRecord::Schema.define(version: 2018_08_14_163546) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -417,6 +417,17 @@ ActiveRecord::Schema.define(version: 2018_08_13_190332) do
     t.index ["deleted_at"], name: "index_languages_on_deleted_at"
   end
 
+  create_table "matches", force: :cascade do |t|
+    t.bigint "round_id"
+    t.bigint "team_a_id"
+    t.bigint "team_b_id"
+    t.bigint "team_winner_id"
+    t.integer "index", default: 0
+    t.string "status", default: "stand_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "medical_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "insurance_provider"
@@ -496,6 +507,14 @@ ActiveRecord::Schema.define(version: 2018_08_13_190332) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_regions_on_deleted_at"
+  end
+
+  create_table "rounds", force: :cascade do |t|
+    t.bigint "tournament_id"
+    t.integer "index"
+    t.string "status", default: "stand_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "scoring_options", force: :cascade do |t|
@@ -590,6 +609,15 @@ ActiveRecord::Schema.define(version: 2018_08_13_190332) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "category_id"
+  end
+
+  create_table "tournaments", force: :cascade do |t|
+    t.integer "event_id"
+    t.integer "event_bracket_id"
+    t.integer "category_id"
+    t.string "status", default: "stand_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|
