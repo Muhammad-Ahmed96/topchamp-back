@@ -91,5 +91,9 @@ Rails.application.configure do
       user_name:            'testomator@amplemind.com',
       password:             'Password01',
       authentication:       :login  }
-  config.front_url = "http://topchamp.tk:444/mail/events/wizard/detail/{id}/basics/?type=event&id={id}"
+  config.front_url = "http://topchamp.tk:444"
+  config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}"
+  config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
+  config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}"
+  config.front_partner_url = config.front_url + "?type=need_partner&id={id}"
 end

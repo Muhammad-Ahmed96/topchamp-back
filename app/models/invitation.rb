@@ -38,7 +38,7 @@ class Invitation < ApplicationRecord
       email = row[0]
       attendee_type_id = row[1]
       data = {event_id: event_id, attendee_type_id: attendee_type_id, email: email}
-      senderId =  Current.user.present? ? Current.user.id : nil
+      senderId = Current.user.present? ? Current.user.id : nil
       invitaions << get_invitation(data, senderId, type)
       invitaions.each {|invitation| invitation.send_mail}
     end
@@ -154,21 +154,32 @@ class Invitation < ApplicationRecord
   def self.short_url(url)
     link = ""
     begin
-    webmaster = Google::Apis::FirebasedynamiclinksV1::FirebaseDynamicLinksService.new # Alias the module
-    request = Google::Apis::FirebasedynamiclinksV1::CreateShortDynamicLinkRequest.new # Alias the module
-    webmaster.key = "AIzaSyCDRA6uidVRErwHJqFkiV8vh4wwmKj6WyY"
-    logger::info("dadaddada")
-    logger::info url_encode(url)
-    request.long_dynamic_link = "https://topchamp.page.link/?link=" + url_encode(url)
-    response =  webmaster.create_short_link_short_dynamic_link(request)
-    link =  response.short_link
+      webmaster = Google::Apis::FirebasedynamiclinksV1::FirebaseDynamicLinksService.new # Alias the module
+      request = Google::Apis::FirebasedynamiclinksV1::CreateShortDynamicLinkRequest.new # Alias the module
+      info = Google::Apis::FirebasedynamiclinksV1::DynamicLinkInfo.new # Alias the module
+      info_android = Google::Apis::FirebasedynamiclinksV1::AndroidInfo.new # Alias the module
+      info_ios = Google::Apis::FirebasedynamiclinksV1::IosInfo.new # Alias the module
+      info_android.android_package_name = "com.topchamp"
+      info_ios.ios_bundle_id = "org.reactjs.native.example.topchamp"
+      info.dynamic_link_domain = "topchamp.page.link"
+      info.link = url
+      #info_android. = url
+      info.android_info = info_android
+      info.ios_info = info_ios
+      webmaster.key = "AIzaSyCDRA6uidVRErwHJqFkiV8vh4wwmKj6WyY"
+      #request.long_dynamic_link = short_link
+      request.dynamic_link_info = info
+      response = webmaster.create_short_link_short_dynamic_link(request)
+      link = response.short_link
     rescue Google::Apis::ClientError => e
       logger::info("dadaddada")
       logger::info(e.to_json)
     end
     link
   end
+
   protected
+
   def generate_token
     random_token = ""
     loop do

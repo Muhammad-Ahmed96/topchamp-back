@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_14_163546) do
+ActiveRecord::Schema.define(version: 2018_08_16_172342) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -472,6 +472,8 @@ ActiveRecord::Schema.define(version: 2018_08_14_163546) do
     t.datetime "updated_at", null: false
     t.bigint "event_bracket_id"
     t.string "payment_transaction_id"
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_player_brackets_on_deleted_at"
   end
 
   create_table "players", force: :cascade do |t|

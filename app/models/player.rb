@@ -5,11 +5,11 @@ class Player < ApplicationRecord
   belongs_to :user
   belongs_to :event
   belongs_to :attendee_type, :optional => true
-  has_many :brackets, class_name: "PlayerBracket"
+  has_many :brackets, class_name: "PlayerBracket", dependent: :destroy
   has_many :brackets_enroll, -> {enroll}, class_name: "PlayerBracket"
   has_many :brackets_wait_list, -> {wait_list}, class_name: "PlayerBracket"
   has_and_belongs_to_many :schedules, :class_name => "EventSchedule"
-  has_and_belongs_to_many :teams
+  has_and_belongs_to_many :teams, dependent: :delete_all
 
   has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 
@@ -188,6 +188,28 @@ class Player < ApplicationRecord
     else
       nil
     end
+  end
+  
+  
+  def unsubscribe
+    teams_ids = self.team_ids
+    teams_to_destroy = []
+    self.brackets.destroy_all
+    self.teams.destroy_all
+    teams_ids.each do |team_id|
+      count = Team.where(:id => team_id).first.players.count
+      if count == 0
+        teams_to_destroy << team_id
+      end
+    end
+    if teams_to_destroy.length > 0
+      Team.where(:id => teams_to_destroy).destroy_all
+    end
+  end
+
+  def incativete
+    self.status = "Incative"
+    self.save!(:validate => false)
   end
 
   private
