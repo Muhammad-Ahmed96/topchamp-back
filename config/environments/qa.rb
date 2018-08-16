@@ -94,6 +94,6 @@ Rails.application.configure do
   config.front_url = "http://topchamptest.tk:444"
   config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
   config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
-  config.front_date_url = config.front_url + "/mail/events/wizard/detail/{event_id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"
+  config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"
   config.front_partner_url = config.front_url + "?type=need_partner&id={id}"
 end
