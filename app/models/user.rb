@@ -377,17 +377,16 @@ class User < ApplicationRecord
       elsif [item[:category_id].to_i].included_in? Category.mixed_categories
         category_type = "partner_mixed"
       end
-      if category_type != ""
-        invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :role).where(:invitation_type => category_type)
-                         .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
-        if invitation.present?
-          result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id])
-        end
+      invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :role).where(:invitation_type => category_type)
+                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
+      if invitation.present?
+        result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id])
+
       else
-        if [item[:category_id].to_i].included_in? Category.single_categories
+        #if [item[:category_id].to_i].included_in? Category.single_categories
           player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
           self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
-        end
+        #end
       end
 
     end
@@ -406,7 +405,7 @@ class User < ApplicationRecord
 
   def self.create_team(user_root_id, event_id, event_bracket_id, category_id, players_ids)
     team = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-               .where(:creator_user_id => user_root_id, :category_id => category_id).first_or_create!
+               .where(:creator_user_id => user_root_id).where(:category_id => category_id).first_or_create!
     team.player_ids = players_ids
   end
 

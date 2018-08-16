@@ -680,7 +680,7 @@ class InvitationsController < ApplicationController
     unless type.present?
       return response_no_type
     end
-    my_url = Rails.configuration.front_url
+    my_url = Rails.configuration.front_partner_url
     if to_user.present?
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
@@ -712,6 +712,16 @@ class InvitationsController < ApplicationController
 
   def save(type)
     @invitation = Invitation.get_invitation(resource_params, @resource.id, type)
+    case @invitation.invitation_type
+    when "event"
+      my_url = (Rails.configuration.front_event_url.gsub '{id}', @invitation.event_id.to_s)
+    when "date"
+      my_url = (Rails.configuration.front_date_url.gsub '{id}', @invitation.event_id.to_s)
+    when "sing_up"
+      my_url = Rails.configuration.front_sing_up_url
+    end
+    @invitation.url = Invitation.short_url(my_url)
+    @invitation.save!(:validate => false)
     event = @invitation.event
     if event.registration_rule.allow_group_registrations or (event.present? and event.creator_user_id == @resource.id)
       @invitation.send_mail
@@ -722,12 +732,20 @@ class InvitationsController < ApplicationController
   end
 
   def save_array(type)
-    my_url = Rails.configuration.front_url
+    my_url = ""
     if is_array_save?
       @invitations = []
       array_params[:invitations].each {|invitation|
         invitation_save = Invitation.get_invitation(invitation, @resource.id, type)
-        invitation_save.url = Invitation.short_url((my_url.gsub '{id}', invitation_save.id.to_s))
+        case invitation_save.invitation_type
+        when "event"
+          my_url = (Rails.configuration.front_event_url.gsub '{id}', invitation_save.event_id.to_s)
+        when "date"
+          my_url = (Rails.configuration.front_date_url.gsub '{id}', invitation_save.event_id.to_s)
+        when "sing_up"
+          my_url = Rails.configuration.front_sing_up_url
+        end
+        invitation_save.url = Invitation.short_url(my_url)
         invitation_save.save!
         @invitations << invitation_save
       }
