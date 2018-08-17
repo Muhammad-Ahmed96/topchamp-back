@@ -1,5 +1,6 @@
 class Team < ApplicationRecord
   include Swagger::Blocks
+  acts_as_paranoid
   has_and_belongs_to_many :players
   belongs_to :event
   belongs_to :bracket, class_name: "EventBracket", foreign_key: "event_bracket_id"
