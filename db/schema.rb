@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_16_172342) do
+ActiveRecord::Schema.define(version: 2018_08_16_220427) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -611,6 +611,8 @@ ActiveRecord::Schema.define(version: 2018_08_16_172342) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "category_id"
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_teams_on_deleted_at"
   end
 
   create_table "tournaments", force: :cascade do |t|

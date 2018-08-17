@@ -92,7 +92,7 @@
                         <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                           <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                             Hello
-                            <strong style="color: #142954;">{{NAME}}</strong>
+                            <strong style="color: #142954;"><%= @player.user.first_name%>&ensp;<%= @player.user.last_name%></strong>
                           </div>
                         </td>
                       </tr>
@@ -149,7 +149,7 @@
                         <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                           <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                             Congratulations! A spot has opened up in your prefered bracket for
-                            <strong style="color: #142954;">{{NAME OF EVENT]}}</strong>.
+                            <strong style="color: #142954;"><%= @event.title %></strong>.
                             Please register within 8 hours or this open spot will transfer to the next person on the wait-list.
                           </div>
                         </td>

@@ -77,6 +77,7 @@ Rails.application.routes.draw do
       resources :event_enrolls,only: [:create, :index], :path => :enrolls do
         collection do
           post :user_cancel
+          post :unsubscribe
           post :change_attendees
         end
       end

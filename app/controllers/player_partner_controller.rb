@@ -203,6 +203,10 @@ class PlayerPartnerController < ApplicationController
     end
   end
   def get_my_partners
+    #get my partners ids
+    my_players_ids = @resource.players.pluck(:id)
+    teams_ids = Team.joins(:players).merge(Player.where(:id => my_players_ids)).pluck(:id)
+    players_ids = Player.where.not(:id => my_players_ids).joins(:teams).merge(Team.where(:id => teams_ids)).pluck(:id)
     #filter of my partners
     search = params[:search].strip unless params[:search].nil?
     column = params[:column].nil? ? 'first_name' : params[:column]
@@ -230,15 +234,15 @@ class PlayerPartnerController < ApplicationController
       column = nil
     end
 
-    users =  User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
+    #partners_ids =  User.joins(:players).merge(Player.where(:id => players_ids)).pluck(:id)
+    users =  User.joins(:players).merge(Player.where(:id => players_ids)).my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
                  .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
                  .email_like(email).last_sign_in_at_like(last_sign_in_at).state_like(state).city_like(city)
                  .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction)
-
     if paginate.to_s == "0"
-      json_response_serializer_collection(users.all, UserWithIsMayPartnerSerializer)
+      json_response_serializer_collection(users.all, UserSingleSerializer)
     else
-      paginate users, per_page: 50, root: :data,  each_serializer: UserWithIsMayPartnerSerializer
+      paginate users, per_page: 50, root: :data,  each_serializer: UserSingleSerializer
     end
   end
 

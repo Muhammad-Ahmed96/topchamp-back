@@ -92,7 +92,7 @@
                         <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                           <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                             Hello
-                            <strong style="color: #142954;">{{Director}}</strong>
+                            <strong style="color: #142954;"><%= @director.first_name %>&ensp;<%= @director.last_name %></strong>
                           </div>
                         </td>
                       </tr>
@@ -149,10 +149,10 @@
                         <td align="left" style="font-size:0px;padding:0;word-break:break-word;">
                           <div style="font-family:Montserrat, 'Helvetica Neue', Helvetica, Roboto, sans-serif;font-size:18px;font-weight:300;line-height:1.55;text-align:left;color:#4A4A4A;">
                             This registrant,
-                            <strong style="color: #142954;">{{NAME}}</strong>
+                            <strong style="color: #142954;"><%= @registrant.first_name %>&ensp;<%= @registrant.last_name %></strong>
                             has cancelled registration for
-                            <strong style="color: #142954;">{{CATEGORY}}</strong>
-                            <strong style="color: #142954;">{{BRACKET}}</strong>.
+                            <strong style="color: #142954;"><%= @category.name%></strong>
+                            <strong style="color: #142954;"><%= @bracket_description %></strong>.
                             Please contact them if they are due a refund.
                           </div>
                         </td>
