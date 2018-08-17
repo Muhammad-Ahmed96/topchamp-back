@@ -1,0 +1,2 @@
+class EventBracketFree < ApplicationRecord
+end

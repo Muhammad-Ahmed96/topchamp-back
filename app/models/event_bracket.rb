@@ -4,6 +4,7 @@ class EventBracket < ApplicationRecord
   after_destroy :on_destroy
 
   belongs_to :event
+  has_one :free, :class_name => "EventBracketFree"
   attr_accessor :status
   attr_accessor :user_age
   attr_accessor :user_skill
@@ -27,8 +28,29 @@ class EventBracket < ApplicationRecord
   scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
 
   def available_for_enroll(category_id)
+    result = false
+    count = self.get_enroll_count category_id
+    free = EventBracketFree.where(:event_bracket_id => self.id).where(:category_id => category_id).first
+    hours = nil
+    if free.present?
+      hours = TimeDifference.between(Time.current, free.free_at).in_hours
+    end
+    if self.quantity.present? and (self.quantity > count and (hours.nil? or hours > Rails.configuration.hours_bracket))
+      result = true
+    end
+    return result
+  end
+
+  def get_enroll_count(category_id)
     count  = PlayerBracket.where(:event_bracket_id => self.id).where(:category_id => category_id).where(:enroll_status => :enroll).count
-    self.quantity.nil? or self.quantity > count
+  end
+
+  def get_free_count(category_id)
+    count = self.get_enroll_count category_id
+    if self.quantity.present?
+      return self.quantity - count
+    end
+    return nil
   end
 
   def get_status(category_id)

@@ -46,7 +46,7 @@ class Player < ApplicationRecord
     end
   end
 
-  def sync_brackets!(data )
+  def sync_brackets!(data)
     brackets_ids = []
     schedules_ids = self.schedule_ids
     any_one = false
@@ -80,6 +80,9 @@ class Player < ApplicationRecord
     end
     #delete other brackets
     self.brackets.where.not(:id => brackets_ids).destroy_all
+    if self.status == "Incative" and self.brackets.count > 0
+      self.activate
+    end
   end
 
 
@@ -196,18 +199,8 @@ class Player < ApplicationRecord
 
 
   def unsubscribe_event
-    teams_ids = self.team_ids
-    teams_to_destroy = []
-    self.brackets.destroy_all
-    self.teams.destroy_all
-    teams_ids.each do |team_id|
-      count = Team.where(:id => team_id).first.players.count
-      if count == 0
-        teams_to_destroy << team_id
-      end
-    end
-    if teams_to_destroy.length > 0
-      Team.where(:id => teams_to_destroy).destroy_all
+    self.brackets.each do |bracket|
+      self.unsubscribe(bracket.category_id, bracket.event_bracket_id)
     end
   end
 
@@ -238,15 +231,30 @@ class Player < ApplicationRecord
     registrant = self.user
     UnsubscribeMailer.unsubscribe(bracket, category, director, registrant, event).deliver
 
-   players =  self.event.players.joins(:brackets_wait_list).merge(PlayerBracket.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)).all
-    players.each do |player|
-      UnsubscribeMailer.spot_open(player, event).deliver
+    free_spaces = bracket.get_free_count(category_id)
+    if free_spaces.present? and free_spaces == 1
+      url =  Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
+      url =  url.gsub "{event_bracket_id}", bracket.id.to_s
+      url =  url.gsub "{category_id}", category.id.to_s
+      url = Invitation.short_url url
+      players = self.event.players.joins(:brackets_wait_list).merge(PlayerBracket.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)).all
+      players.each do |player|
+        UnsubscribeMailer.spot_open(player, event, url).deliver
+      end
+      EventBracketFree.where(:event_bracket_id => bracket.id).where(:category_id => category.id)
+          .update_or_create!({:event_bracket_id => bracket.id, :category_id => category.id, :free_at => DateTime.now,
+                             :url => url})
     end
 
   end
 
   def incativete
     self.status = "Incative"
+    self.save!(:validate => false)
+  end
+
+  def activate
+    self.status = "Active"
     self.save!(:validate => false)
   end
 

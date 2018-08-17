@@ -1604,9 +1604,11 @@ class EventsController < ApplicationController
 
   def available_categories
     @event =  Event.find(params[:id])
+    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    in_categories_id = player.brackets.pluck(:category_id)
     response_data = []
     gender = @resource.gender
-    event_categories = @event.categories
+    event_categories = @event.categories.where.not(:category_id => in_categories_id)
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
     elsif @event.only_for_women and gender == "Male"
@@ -1619,8 +1621,6 @@ class EventsController < ApplicationController
       event_categories = event_categories.only_women
     end
     #validate bracket
-    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
-
     age = player.present? ? player.user.age : nil
     #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
     skill = player.present? ? player.skill_level: nil

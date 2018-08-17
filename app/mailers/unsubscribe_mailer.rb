@@ -43,9 +43,10 @@ class UnsubscribeMailer < ApplicationMailer
   end
 
 
-  def spot_open(player, event)
+  def spot_open(player, event, url)
     @event = event
     @player = player
+    @url = url
     attachments.inline['top-logo.png'] = File.read('app/assets/images/top-logo.png')
     mail(to: player.user.email, subject: "Registry cancellation")
   end

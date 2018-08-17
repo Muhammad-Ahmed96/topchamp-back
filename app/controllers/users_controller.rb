@@ -699,7 +699,7 @@ class UsersController < ApplicationController
   def current_enrolls
     ids = []
     if @resource.players.present?
-      @resource.players.each {|enroll|
+      @resource.players.where(:status => :Active).each {|enroll|
         ids << enroll.event.id
       }
     end
