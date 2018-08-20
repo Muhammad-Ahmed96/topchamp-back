@@ -74,10 +74,6 @@ class EventPolicy < ApplicationPolicy
     user.sysadmin? || user.agent? || user.director? || user.member? || user.customer?
   end
 
-  def agendas?
-    user.sysadmin? || user.agent? || user.director? || user.member?
-  end
-
   def coming_soon?
     user.sysadmin? || user.agent? || user.director? || user.member? || user.customer?
   end

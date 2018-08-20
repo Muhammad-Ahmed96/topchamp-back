@@ -98,8 +98,6 @@ class ApidocsController < ApplicationController
       Category,
       ScoringOption,
       EventRule,
-      EventBracketAge,
-      EventBracketSkill,
       SportRegulator,
       EliminationFormat,
       EventAgenda,

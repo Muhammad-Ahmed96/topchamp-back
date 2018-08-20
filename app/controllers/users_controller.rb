@@ -704,7 +704,7 @@ class UsersController < ApplicationController
       }
     end
     events = Event.where(:id => ids).all
-    json_response_serializer_collection(events, SingleEventSerializer)
+    json_response_serializer_collection(events, EventWithDirectorSerializer)
   end
   swagger_path '/users/:id/sing_up_information' do
     operation :put do
