@@ -115,7 +115,7 @@ class Player < ApplicationRecord
     property :brackets do
       key :type, :array
       items do
-        key :'$ref', :EventBracketAge
+        key :'$ref', :EventBracket
       end
       key :description, "Brackets associated with player"
     end

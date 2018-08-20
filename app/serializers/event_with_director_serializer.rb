@@ -1,4 +1,4 @@
-class SingleEventSerializer < ActiveModel::Serializer
+class EventWithDirectorSerializer < ActiveModel::Serializer
   attributes :id, :venue_id, :event_type_id, :title, :icon, :description, :start_date, :end_date, :visibility,
              :requires_access_code, :event_url, :is_event_sanctioned, :sanctions, :organization_name, :organization_url,
              :is_determine_later_venue, :access_code, :status, :creator_user_id, :valid_to_activate, :sport_regulator_id,
@@ -17,6 +17,7 @@ class SingleEventSerializer < ActiveModel::Serializer
   has_many :discount_personalizeds, serializer: EventDiscountPersonalizedSerializer
   has_one :tax, serializer: EventTaxSerializer
   has_one :registration_rule, serializer: EventRegistrationRuleSerializer
+  has_one :director, serializer: UserSingleSerializer
   #has_one :rule, serializer: EventRuleSerializer
   belongs_to :sport_regulator, serializer: SportRegulatorSerializer
   belongs_to :elimination_format, serializer: EliminationFormatSerializer
@@ -35,5 +36,4 @@ class SingleEventSerializer < ActiveModel::Serializer
       Bracket.collection[object.bracket_by.to_sym]
     end
   end
-
 end

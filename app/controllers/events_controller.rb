@@ -1916,16 +1916,6 @@ class EventsController < ApplicationController
     end
   end
 
-  def agenda_params
-    #validate presence and type
-    unless params[:agendas].nil? and !params[:agendas].kind_of?(Array)
-      params[:agendas].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :category_id, :start_date, :end_date, :start_time,
-                                                               :end_time)
-      end
-    end
-  end
-
 # search current resource of id
   def set_resource
     #apply policy scope

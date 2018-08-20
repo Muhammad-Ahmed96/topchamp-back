@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_17_214107) do
+ActiveRecord::Schema.define(version: 2018_08_20_183313) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -124,42 +124,11 @@ ActiveRecord::Schema.define(version: 2018_08_17_214107) do
     t.index ["deleted_at"], name: "index_elimination_formats_on_deleted_at"
   end
 
-  create_table "event_agendas", force: :cascade do |t|
-    t.bigint "event_id"
-    t.bigint "agenda_type_id"
-    t.date "start_date"
-    t.date "end_date"
-    t.string "start_time"
-    t.string "end_time"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "category_id"
-  end
-
-  create_table "event_bracket_ages", force: :cascade do |t|
-    t.bigint "event_id"
-    t.bigint "event_bracket_skill_id"
-    t.float "age"
-    t.integer "quantity", default: 0
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "event_bracket_frees", force: :cascade do |t|
     t.bigint "event_bracket_id"
     t.bigint "category_id"
     t.datetime "free_at"
     t.string "url"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "event_bracket_skills", force: :cascade do |t|
-    t.bigint "event_id"
-    t.bigint "event_bracket_age_id"
-    t.float "lowest_skill"
-    t.float "highest_skill"
-    t.integer "quantity", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -214,27 +183,6 @@ ActiveRecord::Schema.define(version: 2018_08_17_214107) do
     t.date "late_date_end"
     t.date "on_site_date_start"
     t.date "on_site_date_end"
-  end
-
-  create_table "event_enrolls", force: :cascade do |t|
-    t.bigint "user_id"
-    t.bigint "event_id"
-    t.bigint "category_id"
-    t.bigint "event_bracket_age_id"
-    t.bigint "event_bracket_skill_id"
-    t.string "status"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.datetime "deleted_at"
-    t.string "enroll_status"
-    t.index ["deleted_at"], name: "index_event_enrolls_on_deleted_at"
-  end
-
-  create_table "event_enrolls_players", id: false, force: :cascade do |t|
-    t.bigint "player_id", null: false
-    t.bigint "event_enroll_id", null: false
-    t.index ["event_enroll_id"], name: "index_event_enrolls_players_on_event_enroll_id"
-    t.index ["player_id"], name: "index_event_enrolls_players_on_player_id"
   end
 
   create_table "event_payment_informations", force: :cascade do |t|
