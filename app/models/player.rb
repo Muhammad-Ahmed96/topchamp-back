@@ -205,15 +205,17 @@ class Player < ApplicationRecord
   end
 
   def unsubscribe(category_id, event_bracket_id)
+    event = self.event
     brackets = self.brackets.where(:event_bracket_id => event_bracket_id).where(:category_id => category_id).where(:enroll_status => :enroll).all
     brackets.each do |bracket|
-      team = Team.joins(:players).merge(Player.where(:id => self.id)).where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).first
+      team = Team.joins(:players).merge(Player.where(:id => self.id)).where(:event_id => event.id)
+                 .where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).first
       if team.present?
         self.teams.destroy(team)
       end
       bracket.destroy
     end
-    teams_ids = self.teams.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).pluck(:id)
+    teams_ids = Team.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).where(:event_id => event.id).pluck(:id)
     teams_to_destroy = []
     teams_ids.each do |team_id|
       count = Team.where(:id => team_id).first.players.count
@@ -224,7 +226,6 @@ class Player < ApplicationRecord
     if teams_to_destroy.length > 0
       Team.where(:id => teams_to_destroy).destroy_all
     end
-    event = self.event
     bracket = EventBracket.where(:id => event_bracket_id).first
     category = Category.find(category_id)
     director = User.find(event.creator_user_id)
@@ -256,6 +257,11 @@ class Player < ApplicationRecord
   def activate
     self.status = "Active"
     self.save!(:validate => false)
+  end
+
+  def tournaments
+    self.event.tournaments.joins(rounds: [matches: [team_a: :players]]).merge(Player.where(:id => self.id))
+    .joins(rounds: [matches: [team_b: :players]]).merge(Player.where(:id => self.id))
   end
 
   private
