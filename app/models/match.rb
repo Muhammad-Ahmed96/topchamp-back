@@ -39,6 +39,16 @@ class Match < ApplicationRecord
       key :'$ref', :EventBracket
       key :description, "Team b associated with match"
     end
+    property :seed_team_a do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Seed team a associated with round"
+    end
+    property :seed_team_b do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Seed team b associated with round"
+    end
   end
 
   swagger_schema :MatchInput do
@@ -56,6 +66,16 @@ class Match < ApplicationRecord
       key :type, :integer
       key :format, :int64
       key :description, "Team b id associated with match"
+    end
+    property :seed_team_a do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Seed team a associated with round"
+    end
+    property :seed_team_b do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Seed team b associated with round"
     end
   end
 end
