@@ -100,7 +100,6 @@ class ApidocsController < ApplicationController
       EventRule,
       SportRegulator,
       EliminationFormat,
-      EventAgenda,
       Invitation,
       Participant,
       Player,
