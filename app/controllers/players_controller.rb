@@ -695,8 +695,9 @@ class PlayersController < ApplicationController
   end
   def rounds
     player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first_or_create!
-    tournament = player.tournaments.where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
-                                          .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
+
+    tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
+                     .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
     json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
   end
   swagger_path '/players/categories' do
