@@ -1,7 +1,7 @@
 class TournamentsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches]
+  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :index]
 
   swagger_path '/events/:event_id/tournaments/players' do
     operation :get do
@@ -221,6 +221,64 @@ class TournamentsController < ApplicationController
     end
 
     json_response_serializer(tournament, TournamentSerializer)
+  end
+
+  swagger_path '/events/:event_id/tournaments' do
+    operation :get do
+      key :summary, 'Get tournament '
+      key :description, 'Event Catalog'
+      key :operationId, 'tournamentsIndex'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :paginate
+        key :in, :query
+        key :description, 'paginate {any} = paginate, 0 = no paginate'
+        key :required, false
+        key :type, :integer
+      end
+      response 200 do
+        key :description, 'Tournament Respone'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :Tournament
+            end
+            key :description, "Information container"
+          end
+          property :meta do
+            key :'$ref', PaginateModel
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def index
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
+    tournaments = @event.tournaments
+    if paginate.to_s == "0"
+      json_response_serializer_collection(tournaments.all, TournamentSerializer)
+    else
+      paginate tournaments, per_page: 50, root: :data, each_serializer: TournamentSerializer
+    end
   end
 
   swagger_path '/events/:event_id/tournaments/rounds' do

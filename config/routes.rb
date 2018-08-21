@@ -94,7 +94,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :tournaments, only: [:create]do
+      resources :tournaments, only: [:create, :index]do
         collection do
           get :players_list, :path => :players
           get :teams_list, :path => :teams
