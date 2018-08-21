@@ -697,13 +697,7 @@ class UsersController < ApplicationController
   end
 
   def current_enrolls
-    ids = []
-    if @resource.players.present?
-      @resource.players.where(:status => :Active).each {|enroll|
-        ids << enroll.event.id
-      }
-    end
-    events = Event.where(:id => ids).all
+    events = Event.joins(:players).merge(Player.where(:user_id => @resource.id)).all
     json_response_serializer_collection(events, EventWithDirectorSerializer)
   end
   swagger_path '/users/:id/sing_up_information' do
