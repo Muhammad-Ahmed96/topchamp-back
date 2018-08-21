@@ -663,7 +663,7 @@ class PlayersController < ApplicationController
         key :format, :int64
       end
       parameter do
-        key :name, :bracket_id
+        key :name, :event_bracket_id
         key :in, :query
         key :required, true
         key :type, :integer
