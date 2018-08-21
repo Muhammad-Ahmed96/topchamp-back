@@ -699,6 +699,100 @@ class PlayersController < ApplicationController
                                           .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
     json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
   end
+  swagger_path '/players/categories' do
+    operation :get do
+      key :summary, 'Get categories list player tournaments'
+      key :description, 'Event Catalog'
+      key :operationId, 'playersCategoriesList'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Categories Respone'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :Category
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def categories
+    player = Player.where(user_id: @resource.id).where(event_id: categories_params[:event_id]).first_or_create!
+    in_categories_id = player.brackets_enroll.pluck(:category_id)
+    json_response_serializer_collection(Category.where(:id => in_categories_id ).all, CategorySerializer)
+  end
+
+  swagger_path '/players/brackets' do
+    operation :get do
+      key :summary, 'Get brackets list player tournaments'
+      key :description, 'Event Catalog'
+      key :operationId, 'playersBracketsList'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Brackets Response'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :PlayerBracket
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def brackets
+    player = Player.where(user_id: @resource.id).where(event_id: brackets_list_params[:event_id]).first_or_create!
+    brackets = player.brackets_enroll.where(:category_id => brackets_list_params[:category_id])
+    json_response_serializer_collection(brackets, PlayerBracketSingleSerializer)
+  end
 
   private
 
@@ -754,5 +848,18 @@ class PlayersController < ApplicationController
     params.required(:category_id)
     params.required(:event_bracket_id)
     params.permit(:event_id, :category_id, :event_bracket_id)
+  end
+
+  def categories_params
+    # whitelist params
+    params.required(:event_id)
+    params.permit(:event_id)
+  end
+
+  def brackets_list_params
+    # whitelist params
+    params.required(:event_id)
+    params.required(:category_id)
+    params.permit(:event_id, :category_id)
   end
 end
