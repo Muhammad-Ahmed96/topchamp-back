@@ -1,7 +1,7 @@
 class TournamentsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches]
+  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :details]
 
   swagger_path '/events/:event_id/tournaments/players' do
     operation :get do
@@ -388,7 +388,7 @@ class TournamentsController < ApplicationController
           property :data do
             key :type, :array
             items do
-              key :'$ref', :Raund
+              key :'$ref', :Round
             end
             key :description, "Information container"
           end
@@ -409,6 +409,65 @@ class TournamentsController < ApplicationController
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:category_id => players_list_params[:category_id]).first_or_create!
     json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
+  end
+
+
+  swagger_path '/events/:event_id/tournaments/details' do
+    operation :get do
+      key :summary, 'Get tournament details'
+      key :description, 'Event Catalog'
+      key :operationId, 'tournamentsDetails'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :bracket_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Tournament Respone'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :Round
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def details
+    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
+                     .where(:category_id => players_list_params[:category_id]).first_or_create!
+    json_response_serializer(tournament, TournamentWithTeamsSerializer)
   end
   private
   def set_event
