@@ -72,6 +72,14 @@ class Tournament < ApplicationRecord
     end
   end
 
+  def teams
+    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
+    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
+    teams_ids = matchs_a + matchs_b
+    Team.where(:id => teams_ids).where(:event_id => self.event_id).where(:category_id => self.category_id)
+                .where(:event_bracket_id => self.event_bracket_id)
+  end
+
   swagger_schema :Tournament do
     property :id do
       key :type, :integer

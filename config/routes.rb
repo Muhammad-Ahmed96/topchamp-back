@@ -100,6 +100,7 @@ Rails.application.routes.draw do
           get :players_list, :path => :players
           get :teams_list, :path => :teams
           get :rounds_list, :path => :rounds
+          get :details
         end
       end
     end
