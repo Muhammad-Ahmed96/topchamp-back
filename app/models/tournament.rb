@@ -6,6 +6,17 @@ class Tournament < ApplicationRecord
 
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
 
+  scope :matches_status_in, lambda {|progress| where matches_status: progress if progress.present?}
+  scope :teams_count_in, lambda {|count| where teams_count: progress if count.present?}
+  scope :event_in, lambda {|search| joins(:event).merge(Event.where id: search) if search.present?}
+  scope :category_in, lambda {|search| joins(:category).merge(Category.where id: search) if search.present?}
+  scope :bracket_in, lambda {|search| joins(:bracket).merge(EventBracket.where id: search) if search.present?}
+
+  scope :event_order, lambda {|column, direction = "desc"| includes(:event).order("events.#{column} #{direction}") if column.present?}
+  scope :category_order, lambda {|column, direction = "desc"| includes(:category).order("categories.#{column} #{direction}") if column.present?}
+  scope :bracket_order, lambda {|column, direction = "desc"| includes(:bracket).order("event_brackets.age #{direction}").order("event_brackets.lowest_skill #{direction}")
+                                                                 .order("event_brackets.highest_skill #{direction}").order("event_brackets.young_age #{direction}").order("event_brackets.old_age #{direction}") if column.present?}
+
   def sync_matches!(data)
     deleteIds = []
     if data.present?
@@ -32,6 +43,33 @@ class Tournament < ApplicationRecord
     else
       self.rounds.where.not(id: deleteIds).destroy_all
     end
+    self.set_team_count
+    self.set_matches_status
+  end
+
+  def total_teams
+    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
+    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
+    teams_ids = matchs_a + matchs_b
+    count = Team.where(:id => teams_ids).where(:event_id => self.event_id).where(:category_id => self.category_id)
+                .where(:event_bracket_id => self.event_bracket_id).count
+    return count
+  end
+
+  def set_team_count
+    self.update_attributes(:teams_count => self.total_teams)
+  end
+
+  def set_matches_status
+    event = Event.where(:id => self.event_id).first
+    if event.present?
+      count = event.teams.where(:event_bracket_id => self.event_bracket_id).where(:category_id => self.category_id).count
+      if count == self.total_teams
+        self.update_attributes(:matches_status => :complete)
+      else
+        self.update_attributes(:matches_status => :not_complete)
+      end
+    end
   end
 
   swagger_schema :Tournament do
@@ -55,12 +93,22 @@ class Tournament < ApplicationRecord
       key :format, :int64
       key :description, "Category id associated with tournament"
     end
+
+    property :teams_count do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Teams count associated with tournament"
+    end
     property :status do
       key :type, :string
-      key :description, "Statusassociated with tournament"
+      key :description, "Status associated with tournament"
+    end
+    property :matches_progress do
+      key :type, :string
+      key :description, "Matches progress associated with tournament"
     end
     property :event do
-        key :'$ref', :Event
+      key :'$ref', :Event
       key :description, "Event associated with tournament"
     end
 
