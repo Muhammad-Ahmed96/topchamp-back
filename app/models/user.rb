@@ -94,6 +94,10 @@ class User < ApplicationRecord
     end
   end
 
+  def my_events
+    Event.only_directors(self.id).pluck(:id)
+  end
+
   swagger_schema :UserLogin do
     key :required, [:id, :email, :provider, :uid, :first_name, :middle_initial,
                     :last_name, :gender, :role, :birth_date, :image, :badge_name]

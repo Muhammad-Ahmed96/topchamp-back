@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'tournament_matches_status/index'
   get 'event_schedulers/create'
   get 'event_registration_rules/create'
   get 'players/Index'
@@ -94,7 +95,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :tournaments, only: [:create, :index]do
+      resources :tournaments, only: [:create]do
         collection do
           get :players_list, :path => :players
           get :teams_list, :path => :teams
@@ -167,6 +168,9 @@ Rails.application.routes.draw do
         end
       end
     end
+
+    resources :tournaments, only: [:index]
+    resources :tournament_matches_status, only: [:index]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

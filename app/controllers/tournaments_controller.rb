@@ -1,7 +1,7 @@
 class TournamentsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :index]
+  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches]
 
   swagger_path '/events/:event_id/tournaments/players' do
     operation :get do
@@ -223,19 +223,61 @@ class TournamentsController < ApplicationController
     json_response_serializer(tournament, TournamentSerializer)
   end
 
-  swagger_path '/events/:event_id/tournaments' do
+  swagger_path '/tournaments' do
     operation :get do
-      key :summary, 'Get tournament '
+      key :summary, 'Get tournaments '
       key :description, 'Event Catalog'
       key :operationId, 'tournamentsIndex'
       key :produces, ['application/json',]
       key :tags, ['events']
       parameter do
+        key :name, :column
+        key :in, :query
+        key :description, 'Column to order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :direction
+        key :in, :query
+        key :description, 'Direction to order'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :event_id
-        key :in, :path
-        key :required, true
-        key :type, :integer
-        key :format, :int64
+        key :in, :query
+        key :description, 'Event filter'
+        key :required, false
+        key :type, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :description, 'Category filter'
+        key :required, false
+        key :type, :int64
+      end
+      parameter do
+        key :name, :bracket_id
+        key :in, :query
+        key :description, 'Bracket filter'
+        key :required, false
+        key :type, :int64
+      end
+      parameter do
+        key :name, :teams_count
+        key :in, :query
+        key :description, 'Teams count filter'
+        key :required, false
+        key :type, :int64
+      end
+      parameter do
+        key :name, :matches_status
+        key :in, :query
+        key :description, 'Assigned matches status filter'
+        key :required, false
+        key :type, :string
       end
       parameter do
         key :name, :paginate
@@ -272,8 +314,38 @@ class TournamentsController < ApplicationController
     end
   end
   def index
+    authorize Event
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
-    tournaments = @event.tournaments
+    column = params[:column].nil? ? 'title' : params[:column]
+    direction = params[:direction].nil? ? 'asc' : params[:direction]
+    event_id = params[:event_id]
+    matches_status = params[:matches_status]
+    category_id = params[:category_id]
+    bracket_id = params[:bracket_id]
+    teams_count = params[:teams_count]
+
+    order_event = nil
+    order_category = nil
+    order_bracket = nil
+    if column.to_s == "title"
+      order_event = column
+      column = nil
+    end
+
+    if column.to_s == "name"
+      order_category = column
+      column = nil
+    end
+
+    if column.to_s == "bracket"
+      order_bracket = column
+      column = nil
+    end
+
+
+    tournaments = TournamentPolicy::Scope.new(current_user, Tournament).resolve.my_order(column, direction).matches_status_in(matches_status).event_in(event_id).category_in(category_id)
+    .bracket_in(bracket_id).event_order(order_event, direction).category_order(order_category, direction).bracket_order(order_bracket, direction)
+    .teams_count_in(teams_count)
     if paginate.to_s == "0"
       json_response_serializer_collection(tournaments.all, TournamentSerializer)
     else
