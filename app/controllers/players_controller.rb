@@ -331,6 +331,9 @@ class PlayersController < ApplicationController
     authorize @player
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
+    @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
+        .update(:payment_transaction_id =>  "000")
+    @player.set_teams
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
