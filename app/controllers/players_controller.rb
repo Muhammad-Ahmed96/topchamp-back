@@ -329,10 +329,18 @@ class PlayersController < ApplicationController
 
   def update
     authorize @player
+    enrolls_old = @player.brackets_enroll
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
     @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
-        .update(:payment_transaction_id =>  "000")
+        .where(:category_id  => brackets.pluck(:category_id)).update(:payment_transaction_id =>  "000")
+    enrolls_old.each do |item|
+      enroll = @player.brackets.where(:enroll_status => :enroll).where(:event_bracket_id => item.event_bracket_id)
+                   .where(:category_id  => item.category_id).first
+      if enroll.nil?
+        @player.unsubscribe(item.category_id, item.event_bracket_id)
+      end
+    end
     @player.set_teams
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
