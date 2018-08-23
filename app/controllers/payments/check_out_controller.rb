@@ -248,7 +248,9 @@ class Payments::CheckOutController < ApplicationController
     player.sync_brackets! brackets
     player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => number_with_precision(tax.present? ? tax[:amount] : 0, precision: 2),
                                          :description => "Bracket subscribe payment"})
-    player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).update(:payment_transaction_id =>  response.transactionResponse.transId)
+    player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
+        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id  => brackets.pluck(:category_id))
+        .update(:payment_transaction_id =>  response.transactionResponse.transId)
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
   end

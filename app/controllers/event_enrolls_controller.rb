@@ -8,6 +8,7 @@ class EventEnrollsController < ApplicationController
     json_response_serializer_collection(@event.players, PlayerSerializer)
   end
 
+=begin
   swagger_path '/events/:id/enrolls' do
     operation :post do
       key :summary, 'Enroll to event'
@@ -36,6 +37,7 @@ class EventEnrollsController < ApplicationController
       end
     end
   end
+=end
 
   def create
     brackets = @event.available_brackets(player_brackets_params)
