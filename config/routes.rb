@@ -75,7 +75,8 @@ Rails.application.routes.draw do
         get :available_categories
         get :get_registration_fee, :path => :registration_fee
       end
-      resources :event_enrolls,only: [:create, :index], :path => :enrolls do
+      #Deleted  :create path
+      resources :event_enrolls,only: [:index], :path => :enrolls do
         collection do
           post :user_cancel
           post :unsubscribe

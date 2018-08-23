@@ -100,14 +100,14 @@ class EventEnrollsController < ApplicationController
       end
       parameter do
         key :name, :category_id
-        key :in, :query
+        key :in, :body
         key :required, true
         key :type, :integer
         key :format, :int64
       end
       parameter do
         key :name, :event_bracket_id
-        key :in, :query
+        key :in, :body
         key :required, true
         key :type, :integer
         key :format, :int64
