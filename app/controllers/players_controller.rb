@@ -329,7 +329,7 @@ class PlayersController < ApplicationController
 
   def update
     authorize @player
-    enrolls_old = @player.brackets_enroll
+    enrolls_old = @player.brackets_enroll.all
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
     @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
