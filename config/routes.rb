@@ -104,6 +104,7 @@ Rails.application.routes.draw do
           get :details
         end
       end
+      resources :scores, only: [:create, :index]
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]

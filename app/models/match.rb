@@ -3,6 +3,7 @@ class Match < ApplicationRecord
   belongs_to :round
   belongs_to :team_a, foreign_key: "team_a_id", :class_name => "Team", :optional => true
   belongs_to :team_b, foreign_key: "team_b_id", :class_name => "Team", :optional => true
+  has_many :sets, :class_name => "MatchSet"
 
   scope :order_by_index,-> { order(index: :asc) }
 
