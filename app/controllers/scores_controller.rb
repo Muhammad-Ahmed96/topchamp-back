@@ -78,7 +78,7 @@ class ScoresController < ApplicationController
     set = match.sets.where(:number => data[:number]).first_or_create!(data)
     data = {:score => score_save_params[:score], :time_out => score_save_params[:time_out],
             :team_id => score_save_params[:team_id]}
-    score = set.scores.where(:team_id => score_save_params[:tem_id]).update_or_create!(data)
+    score = set.scores.where(:team_id => score_save_params[:team_id]).update_or_create!(data)
 =begin
     round = match.round
     tournament = round.tournament
