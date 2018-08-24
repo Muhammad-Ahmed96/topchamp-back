@@ -75,6 +75,7 @@ class ApidocsController < ApplicationController
       PartnersController,
       Payments::CreditCardsController,
       Payments::CheckOutController,
+      ScoresController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
