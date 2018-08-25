@@ -437,6 +437,7 @@ class PlayersController < ApplicationController
   def inactive
     authorize Player
     @player.status = :Inactive
+    @player.unsubscribe_event
     @player.save!(:validate => false)
     json_response_success(t("inactivated_success", model: Player.model_name.human), true)
   end
