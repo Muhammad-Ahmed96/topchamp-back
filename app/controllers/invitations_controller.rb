@@ -493,7 +493,7 @@ class InvitationsController < ApplicationController
         end
         if types.length > 0
           participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
-          types |= participant.attendee_type_ids.to_a
+          types = types + participant.attendee_type_ids.to_a
           participant.attendee_type_ids = types
         end
         @invitation.status = :role
