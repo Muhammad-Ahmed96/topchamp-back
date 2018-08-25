@@ -714,7 +714,7 @@ class InvitationsController < ApplicationController
     @invitation = Invitation.get_invitation(resource_params, @resource.id, type)
     case @invitation.invitation_type
     when "event"
-      my_url = Rails.configuration.front_date_url.gsub '{id}', @invitation.event_id.to_s
+      my_url = Rails.configuration.front_event_url.gsub '{id}', @invitation.event_id.to_s
       my_url = my_url.gsub '{invitatio_id}', @invitation.id.to_s
     when "date"
       my_url = Rails.configuration.front_date_url.gsub '{id}', @invitation.event_id.to_s
@@ -741,7 +741,7 @@ class InvitationsController < ApplicationController
         invitation_save = Invitation.get_invitation(invitation, @resource.id, type)
         case invitation_save.invitation_type
         when "event"
-          my_url = Rails.configuration.front_date_url.gsub '{id}', invitation_save.event_id.to_s
+          my_url = Rails.configuration.front_event_url.gsub '{id}', invitation_save.event_id.to_s
           my_url = my_url.gsub '{invitatio_id}', invitation_save.id.to_s
         when "date"
           my_url = Rails.configuration.front_date_url.gsub '{id}', invitation_save.event_id.to_s
