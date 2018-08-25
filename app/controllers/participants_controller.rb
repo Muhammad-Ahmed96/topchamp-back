@@ -101,6 +101,7 @@ class ParticipantsController < ApplicationController
   end
 
   def index
+    authorize Participant
     column = params[:column].nil? ? 'event_title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
@@ -127,7 +128,7 @@ class ParticipantsController < ApplicationController
       user_column = column
       column = nil
     end
-    participants = Participant.my_order(column, direction).first_name_like(first_name).last_name_like(last_name).email_like(email)
+    participants =  ParticipantPolicy::Scope.new(current_user, Participant).resolve.my_order(column, direction).first_name_like(first_name).last_name_like(last_name).email_like(email)
                        .status_in(status).event_in(event_id).attendee_type_in(attendee_type_id).event_order(event_title_column, direction)
                        .attendee_type_order(attendee_type_column, direction)
                        .event_like(event_title).user_order(user_column, direction)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_22_155318) do
+ActiveRecord::Schema.define(version: 2018_08_24_164710) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -374,6 +374,16 @@ ActiveRecord::Schema.define(version: 2018_08_22_155318) do
     t.index ["deleted_at"], name: "index_languages_on_deleted_at"
   end
 
+  create_table "match_sets", force: :cascade do |t|
+    t.bigint "match_id"
+    t.integer "number"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_match_sets_on_deleted_at"
+  end
+
   create_table "matches", force: :cascade do |t|
     t.bigint "round_id"
     t.bigint "team_a_id"
@@ -476,6 +486,17 @@ ActiveRecord::Schema.define(version: 2018_08_22_155318) do
     t.string "status", default: "stand_by"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "scores", force: :cascade do |t|
+    t.bigint "match_set_id"
+    t.bigint "team_id"
+    t.float "score"
+    t.float "time_out"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_scores_on_deleted_at"
   end
 
   create_table "scoring_options", force: :cascade do |t|

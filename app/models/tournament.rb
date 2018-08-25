@@ -80,6 +80,14 @@ class Tournament < ApplicationRecord
                 .where(:event_bracket_id => self.event_bracket_id)
   end
 
+  def set_winner(match)
+    next_round = self.rounds.where("index > ?", match.round.index ).order(index: :asc).first
+    if next_round.present?
+      next_match = next_round.matches.where("index >= ?", match.index).order(index: :asc).first
+    end
+
+  end
+
   swagger_schema :Tournament do
     property :id do
       key :type, :integer
