@@ -372,6 +372,7 @@ class PlayersController < ApplicationController
 
   def destroy
     authorize @player
+    @player.unsubscribe_event
     @player.destroy
     json_response_success(t("deleted_success", model: Player.model_name.human), true)
   end
