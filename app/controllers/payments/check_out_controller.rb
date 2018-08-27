@@ -187,7 +187,7 @@ class Payments::CheckOutController < ApplicationController
     if personalized_discount.present?
       enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
-    elsif general_discount.present? and general_discount.limit < general_discount.applied
+    elsif general_discount.present? and general_discount.limited < general_discount.applied
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
       general_discount.applied = general_discount.applied + 1
