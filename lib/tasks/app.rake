@@ -78,6 +78,14 @@ namespace :app do
     end
   end
 
+  desc 'Set team count'
+  task tournament_teams_count: :environment do
+    Tournament.all.each do |tournament|
+      tournament.set_team_count
+      tournament.set_matches_status
+    end
+  end
+
 
 
 end

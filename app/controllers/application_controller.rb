@@ -4,9 +4,18 @@ class ApplicationController < ActionController::API
   include ExceptionHandler
   include Response
   delegate :t, to: I18n
+  before_action :set_mailer_host
   before_action :repair_nested_params
   before_action :configure_permitted_parameters, if: :devise_controller?
   around_action :set_current_user
+
+
+
+
+  def set_mailer_host
+    ActionMailer::Base.default_url_options[:host] = request.host_with_port
+    ActionMailer::Base.default_url_options[:protocol] = request.protocol
+  end
 
 
   def set_current_user

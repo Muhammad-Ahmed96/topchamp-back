@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_03_220147) do
+ActiveRecord::Schema.define(version: 2018_08_24_164710) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -124,33 +124,11 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.index ["deleted_at"], name: "index_elimination_formats_on_deleted_at"
   end
 
-  create_table "event_agendas", force: :cascade do |t|
-    t.bigint "event_id"
-    t.bigint "agenda_type_id"
-    t.date "start_date"
-    t.date "end_date"
-    t.string "start_time"
-    t.string "end_time"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+  create_table "event_bracket_frees", force: :cascade do |t|
+    t.bigint "event_bracket_id"
     t.bigint "category_id"
-  end
-
-  create_table "event_bracket_ages", force: :cascade do |t|
-    t.bigint "event_id"
-    t.bigint "event_bracket_skill_id"
-    t.float "age"
-    t.integer "quantity", default: 0
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "event_bracket_skills", force: :cascade do |t|
-    t.bigint "event_id"
-    t.bigint "event_bracket_age_id"
-    t.float "lowest_skill"
-    t.float "highest_skill"
-    t.integer "quantity", default: 0
+    t.datetime "free_at"
+    t.string "url"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -207,27 +185,6 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.date "on_site_date_end"
   end
 
-  create_table "event_enrolls", force: :cascade do |t|
-    t.bigint "user_id"
-    t.bigint "event_id"
-    t.bigint "category_id"
-    t.bigint "event_bracket_age_id"
-    t.bigint "event_bracket_skill_id"
-    t.string "status"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.datetime "deleted_at"
-    t.string "enroll_status"
-    t.index ["deleted_at"], name: "index_event_enrolls_on_deleted_at"
-  end
-
-  create_table "event_enrolls_players", id: false, force: :cascade do |t|
-    t.bigint "player_id", null: false
-    t.bigint "event_enroll_id", null: false
-    t.index ["event_enroll_id"], name: "index_event_enrolls_players_on_event_enroll_id"
-    t.index ["player_id"], name: "index_event_enrolls_players_on_player_id"
-  end
-
   create_table "event_payment_informations", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "bank_name"
@@ -269,6 +226,13 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.boolean "allow_waiver"
     t.text "waiver"
     t.boolean "allow_wait_list"
+    t.boolean "is_share", default: false
+    t.boolean "add_to_my_calendar", default: false
+    t.boolean "enable_map", default: false
+    t.boolean "share_my_cell_phone", default: false
+    t.boolean "share_my_email", default: false
+    t.date "player_cancel_start_date"
+    t.date "player_cancel_start_end"
   end
 
   create_table "event_rules", force: :cascade do |t|
@@ -279,6 +243,32 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.bigint "scoring_option_match_2_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "event_schedules", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "agenda_type_id"
+    t.bigint "venue_id"
+    t.string "title"
+    t.string "instructor"
+    t.text "description"
+    t.date "start_date"
+    t.date "end_date"
+    t.time "start_time"
+    t.time "end_time"
+    t.float "cost"
+    t.integer "capacity"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "category_id"
+    t.string "venue"
+  end
+
+  create_table "event_schedules_players", id: false, force: :cascade do |t|
+    t.bigint "player_id", null: false
+    t.bigint "event_schedule_id", null: false
+    t.index ["event_schedule_id"], name: "index_event_schedules_players_on_event_schedule_id"
+    t.index ["player_id"], name: "index_event_schedules_players_on_player_id"
   end
 
   create_table "event_taxes", force: :cascade do |t|
@@ -350,6 +340,14 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.index ["sport_id"], name: "index_events_sports_on_sport_id"
   end
 
+  create_table "invitation_brackets", force: :cascade do |t|
+    t.bigint "invitation_id"
+    t.bigint "event_bracket_id"
+    t.boolean "accepted", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "invitations", force: :cascade do |t|
     t.bigint "event_id"
     t.bigint "user_id"
@@ -374,6 +372,29 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_languages_on_deleted_at"
+  end
+
+  create_table "match_sets", force: :cascade do |t|
+    t.bigint "match_id"
+    t.integer "number"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_match_sets_on_deleted_at"
+  end
+
+  create_table "matches", force: :cascade do |t|
+    t.bigint "round_id"
+    t.bigint "team_a_id"
+    t.bigint "team_b_id"
+    t.bigint "team_winner_id"
+    t.integer "index", default: 0
+    t.string "status", default: "stand_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "seed_team_a"
+    t.integer "seed_team_b"
   end
 
   create_table "medical_informations", force: :cascade do |t|
@@ -420,6 +441,8 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.datetime "updated_at", null: false
     t.bigint "event_bracket_id"
     t.string "payment_transaction_id"
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_player_brackets_on_deleted_at"
   end
 
   create_table "players", force: :cascade do |t|
@@ -433,7 +456,18 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.bigint "partner_double_id"
     t.bigint "partner_mixed_id"
     t.bigint "attendee_type_id"
+    t.string "signature_file_name"
+    t.string "signature_content_type"
+    t.integer "signature_file_size"
+    t.datetime "signature_updated_at"
     t.index ["deleted_at"], name: "index_players_on_deleted_at"
+  end
+
+  create_table "players_teams", id: false, force: :cascade do |t|
+    t.bigint "team_id", null: false
+    t.bigint "player_id", null: false
+    t.index ["player_id"], name: "index_players_teams_on_player_id"
+    t.index ["team_id"], name: "index_players_teams_on_team_id"
   end
 
   create_table "regions", force: :cascade do |t|
@@ -444,6 +478,25 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_regions_on_deleted_at"
+  end
+
+  create_table "rounds", force: :cascade do |t|
+    t.bigint "tournament_id"
+    t.integer "index"
+    t.string "status", default: "stand_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "scores", force: :cascade do |t|
+    t.bigint "match_set_id"
+    t.bigint "team_id"
+    t.float "score"
+    t.float "time_out"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_scores_on_deleted_at"
   end
 
   create_table "scoring_options", force: :cascade do |t|
@@ -527,6 +580,30 @@ ActiveRecord::Schema.define(version: 2018_08_03_220147) do
     t.bigint "venue_id", null: false
     t.index ["sport_id"], name: "index_sports_venues_on_sport_id"
     t.index ["venue_id"], name: "index_sports_venues_on_venue_id"
+  end
+
+  create_table "teams", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_id"
+    t.bigint "creator_user_id"
+    t.string "name"
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "category_id"
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_teams_on_deleted_at"
+  end
+
+  create_table "tournaments", force: :cascade do |t|
+    t.integer "event_id"
+    t.integer "event_bracket_id"
+    t.integer "category_id"
+    t.string "status", default: "stand_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "matches_status", default: "not_complete"
+    t.integer "teams_count", default: 0
   end
 
   create_table "users", force: :cascade do |t|

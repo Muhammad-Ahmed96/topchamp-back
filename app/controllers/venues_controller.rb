@@ -1,7 +1,7 @@
 class VenuesController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
   before_action :authenticate_user!
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive]
   around_action :transactions_filter, only: [:update, :create]
 
   swagger_path '/venues' do

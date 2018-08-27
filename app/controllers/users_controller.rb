@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
   before_action :authenticate_user!, except: [:sing_up_information]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
   around_action :transactions_filter, only: [:update, :create]
 # Update password
   swagger_path '/users' do
@@ -697,14 +697,8 @@ class UsersController < ApplicationController
   end
 
   def current_enrolls
-    ids = []
-    if @resource.players.present?
-      @resource.players.each {|enroll|
-        ids << enroll.event.id
-      }
-    end
-    events = Event.where(:id => ids).all
-    json_response_serializer_collection(events, SingleEventSerializer)
+    events = Event.joins(:players).merge(Player.where(:user_id => @resource.id)).all
+    json_response_serializer_collection(events, EventWithDirectorSerializer)
   end
   swagger_path '/users/:id/sing_up_information' do
     operation :put do

@@ -152,7 +152,7 @@ en:
            registration_rule?: 'You cannot edit this event'
            details?: 'You cannot edit this event'
            coming_soon?: 'You cannot view events'
-           user_cancel?: 'You cannot cancer registration, please contact Tournament Director'
+           user_cancel?: 'You cannot cancel registration, please contact Tournament Director'
            change_attendees?: 'You cannot change registration'
      sport_regulator_policy:
             update?: 'You cannot edit this sport regulator'
@@ -224,5 +224,15 @@ en:
   refuse_success: "%{model} refuse success"
   not_brackets_to_enrroll: "No brackets to enroll"
   not_type: "Type required"
+  player:
+    partner:
+      validation:
+        invalid_inforamtion: "Invalid information partner"
+        valid: "Valid partner"
   payments:
     declined: "Your card was declined. In order to resolve the issue, you will need to contact your bank"
+  events:
+    discounts:
+      invalid: "Invalid discount code"
+      limit_reached: "Your discount code has reached its usage limit"
+      valid: "Valid"

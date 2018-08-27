@@ -112,7 +112,7 @@ class PartnersController < ApplicationController
       users_in = event.players.pluck(:user_id)
     else
       in_event = event.players.pluck(:user_id)
-      #not_in << in_event
+      not_in = not_in + in_event
     end
     users =  User.my_order(column, direction).search(search).where.not(id: not_in).where(:gender => gender)
     if users_in.present?

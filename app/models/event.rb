@@ -24,16 +24,19 @@ class Event < ApplicationRecord
   has_many :players
   has_many :participants
   has_one :registration_rule, class_name: 'EventRegistrationRule'
-  has_many :agendas, class_name: 'EventAgenda'
+  belongs_to :director, class_name: 'User', :foreign_key => "creator_user_id"
   #has_one :rule, class_name: 'EventRule'
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
+  has_many :tournaments
+  has_many :teams
 
 
   has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 
   has_many :brackets, -> {only_parent}, class_name: "EventBracket"
   has_many :internal_brackets, class_name: "EventBracket"
+  has_many :schedules, class_name: "EventSchedule"
 
 
   belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
@@ -123,28 +126,27 @@ class Event < ApplicationRecord
     self.discount_personalizeds.where.not(id: deleteIds).destroy_all
   end
 
-
-  def sync_agendas!(data)
+  def sync_schedules!(data)
     deleteIds = []
     if data.present?
-      event_agenda = nil
-      data.each {|agenda|
-        if agenda[:id].present?
-          event_agenda = self.agendas.where(id: agenda[:id]).first
-          if event_agenda.present?
-            event_agenda.update! agenda
+      schedule = nil
+      data.each {|item|
+        if item[:id].present?
+          schedule = self.schedules.where(id: item[:id]).first
+          if schedule.present?
+            schedule.update! item
           else
-            agenda[:id] = nil
-            event_agenda = self.agendas.create! agenda
+            item[:id] = nil
+            schedule = self.schedules.create! item
           end
         else
-          event_agenda = self.agendas.create! agenda
+          schedule = self.schedules.create! item
         end
-        deleteIds << event_agenda.id
+        deleteIds << schedule.id
       }
     end
     unless deleteIds.nil?
-      self.agendas.where.not(id: deleteIds).destroy_all
+      self.schedules.where.not(id: deleteIds).destroy_all
     end
   end
 
@@ -396,6 +398,14 @@ class Event < ApplicationRecord
       end
       key :description, "Regions associated with event"
     end
+
+    property :schedules do
+      key :type, :array
+      items do
+        key :'$ref', :EventSchedule
+      end
+      key :description, "Schedules associated with event"
+    end
     property :categories do
       key :type, :array
       items do
@@ -477,13 +487,6 @@ class Event < ApplicationRecord
         key :'$ref', :ScoringOption
       end
       key :description, "Scoring option match 2 associated with event"
-    end
-    property :agendas do
-      key :type, :array
-      items do
-        key :'$ref', :EventAgenda
-      end
-      key :description, "Agendas associated with event"
     end
   end
   swagger_schema :EventInput do
@@ -666,33 +669,44 @@ class Event < ApplicationRecord
   end
 
   def get_discount
-    discount = 0
+    discount = nil
     discounts = self.discount
     total_players = self.players.count
     if discounts.present?
       if discounts.early_bird_date_start.present? and discounts.early_bird_date_end.present?
         start_date = discounts.early_bird_date_start.to_date
         end_date = discounts.early_bird_date_end.to_date
-        if Date.today >= start_date and Date.today <= end_date and (discounts.early_bird_players < total_players or total_players == 0)
+        if Date.today >= start_date and Date.today <= end_date and (discounts.early_bird_players > total_players or total_players == 0)
           discount = discounts.early_bird_registration
         end
       end
       if discounts.late_date_start.present? and discounts.late_date_end.present?
         start_date = discounts.late_date_start.to_date
         end_date = discounts.late_date_end.to_date
-        if Date.today >= start_date and Date.today <= end_date and (discounts.late_players < total_players or total_players == 0)
+        if Date.today >= start_date and Date.today <= end_date and (discounts.late_players > total_players or total_players == 0)
           discount = discounts.late_registration
         end
       end
       if discounts.on_site_date_start.present? and discounts.on_site_date_end.present?
         start_date = discounts.on_site_date_start.to_date
         end_date = discounts.on_site_date_end.to_date
-        if Date.today >= start_date and Date.today <= end_date and (discounts.on_site_players < total_players or total_players == 0)
+        if Date.today >= start_date and Date.today <= end_date and (discounts.on_site_players > total_players or total_players == 0)
           discount = discounts.on_site_registration
         end
       end
     end
     discount
+  end
+
+
+  def registration_fee
+    discount = self.get_discount
+    if discount.present?
+      return discount
+    else
+      return self.payment_method.present? ? self.payment_method.enrollment_fee : 0
+    end
+    #return  enroll_fee - ((discount * enroll_fee) / 100)
   end
 
   private

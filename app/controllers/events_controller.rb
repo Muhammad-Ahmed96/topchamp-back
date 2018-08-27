@@ -1,11 +1,11 @@
 class EventsController < ApplicationController
   include Swagger::Blocks
+  before_action :authenticate_user!
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :registration_rule, :venue, :details, :agendas, :categories]
-  before_action :authenticate_user!
+                                      :service_fee, :venue, :details, :categories]
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
-                                             :details, :activate, :agendas]
+                                             :details, :activate]
 
 
   swagger_path '/events' do
@@ -1437,53 +1437,6 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
-  swagger_path '/events/:id/registration_rule' do
-    operation :put do
-      key :summary, 'Events registration rule'
-      key :description, 'Events Catalog'
-      key :operationId, 'eventsRegistrationRule'
-      key :produces, ['application/json',]
-      key :tags, ['events']
-      parameter do
-        key :name, :registration_rule
-        key :in, :body
-        key :description, 'Registration rule'
-        key :required, true
-        schema do
-          key :'$ref', :EventRegistrationRuleInput
-        end
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :Event
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-
-  def registration_rule
-    authorize Event
-    if registration_rule_params.present?
-      registration_rule = @event.registration_rule
-      if registration_rule.present?
-        registration_rule.update! registration_rule_params
-      else
-        @event.create_registration_rule! registration_rule_params
-      end
-    end
-    json_response_serializer(@event, EventSerializer)
-  end
-
   swagger_path '/events/:id/details' do
     operation :put do
       key :summary, 'Events details'
@@ -1586,46 +1539,6 @@ class EventsController < ApplicationController
     json_response_serializer(@event, EventSerializer)
   end
 
-  swagger_path '/events/:id/agendas' do
-    operation :put do
-      key :summary, 'Events agendas '
-      key :description, 'Events Catalog'
-      key :operationId, 'eventsAgendas'
-      key :produces, ['application/json',]
-      key :tags, ['events']
-      parameter do
-        key :name, :agendas
-        key :in, :body
-        key :description, 'Agendas'
-        key :type, :array
-        items do
-          key :'$ref', :EventAgendaInput
-        end
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :Event
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-
-  def agendas
-    authorize Event
-      @event.sync_agendas! agenda_params
-    json_response_serializer(@event, EventSerializer)
-  end
-
   swagger_path '/events/:id/categories' do
     operation :get do
       key :summary, 'Events categories List '
@@ -1691,9 +1604,11 @@ class EventsController < ApplicationController
 
   def available_categories
     @event =  Event.find(params[:id])
+    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+    in_categories_id = player.brackets.pluck(:category_id)
     response_data = []
     gender = @resource.gender
-    event_categories = @event.categories
+    event_categories = @event.categories.where.not(:category_id => in_categories_id)
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
     elsif @event.only_for_women and gender == "Male"
@@ -1706,8 +1621,6 @@ class EventsController < ApplicationController
       event_categories = event_categories.only_women
     end
     #validate bracket
-    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
-
     age = player.present? ? player.user.age : nil
     #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
     skill = player.present? ? player.skill_level: nil
@@ -1743,6 +1656,132 @@ class EventsController < ApplicationController
       end
     end
     json_response_serializer_collection(response_data, EventCategorySerializer)
+  end
+
+
+  swagger_path '/events/downloads/discounts_template.xlsx' do
+    operation :get do
+      key :summary, 'Discounts download template'
+      key :description, 'Invitations'
+      key :operationId, 'eventsDownloadDiscountsTemplate'
+      key :produces, ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',]
+      key :tags, ['events']
+      response 200 do
+        key :description, 'template'
+        key :type, :string
+        key :format, :binary
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def download_discounts_template
+    send_file("#{Rails.root}/app/assets/template/discounts-template.xlsx",
+              filename: "discounts-template.xlsx",
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  end
+
+  swagger_path '/events/:id/registration_fee' do
+    operation :get do
+      key :summary, 'Events registratiosn fee '
+      key :description, 'Get current registration fee'
+      key :operationId, 'eventsGetRegistrationFee'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :discount_code
+        key :in, :body
+        key :required, false
+        key :type, :string
+      end
+      parameter do
+        key :name, :brackets_count
+        key :in, :body
+        key :required, false
+        key :type, :integer
+      end
+      response 200 do
+        key :name, :registration_fee
+        key :description, 'Current fees'
+        schema do
+          key :type, :object
+          property :enroll_fee do
+            key :type, :number
+            key :format, :float
+            key :description, "Enroll fee"
+          end
+          property :bracket_fee do
+            key :type, :number
+            key :format, :float
+            key :description, "Bracket fee"
+          end
+          property :tax do
+            key :type, :number
+            key :format, :float
+            key :description, "tax"
+          end
+          property :total do
+            key :type, :number
+            key :format, :float
+            key :description, "Total without tax"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def get_registration_fee
+    @event = Event.find(params[:id])
+    #set tax of event
+    tax = @event.tax
+    brackets_count = subscribe_params[:brackets_count].present? ? subscribe_params[:brackets_count].to_i : 1
+    payment_method = @event.payment_method
+    enroll_fee = @event.registration_fee
+    bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
+    bracket_fee = bracket_fee *  brackets_count
+    tax_amount = 0
+    amount = enroll_fee + bracket_fee
+    if tax.present?
+      if tax.is_percent
+        tax_amount = (tax.tax * amount) / 100
+      else
+        tax_amount = tax.tax
+      end
+
+    end
+
+    #apply discounts
+    #event_discount = @event.get_discount
+    personalized_discount = subscribe_params[:discount_code].present? ? @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first : nil
+    general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first : nil
+
+    #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
+    #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
+
+    if personalized_discount.present?
+      enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
+      #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+    elsif general_discount.present? and general_discount.limit < general_discount.applied
+      enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
+      #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+    end
+    json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount, :total => amount})
   end
 
   private
@@ -1853,16 +1892,6 @@ class EventsController < ApplicationController
     end
   end
 
-  def registration_rule_params
-    # whitelist params
-    unless params[:registration_rule].nil?
-      params.require(:registration_rule).permit(:allow_group_registrations, :partner, :require_password,
-                                                :password, :require_director_approval, :allow_players_cancel, :use_link_home_page,
-                                                :link_homepage, :use_link_event_website, :link_event_website, :use_app_event_website, :link_app,
-                                                :allow_attendees_change, :allow_waiver, :waiver, :allow_wait_list)
-    end
-  end
-
   def categories_params
     params.permit(categories: [])
   end
@@ -1887,16 +1916,6 @@ class EventsController < ApplicationController
     end
   end
 
-  def agenda_params
-    #validate presence and type
-    unless params[:agendas].nil? and !params[:agendas].kind_of?(Array)
-      params[:agendas].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :agenda_type_id, :category_id, :start_date, :end_date, :start_time,
-                                                               :end_time)
-      end
-    end
-  end
-
 # search current resource of id
   def set_resource
     #apply policy scope
@@ -1905,5 +1924,9 @@ class EventsController < ApplicationController
 
   def response_message_error(message, code)
     json_response_error(message, 422, code)
+  end
+
+  def subscribe_params
+    params.permit(:discount_code, :brackets_count)
   end
 end

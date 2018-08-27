@@ -24,8 +24,7 @@ class SingleEventSerializer < ActiveModel::Serializer
   has_many :brackets, serializer: EventBracketSerializer
   belongs_to :scoring_option_match_1, serializer: ScoringOptionSerializer
   belongs_to :scoring_option_match_2, serializer: ScoringOptionSerializer
-
-  has_many :agendas,  serializer:EventAgendaSerializer
+  has_many :schedules, serializer: EventScheduleSerializer
 
   def valid_to_activate
     object.valid_to_activate?

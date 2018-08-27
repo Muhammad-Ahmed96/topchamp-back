@@ -1,13 +1,14 @@
 class EventEnrollsController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:create, :index, :user_cancel, :change_attendees]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:create, :user_cancel, :change_attendees]
+  before_action :set_resource, only: [:create, :index, :user_cancel, :change_attendees, :unsubscribe]
+  around_action :transactions_filter, only: [:create, :user_cancel, :change_attendees, :unsubscribe]
 
   def index
     json_response_serializer_collection(@event.players, PlayerSerializer)
   end
 
+=begin
   swagger_path '/events/:id/enrolls' do
     operation :post do
       key :summary, 'Enroll to event'
@@ -36,6 +37,7 @@ class EventEnrollsController < ApplicationController
       end
     end
   end
+=end
 
   def create
     brackets = @event.available_brackets(player_brackets_params)
@@ -76,8 +78,64 @@ class EventEnrollsController < ApplicationController
 
   def user_cancel
     authorize(@event)
-    @event.players.where(:user_id => @resource.id).destroy_all
+    @event.players.where(:user_id => @resource.id).each do |player|
+      player.incativete
+      player.unsubscribe_event
+    end
     @event.participants.where(:user_id => @resource.id).destroy_all
+    json_response_success(t("success"), true)
+  end
+
+  swagger_path '/events/:id/enrolls/unsubscribe' do
+    operation :post do
+      key :summary, 'Cancel unsubscribe to bracket'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventUnsubscribeEnroll'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :event_bracket_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def unsubscribe
+    @event.players.where(:user_id => @resource.id).each do |player|
+      #player.incativete
+      player.unsubscribe(unsubscribe_params[:category_id], unsubscribe_params[:event_bracket_id])
+    end
     json_response_success(t("success"), true)
   end
 
@@ -142,5 +200,11 @@ class EventEnrollsController < ApplicationController
 
   def response_no_enroll_error
     json_response_error([t("not_brackets_to_enrroll")], 422)
+  end
+
+  def unsubscribe_params
+    params.required(:category_id)
+    params.required(:event_bracket_id)
+    params.permit(:category_id, :event_bracket_id,)
   end
 end
