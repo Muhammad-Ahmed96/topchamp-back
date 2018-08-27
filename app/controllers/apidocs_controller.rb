@@ -26,6 +26,10 @@ class ApidocsController < ApplicationController
       key :name, 'users'
       key :description, 'Users operations'
     end
+    tag do
+      key :name, 'players'
+      key :description, 'Players operations'
+    end
   end
 
   # A list of all classes that have swagger_* declarations.
@@ -60,12 +64,18 @@ class ApidocsController < ApplicationController
       ScoringOptionsController,
       SkillLevelsController,
       EventEnrollsController,
+      EventRegistrationRulesController,
+      EventSchedulersController,
+      EventDiscountsController,
+      TournamentsController,
       ParticipantsController,
       PlayersController,
+      PlayerPartnerController,
       BusinessCategoriesController,
       PartnersController,
       Payments::CreditCardsController,
       Payments::CheckOutController,
+      ScoresController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -89,11 +99,8 @@ class ApidocsController < ApplicationController
       Category,
       ScoringOption,
       EventRule,
-      EventBracketAge,
-      EventBracketSkill,
       SportRegulator,
       EliminationFormat,
-      EventAgenda,
       Invitation,
       Participant,
       Player,
@@ -111,6 +118,11 @@ class ApidocsController < ApplicationController
       MedicalInformation,
       EventType,
       AttendeeType,
+      EventSchedule,
+      Team,
+      Match,
+      Round,
+      Tournament,
       self,
   ].freeze
 

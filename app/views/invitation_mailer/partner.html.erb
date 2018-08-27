@@ -154,8 +154,7 @@
                         Would you like to partner for this upcoming
                         <strong><%=@invitation.event.title unless  @invitation.event.nil? %></strong>
                         on
-                        <strong><% if @invitation.event.present?%><%= @invitation.event.start_date.strftime("%B %d, %Y") unless @invitation.event.start_date.nil?%>&ensp;<%= t("to") + " " + @invitation.event.end_date.strftime("%B %d, %Y") unless @invitation.event.end_date.nil?%><% end %></strong>
-                        ?
+                        <strong><% if @invitation.event.present?%><%= @invitation.event.start_date.strftime("%B %d, %Y") unless @invitation.event.start_date.nil?%>&ensp;<%= t("to") + " " + @invitation.event.end_date.strftime("%B %d, %Y") unless @invitation.event.end_date.nil?%><% end %></strong>?
                       </div>
                     </td>
                   </tr>
@@ -273,7 +272,7 @@
                             <a href="<%="#{@invitation.url}"%>"
                                style="background:#142954;color:#FFFFFF;font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:18px;font-weight:300;line-height:120%;Margin:0;text-decoration:none;text-transform:none;"
                                target="_blank">
-                               Enroll me!
+                               Visit Top Champ
                             </a>
                           </td>
                         </tr>

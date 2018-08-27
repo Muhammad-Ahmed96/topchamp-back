@@ -23,6 +23,18 @@ class Category < ApplicationRecord
     [1,3]
   end
 
+  def self.single_mixed_category
+    return 5
+  end
+
+  def self.single_men_double_category
+    return 2
+  end
+
+  def self.single_women_double_category
+    return 4
+  end
+
   swagger_schema :Category do
     property :id do
       key :type, :integer

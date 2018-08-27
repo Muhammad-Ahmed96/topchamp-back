@@ -4,6 +4,7 @@ class Payments::CheckOutController < ApplicationController
   include Swagger::Blocks
   include AuthorizeNet::API
   before_action :authenticate_user!
+  around_action :transactions_filter, only: [:subscribe]
   swagger_path '/payments/check_out/event' do
     operation :post do
       key :summary, 'Check out event'
@@ -164,29 +165,31 @@ class Payments::CheckOutController < ApplicationController
   def subscribe
     event = Event.find(subscribe_params[:event_id])
     brackets = event.available_brackets(player_brackets_params)
-
+    logger::info "dadadadada"
+    logger::info brackets.inspect
     if brackets.length <= 0
       return response_no_enroll_error
     end
     config = Payments::ItemsConfig.get_bracket
     items = []
     amount = 0
-    enroll_fee = event.payment_method.present? ? event.payment_method.enrollment_fee : 0
+    enroll_fee = event.registration_fee
     bracket_fee = event.payment_method.present? ? event.payment_method.bracket_fee : 0
     #aply discounts
-    event_discount = event.get_discount
+    #event_discount = event.get_discount
     personalized_discount = event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first
     general_discount = event.discount_generals.where(:code => subscribe_params[:discount_code]).first
 
-    enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
-    bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
+    #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
+    #todo discount
+    #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
 
     if personalized_discount.present?
       enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
-      bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+      #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
     elsif general_discount.present? and general_discount.limit < general_discount.applied
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
-      bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+      #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
       general_discount.applied = general_discount.applied + 1
       general_discount.save!(:validate => false)
     end
@@ -245,15 +248,10 @@ class Payments::CheckOutController < ApplicationController
     player.sync_brackets! brackets
     player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => number_with_precision(tax.present? ? tax[:amount] : 0, precision: 2),
                                          :description => "Bracket subscribe payment"})
-    brackets.each do |bracket|
-      if bracket[:enroll_status] == :enroll
-        saved_bracket = player.brackets.where(:event_bracket_id => bracket[:event_bracket_id]).first
-        if saved_bracket.present?
-          saved_bracket.payment_transaction_id = response.transactionResponse.transId
-          saved_bracket.save!(:validate => false)
-        end
-      end
-    end
+    player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
+        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id  => brackets.pluck(:category_id))
+        .update(:payment_transaction_id =>  response.transactionResponse.transId)
+    player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 

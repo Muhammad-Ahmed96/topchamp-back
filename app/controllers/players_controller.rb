@@ -1,8 +1,8 @@
 class PlayersController < ApplicationController
   include Swagger::Blocks
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner, :wait_list, :enrolled]
   before_action :authenticate_user!
-  around_action :transactions_filter, only: [:update, :create, :partner]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner, :wait_list, :enrolled]
+  around_action :transactions_filter, only: [:update, :create, :partner, :signature]
   swagger_path '/players' do
     operation :get do
       key :summary, 'List players'
@@ -329,8 +329,19 @@ class PlayersController < ApplicationController
 
   def update
     authorize @player
+    enrolls_old = @player.brackets_enroll.all
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
+    @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
+        .where(:category_id  => brackets.pluck(:category_id)).update(:payment_transaction_id =>  "000")
+    enrolls_old.each do |item|
+      enroll = @player.brackets.where(:enroll_status => :enroll).where(:event_bracket_id => item.event_bracket_id)
+                   .where(:category_id  => item.category_id).first
+      if enroll.nil?
+        @player.unsubscribe(item.category_id, item.event_bracket_id)
+      end
+    end
+    @player.set_teams
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
@@ -361,6 +372,7 @@ class PlayersController < ApplicationController
 
   def destroy
     authorize @player
+    @player.unsubscribe_event
     @player.destroy
     json_response_success(t("deleted_success", model: Player.model_name.human), true)
   end
@@ -425,123 +437,9 @@ class PlayersController < ApplicationController
   def inactive
     authorize Player
     @player.status = :Inactive
+    @player.unsubscribe_event
     @player.save!(:validate => false)
     json_response_success(t("inactivated_success", model: Player.model_name.human), true)
-  end
-  swagger_path '/players/partner_double' do
-    operation :post do
-      key :summary, 'Partner double players'
-      key :description, 'Players Catalog'
-      key :operationId, 'playersPartnerDouble'
-      key :produces, ['application/json',]
-      key :tags, ['players']
-      parameter do
-        key :name, :partner_id
-        key :in, :body
-        key :required, true
-        key :type, :string
-      end
-      parameter do
-        key :name, :event_id
-        key :in, :body
-        key :required, true
-        key :type, :string
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :SuccessModel
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-
-  def partner_double
-    #todo
-    # Delete this method
-    authorize Player
-    to_user = User.find( partner_params[:partner_id])
-    event = Event.find( partner_params[:event_id])
-    unless event.present?
-      return response_no_event
-    end
-    if params[:url].nil?
-      params[:url] = "localhost/test"
-    end
-    if to_user.present?
-      data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
-      @invitation = Invitation.get_invitation(data, @resource.id, "partner_double")
-      @invitation.send_mail(true)
-    else
-      return json_response_error([t("no_player")], 422)
-    end
-    json_response_success(t("edited_success", model: Player.model_name.human), true)
-  end
-  swagger_path '/players/partner_mixed' do
-    operation :post do
-      key :summary, 'Partner mixed players'
-      key :description, 'Players Catalog'
-      key :operationId, 'playersPartnerMixed'
-      key :produces, ['application/json',]
-      key :tags, ['players']
-      parameter do
-        key :name, :partner_id
-        key :in, :body
-        key :required, true
-        key :type, :string
-      end
-      parameter do
-        key :name, :event_id
-        key :in, :body
-        key :required, true
-        key :type, :string
-      end
-      response 200 do
-        key :description, ''
-        schema do
-          key :'$ref', :SuccessModel
-        end
-      end
-      response 401 do
-        key :description, 'not authorized'
-        schema do
-          key :'$ref', :ErrorModel
-        end
-      end
-      response :default do
-        key :description, 'unexpected error'
-      end
-    end
-  end
-  def partner_mixed
-    #todo
-    # Delete this method
-    authorize Player
-    to_user = User.find( partner_params[:partner_id])
-    event = Event.find( partner_params[:event_id])
-    unless event.present?
-      return response_no_event
-    end
-    if params[:url].nil?
-      params[:url] = "localhost/test"
-    end
-    if to_user.present?
-      data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
-      @invitation = Invitation.get_invitation(data, @resource.id, "partner_mixed")
-      @invitation.send_mail(true)
-    else
-      return json_response_error([t("no_player")], 422)
-    end
-    json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
   swagger_path '/players/:id/wait_list' do
@@ -606,6 +504,317 @@ class PlayersController < ApplicationController
     json_response_serializer_collection(@player.brackets_enroll, PlayerBracketSingleSerializer)
   end
 
+  swagger_path '/players/signature' do
+    operation :post do
+      key :summary, 'Signature associated with player'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersSignature'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :signature
+        key :in, :body
+        key :required, true
+        key :type, :string
+        key :format, :binary
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def signature
+    player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first_or_create!
+    player.signature = signature_param[:signature]
+    player.save!(:validate => false)
+    json_response_success(t("edited_success", model: Player.model_name.human), true)
+  end
+
+
+  swagger_path '/players/schedules' do
+    operation :get do
+      key :summary, 'Schedules associated with player'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersSchedules'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Schedules Response'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', EventSchedule
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def get_schedules
+    player = Player.where(user_id: @resource.id).where(event_id: schedules_param[:event_id]).first_or_create!
+    json_response_serializer_collection(player.schedules, EventScheduleSerializer)
+  end
+
+  swagger_path '/players/validate_partner' do
+    operation :get do
+      key :summary, 'Validate partner information associated with player'
+      key :description, 'Players Catalog'
+      key :operationId, 'playersValidatePartner'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :partner_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :bracket_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def validate_partner
+    player = Player.where(user_id: @resource.id).where(event_id: validate_partner_params[:event_id]).first_or_create!
+    result = player.validate_partner(validate_partner_params[:partner_id], validate_partner_params[:bracket_id], validate_partner_params[:category_id])
+    if result.nil?
+      return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+    end
+    json_response_success(t("player.partner.validation.valid"), response)
+  end
+
+  swagger_path '/players/rounds' do
+    operation :get do
+      key :summary, 'Get rounds list player tpurnaments'
+      key :description, 'Event Catalog'
+      key :operationId, 'playersRoundsList'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :event_bracket_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Raound Respone'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :Raund
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def rounds
+    # player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first_or_create!
+    #
+    # tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
+    #                  .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
+    # json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
+
+    player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first_or_create!
+    team =  player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).where(:category_id =>  tournaments_list_params[:category_id]).first
+    @tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
+                      .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
+    team_id = team.present? ? team.id : 0
+    rounds = @tournament.rounds.joins(:matches).merge(Match.where(:team_a_id => team_id))
+    json_response_serializer_collection(rounds, RoundSingleSerializer)
+  end
+  swagger_path '/players/categories' do
+    operation :get do
+      key :summary, 'Get categories list player tournaments'
+      key :description, 'Event Catalog'
+      key :operationId, 'playersCategoriesList'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Categories Respone'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :Category
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def categories
+    player = Player.where(user_id: @resource.id).where(event_id: categories_params[:event_id]).first_or_create!
+    in_categories_id = player.brackets_enroll.pluck(:category_id)
+    json_response_serializer_collection(Category.where(:id => in_categories_id ).all, CategorySerializer)
+  end
+
+  swagger_path '/players/brackets' do
+    operation :get do
+      key :summary, 'Get brackets list player tournaments'
+      key :description, 'Event Catalog'
+      key :operationId, 'playersBracketsList'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Brackets Response'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :PlayerBracket
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def brackets
+    player = Player.where(user_id: @resource.id).where(event_id: brackets_list_params[:event_id]).first_or_create!
+    brackets = player.brackets_enroll.where(:category_id => brackets_list_params[:category_id])
+    json_response_serializer_collection(brackets, PlayerBracketSingleSerializer)
+  end
 
   private
 
@@ -632,5 +841,47 @@ class PlayersController < ApplicationController
 
   def response_no_event
     json_response_error([t("not_event")], 422)
+  end
+
+  def signature_param
+    # whitelist params
+    params.required(:event_id)
+    params.required(:signature)
+    params.permit(:signature, :event_id)
+  end
+
+  def schedules_param
+    # whitelist params
+    params.required(:event_id)
+    params.permit(:event_id)
+  end
+
+  def validate_partner_params
+    # whitelist params
+    params.required(:event_id)
+    params.required(:partner_id)
+    params.required(:bracket_id)
+    params.required(:category_id)
+    params.permit(:partner_id, :event_id, :bracket_id, :category_id)
+  end
+  def tournaments_list_params
+    # whitelist params
+    params.required(:event_id)
+    params.required(:category_id)
+    params.required(:event_bracket_id)
+    params.permit(:event_id, :category_id, :event_bracket_id)
+  end
+
+  def categories_params
+    # whitelist params
+    params.required(:event_id)
+    params.permit(:event_id)
+  end
+
+  def brackets_list_params
+    # whitelist params
+    params.required(:event_id)
+    params.required(:category_id)
+    params.permit(:event_id, :category_id)
   end
 end

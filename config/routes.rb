@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  get 'tournament_matches_status/index'
+  get 'event_schedulers/create'
+  get 'event_registration_rules/create'
   get 'players/Index'
   mount_devise_token_auth_for 'User', at: 'api', controllers: {sessions: 'application_sessions',
                                                                passwords: 'application_password',
@@ -49,6 +52,10 @@ Rails.application.routes.draw do
       collection do
         get :coming_soon
         get :upcoming
+        scope :downloads do
+          get :download_discounts_template, :path => :discounts_template
+        end
+
       end
       member do
         put :create_venue
@@ -62,18 +69,42 @@ Rails.application.routes.draw do
         put :tax
         put :refund_policy
         put :service_fee
-        put :registration_rule
         put :details
         put :agendas
         get :categories
         get :available_categories
+        get :get_registration_fee, :path => :registration_fee
       end
-      resources :event_enrolls,only: [:create, :index], :path => :enrolls do
+      #Deleted  :create path
+      resources :event_enrolls,only: [:index], :path => :enrolls do
         collection do
           post :user_cancel
+          post :unsubscribe
           post :change_attendees
         end
       end
+      resources :event_registration_rules, only: [:create], :path => "" do
+        collection do
+          put :create, :path => :registration_rule
+        end
+      end
+
+      resources :event_schedulers, only: [:create, :index, :show], :path => :schedules
+      resources :event_discounts, only: [], :path => :discounts do
+        collection do
+          get :validate
+        end
+      end
+
+      resources :tournaments, only: [:create]do
+        collection do
+          get :players_list, :path => :players
+          get :teams_list, :path => :teams
+          get :rounds_list, :path => :rounds
+          get :details
+        end
+      end
+      resources :scores, only: [:create, :index]
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
@@ -111,6 +142,14 @@ Rails.application.routes.draw do
       collection do
         post :partner_mixed
         post :partner_double
+        post :signature
+        get :get_schedules, :path => :schedules
+        get :validate_partner
+        get :rounds
+        get :categories
+        get :brackets
+        post :partners, action: :add_partner, controller: :player_partner
+        get :partners, action: :get_my_partners, controller: :player_partner
       end
       member do
         put :activate
@@ -132,6 +171,9 @@ Rails.application.routes.draw do
         end
       end
     end
+
+    resources :tournaments, only: [:index]
+    resources :tournament_matches_status, only: [:index]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

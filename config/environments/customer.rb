@@ -82,8 +82,7 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-  config.action_mailer.asset_host = 'ec2-54-200-72-86.us-west-2.compute.amazonaws.com:444'
-  config.action_mailer.default_url_options = { host: 'ec2-54-200-72-86.us-west-2.compute.amazonaws.com:444' }
+  config.action_mailer.asset_host = 'topchamp.tk'
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
       tls: true,
@@ -92,4 +91,11 @@ Rails.application.configure do
       user_name:            'testomator@amplemind.com',
       password:             'Password01',
       authentication:       :login  }
+  config.hours_bracket = 8
+  config.front_url = "http://topchamp.tk:444"
+  config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
+  config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
+  config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"
+  config.front_partner_url = config.front_url + "?type=need_partner&id={id}"
+  config.front_new_spot_url = config.front_url + "?type=new_spot&event_id={event_id}&event_bracket_id={event_bracket_id}&category_id={category_id}"
 end

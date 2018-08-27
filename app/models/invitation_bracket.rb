@@ -1,0 +1,2 @@
+class InvitationBracket < ApplicationRecord
+end
