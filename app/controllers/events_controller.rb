@@ -1756,15 +1756,6 @@ class EventsController < ApplicationController
     bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
     bracket_fee = bracket_fee *  brackets_count
     tax_amount = 0
-    amount = enroll_fee + bracket_fee
-    if tax.present?
-      if tax.is_percent
-        tax_amount = (tax.tax * amount) / 100
-      else
-        tax_amount = tax.tax
-      end
-
-    end
 
     #apply discounts
     #event_discount = @event.get_discount
@@ -1773,13 +1764,22 @@ class EventsController < ApplicationController
 
     #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
     #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
-
     if personalized_discount.present?
       enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
-    elsif general_discount.present? and general_discount.limited < general_discount.applied
+    elsif general_discount.present? and (general_discount.limited > general_discount.applied)
+
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+    end
+    amount = enroll_fee + bracket_fee
+    if tax.present?
+      if tax.is_percent
+        tax_amount = (tax.tax * amount) / 100
+      else
+        tax_amount = tax.tax
+      end
+
     end
     json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount, :total => amount})
   end
