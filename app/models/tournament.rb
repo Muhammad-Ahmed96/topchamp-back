@@ -89,6 +89,11 @@ class Tournament < ApplicationRecord
 
   end
 
+  def get_index_match(current_round, current_match)
+    total_rounds = Math.log(self.teams_count) / Math.log(2)
+
+  end
+
   swagger_schema :Tournament do
     property :id do
       key :type, :integer

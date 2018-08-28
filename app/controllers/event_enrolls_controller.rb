@@ -79,7 +79,7 @@ class EventEnrollsController < ApplicationController
   def user_cancel
     authorize(@event)
     @event.players.where(:user_id => @resource.id).each do |player|
-      player.incativete
+      player.inactivate
       player.unsubscribe_event
     end
     @event.participants.where(:user_id => @resource.id).destroy_all
@@ -133,7 +133,7 @@ class EventEnrollsController < ApplicationController
   end
   def unsubscribe
     @event.players.where(:user_id => @resource.id).each do |player|
-      #player.incativete
+      #player.inactivate
       player.unsubscribe(unsubscribe_params[:category_id], unsubscribe_params[:event_bracket_id])
     end
     json_response_success(t("success"), true)
