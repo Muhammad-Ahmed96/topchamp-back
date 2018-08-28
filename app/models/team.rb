@@ -7,6 +7,20 @@ class Team < ApplicationRecord
   belongs_to :category
 
 
+  def seed(tournament_id)
+    seed = nil
+    match = Match.joins(:round).merge(Round.where(:id => tournament_id)).where.not(:seed_team_a => nil).where.not(:seed_team_b => nil)
+    .where("team_a_id = ? OR team_b_id = ?", self.id, self.id).distinct.first
+    if match.present?
+      if match.seed_team_a.present? and match.team_a_id == self.id
+        seed = match.seed_team_a
+      elsif match.seed_team_b.present? and match.team_b_id == self.id
+        seed = match.seed_team_b
+      end
+    end
+    return seed
+  end
+
   swagger_schema :Team do
     property :id do
       key :type, :integer
