@@ -80,7 +80,7 @@ class Player < ApplicationRecord
     end
     #delete other brackets
     self.brackets.where.not(:id => brackets_ids).destroy_all
-    if self.status == "Incative" and self.brackets.count > 0
+    if self.status == "Inactive" and self.brackets.count > 0
       self.activate
     end
   end
@@ -253,8 +253,8 @@ class Player < ApplicationRecord
 
   end
 
-  def incativete
-    self.status = "Incative"
+  def inactivate
+    self.status = "Inactive"
     self.save!(:validate => false)
   end
 
