@@ -252,6 +252,13 @@ class TournamentsController < ApplicationController
         key :type, :int64
       end
       parameter do
+        key :name, :event
+        key :in, :query
+        key :description, 'Title of event filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :category_id
         key :in, :query
         key :description, 'Category filter'
@@ -326,6 +333,7 @@ class TournamentsController < ApplicationController
     column = params[:column].nil? ? 'title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     event_id = params[:event_id]
+    event = params[:event]
     matches_status = params[:matches_status]
     category_id = params[:category_id]
     bracket_id = params[:bracket_id]
@@ -353,7 +361,7 @@ class TournamentsController < ApplicationController
 
     tournaments = TournamentPolicy::Scope.new(current_user, Tournament).resolve.my_order(column, direction).matches_status_in(matches_status).event_in(event_id).category_in(category_id)
     .bracket_in(bracket_id).bracket_like(bracket).event_order(order_event, direction).category_order(order_category, direction).bracket_order(order_bracket, direction)
-    .teams_count_in(teams_count)
+    .teams_count_in(teams_count).event_like(event)
     if paginate.to_s == "0"
       json_response_serializer_collection(tournaments.all, TournamentSerializer)
     else

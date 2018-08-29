@@ -9,9 +9,10 @@ class Tournament < ApplicationRecord
   scope :matches_status_in, lambda {|progress| where matches_status: progress if progress.present?}
   scope :teams_count_in, lambda {|count| where teams_count: progress if count.present?}
   scope :event_in, lambda {|search| joins(:event).merge(Event.where id: search) if search.present?}
+  scope :event_like, lambda {|search| joins(:event).merge(Event.where("title LIKE ?", "%#{search}%")) if search.present?}
   scope :category_in, lambda {|search| joins(:category).merge(Category.where id: search) if search.present?}
   scope :bracket_in, lambda {|search| joins(:bracket).merge(EventBracket.where id: search) if search.present?}
-  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventBracket.where("to_char(age,'999') LIKE ? OR to_char(lowest_skill,'9999') like ? OR to_char(highest_skill,'9999') LIKE ? OR to_char(young_age,'9999') LIKE ? OR to_char(old_age,'9999') LIKE ?", "%#{search}%","%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%")) if search.present?}
+  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventBracket.where("to_char(age,'999') LIKE ? OR to_char(lowest_skill,'9999') like ? OR to_char(highest_skill,'9999') LIKE ? OR to_char(young_age,'9999') LIKE ? OR to_char(old_age,'9999') LIKE ?", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%")) if search.present?}
 
   scope :event_order, lambda {|column, direction = "desc"| includes(:event).order("events.#{column} #{direction}") if column.present?}
   scope :category_order, lambda {|column, direction = "desc"| includes(:category).order("categories.#{column} #{direction}") if column.present?}
@@ -78,20 +79,36 @@ class Tournament < ApplicationRecord
     matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
     teams_ids = matchs_a + matchs_b
     Team.where(:id => teams_ids).where(:event_id => self.event_id).where(:category_id => self.category_id)
-                .where(:event_bracket_id => self.event_bracket_id)
+        .where(:event_bracket_id => self.event_bracket_id)
   end
 
   def set_winner(match)
-    next_round = self.rounds.where("index > ?", match.round.index ).order(index: :asc).first
+    logger::info("set_winner")
+    next_round = self.rounds.where("index > ?", match.round.index).order(index: :asc).first
     if next_round.present?
-      next_match = next_round.matches.where("index >= ?", match.index).order(index: :asc).first
+      next_match_info = self.get_index_match(match.index)
+      logger::info next_match_info
+      next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
+      if next_match.present?
+        winner_team_id = match.get_winner_team_id
+        if next_match_info[:type] == 'A'
+          next_match.team_a_id = winner_team_id
+        elsif next_match_info[:type] == 'B'
+          next_match.team_b_id = winner_team_id
+        end
+        next_match.save!(:validate => false)
+      end
     end
 
   end
 
-  def get_index_match(current_round, current_match)
-    total_rounds = Math.log(self.teams_count) / Math.log(2)
-
+  def get_index_match(match_index)
+    next_index = nil
+    # total_rounds = Math.log(self.teams_count) / Math.log(2)
+    rest = (((match_index + 2) / 2.to_f) - 1)
+    next_index = rest.to_i
+    type = rest.modulo(1) == 0 ? 'A' : 'B'
+    return {:index => next_index, :type => type}
   end
 
   swagger_schema :Tournament do
