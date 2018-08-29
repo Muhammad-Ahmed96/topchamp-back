@@ -79,4 +79,23 @@ class Match < ApplicationRecord
       key :description, "Seed team b associated with round"
     end
   end
+
+  def get_winner_team_id
+    winner_team_id = nil
+    score_a = Score.joins(:set).merge(MatchSet.where(:match_id => self.id)).where(:team_id => self.team_a_id).sum(:score)
+    score_b = Score.joins(:set).merge(MatchSet.where(:match_id => self.id)).where(:team_id => self.team_b_id).sum(:score)
+
+    #time_out_a = Score.joins(:set).merge(MatchSet.where(:match_id => self.id)).where(:team_id => self.team_b_id).sum(:time_out)
+    #time_out_b = Score.joins(:set).merge(MatchSet.where(:match_id => self.id)).where(:team_id => self.team_b_id).sum(:time_out)
+
+    if score_a > score_b
+      winner_team_id = self.team_a_id
+    elsif score_a < score_b
+      winner_team_id = self.team_b_id
+    end
+
+    self.team_winner_id = winner_team_id
+    self.save!(:validate => false)
+    return winner_team_id
+  end
 end

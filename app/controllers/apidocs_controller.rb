@@ -123,6 +123,7 @@ class ApidocsController < ApplicationController
       Match,
       Round,
       Tournament,
+      Score,
       self,
   ].freeze
 
