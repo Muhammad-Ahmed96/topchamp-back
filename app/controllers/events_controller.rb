@@ -1756,7 +1756,7 @@ class EventsController < ApplicationController
     tax_amount = 0
 
     #apply discounts
-    event_discount = @event.get_discount
+    #event_discount = @event.get_discount
     personalized_discount = subscribe_params[:discount_code].present? ? @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first : nil
     general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first : nil
     bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
