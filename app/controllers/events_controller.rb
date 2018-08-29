@@ -1771,16 +1771,16 @@ class EventsController < ApplicationController
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
      # bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
     end
-
+    amount = enroll_fee + bracket_fee
     if tax.present?
       if tax.is_percent
         tax_amount = (tax.tax * amount) / 100
       else
         tax_amount = tax.tax
       end
-
+      amount = amount + tax_amount
     end
-    amount = enroll_fee + bracket_fee + tax_amount
+
     json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount, :total => amount})
   end
 
