@@ -7,9 +7,9 @@ class Tournament < ApplicationRecord
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
 
   scope :matches_status_in, lambda {|progress| where matches_status: progress if progress.present?}
-  scope :teams_count_in, lambda {|count| where teams_count: progress if count.present?}
+  scope :teams_count_in, lambda {|count| where teams_count: count if count.present?}
   scope :event_in, lambda {|search| joins(:event).merge(Event.where id: search) if search.present?}
-  scope :event_like, lambda {|search| joins(:event).merge(Event.where("title LIKE ?", "%#{search}%")) if search.present?}
+  scope :event_like, lambda {|search| joins(:event).merge(Event.where("LOWER(title) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :category_in, lambda {|search| joins(:category).merge(Category.where id: search) if search.present?}
   scope :bracket_in, lambda {|search| joins(:bracket).merge(EventBracket.where id: search) if search.present?}
   scope :bracket_like, lambda {|search| joins(:bracket).merge(EventBracket.where("to_char(age,'999') LIKE ? OR to_char(lowest_skill,'9999') like ? OR to_char(highest_skill,'9999') LIKE ? OR to_char(young_age,'9999') LIKE ? OR to_char(old_age,'9999') LIKE ?", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%")) if search.present?}
