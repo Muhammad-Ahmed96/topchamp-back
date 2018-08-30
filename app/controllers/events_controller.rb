@@ -1604,8 +1604,8 @@ class EventsController < ApplicationController
 
   def available_categories
     @event =  Event.find(params[:id])
-    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
-    in_categories_id = player.brackets.pluck(:category_id)
+    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first
+    in_categories_id = player.present? ? player.brackets.pluck(:category_id): []
     response_data = []
     gender = @resource.gender
     event_categories = @event.categories.where.not(:category_id => in_categories_id)
@@ -1621,11 +1621,11 @@ class EventsController < ApplicationController
       event_categories = event_categories.only_women
     end
     #validate bracket
-    age = player.present? ? player.user.age : nil
-    #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
-    skill = player.present? ? player.skill_level: nil
+    age = @resource.age
+    skill = @resource.skill_level
     event_categories.each do |item|
       item.player = player
+      item.user = @resource
     end
     event_categories.to_a.each do |item|
       if @event.bracket_by == "age" or @event.bracket_by == "skill"
@@ -1634,7 +1634,7 @@ class EventsController < ApplicationController
         end
       elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
         if item.brackets.length > 0
-          not_in = player.brackets.where(:category_id => item[:id]).pluck(:event_bracket_id)
+          not_in = player.present? ? player.brackets.where(:category_id => item[:id]).pluck(:event_bracket_id): []
           item.brackets.each do |bra|
             if bra.brackets.age_filter(age, @event.sport_regulator.allow_age_range).skill_filter(skill).not_in(not_in).length > 0
               response_data << item

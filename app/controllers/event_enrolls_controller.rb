@@ -51,6 +51,19 @@ class EventEnrollsController < ApplicationController
 
   end
 
+
+  def wait_list
+    brackets = @event.available_brackets(player_brackets_params)
+    if brackets.length > 0
+      player = Player.where(user_id: @resource.id).where(event_id: @event.id).first_or_create!
+      player.sync_brackets! brackets
+      return json_response_serializer(player, PlayerSerializer)
+    else
+      return response_no_enroll_error
+    end
+
+  end
+
   swagger_path '/events/:id/enrolls/user_cancel' do
     operation :post do
       key :summary, 'Cancel registration to event'

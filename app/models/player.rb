@@ -85,6 +85,27 @@ class Player < ApplicationRecord
     end
   end
 
+  def sync_brackets_wait_list!(data)
+    event = self.event
+    if data.present? and data.kind_of?(Array)
+      data.each do |bracket|
+        #get bracket to enroll
+        current_bracket = EventBracket.where(:event_id => event.id).where(:id => bracket[:event_bracket_id]).first
+        # check if category exist in event
+        category = self.event.internal_categories.where(:id => bracket[:category_id]).count
+        if current_bracket.present? and category > 0
+          status = current_bracket.get_status(bracket[:category_id])
+          if status == :waiting_list
+            save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id]}
+            saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
+            saved_bracket.enroll_status = status
+            saved_bracket.save!
+          end
+        end
+      end
+    end
+  end
+
 
   def set_teams
     User.create_teams(self.brackets_enroll, self.user_id, event.id)

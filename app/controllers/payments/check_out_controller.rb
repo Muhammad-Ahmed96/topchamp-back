@@ -140,6 +140,7 @@ class Payments::CheckOutController < ApplicationController
         key :name, :enrolls
         key :in, :body
         key :description, 'Enrolls'
+        key :required, true
         key :type, :array
         items do
           key :'$ref', :PlayerBracketInput
