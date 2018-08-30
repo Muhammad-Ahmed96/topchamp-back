@@ -2,6 +2,7 @@ class CategoriesEvent < ApplicationRecord
   belongs_to :category
   belongs_to :event
   attr_accessor :brackets
+  attr_accessor :user
   attr_accessor :player
 
   scope :only_men, lambda { joins(:category).merge(Category.where :id => Category.men_categories)}
@@ -10,10 +11,10 @@ class CategoriesEvent < ApplicationRecord
 
   def brackets
     brackets = []
-    age = player.present? ? player.user.age : nil
+    age = user.present? ? user.age : nil
     not_in = player.present? ? player.brackets.where(:category_id => self.category.id).pluck(:event_bracket_id) : []
     #skill = player.present? ? player.skill_level.present? ? player.skill_level: -1000 : nil
-    skill = player.present? ? player.skill_level: nil
+    skill = user.present? ? user.skill_level: nil
     allow_age_range = self.event.sport_regulator.present? ? self.event.sport_regulator.allow_age_range : false
      self.event.brackets.age_filter(age, allow_age_range).skill_filter(skill).not_in(not_in).each do |bracket|
        bracket.user_age = age

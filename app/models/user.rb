@@ -423,6 +423,12 @@ class User < ApplicationRecord
     return [self.id].included_in? partners_ids
   end
 
+  def skill_level
+    if self.association_information.present?
+      self.association_information.raking
+    end
+  end
+
   private
 
   def check_dimensions

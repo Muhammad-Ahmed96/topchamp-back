@@ -589,8 +589,9 @@ class PlayersController < ApplicationController
     end
   end
   def get_schedules
-    player = Player.where(user_id: @resource.id).where(event_id: schedules_param[:event_id]).first_or_create!
-    json_response_serializer_collection(player.schedules, EventScheduleSerializer)
+    player = Player.where(user_id: @resource.id).where(event_id: schedules_param[:event_id]).first
+    schedules = player.present? ? player.schedules : []
+    json_response_serializer_collection(schedules, EventScheduleSerializer)
   end
 
   swagger_path '/players/validate_partner' do
@@ -646,7 +647,10 @@ class PlayersController < ApplicationController
     end
   end
   def validate_partner
-    player = Player.where(user_id: @resource.id).where(event_id: validate_partner_params[:event_id]).first_or_create!
+    player = Player.where(user_id: @resource.id).where(event_id: validate_partner_params[:event_id]).first
+    if player.nil?
+      return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+    end
     result = player.validate_partner(validate_partner_params[:partner_id], validate_partner_params[:bracket_id], validate_partner_params[:category_id])
     if result.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
@@ -656,7 +660,7 @@ class PlayersController < ApplicationController
 
   swagger_path '/players/rounds' do
     operation :get do
-      key :summary, 'Get rounds list player tpurnaments'
+      key :summary, 'Get rounds list player tournaments'
       key :description, 'Event Catalog'
       key :operationId, 'playersRoundsList'
       key :produces, ['application/json',]
@@ -707,13 +711,11 @@ class PlayersController < ApplicationController
     end
   end
   def rounds
-    # player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first_or_create!
-    #
-    # tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
-    #                  .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
-    # json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
 
-    player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first_or_create!
+    player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first
+    if player.nil?
+      return  json_response_error([t("no_player")], 422)
+    end
     team =  player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).where(:category_id =>  tournaments_list_params[:category_id]).first
     @tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
                       .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
@@ -760,7 +762,10 @@ class PlayersController < ApplicationController
     end
   end
   def categories
-    player = Player.where(user_id: @resource.id).where(event_id: categories_params[:event_id]).first_or_create!
+    player = Player.where(user_id: @resource.id).where(event_id: categories_params[:event_id]).first
+    if player.nil?
+      return  json_response_error([t("no_player")], 422)
+    end
     in_categories_id = player.brackets_enroll.pluck(:category_id)
     json_response_serializer_collection(Category.where(:id => in_categories_id ).all, CategorySerializer)
   end
@@ -811,7 +816,10 @@ class PlayersController < ApplicationController
     end
   end
   def brackets
-    player = Player.where(user_id: @resource.id).where(event_id: brackets_list_params[:event_id]).first_or_create!
+    player = Player.where(user_id: @resource.id).where(event_id: brackets_list_params[:event_id]).first
+    if player.nil?
+      return  json_response_error([t("no_player")], 422)
+    end
     brackets = player.brackets_enroll.where(:category_id => brackets_list_params[:category_id])
     json_response_serializer_collection(brackets, PlayerBracketSingleSerializer)
   end

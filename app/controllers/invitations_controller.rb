@@ -208,8 +208,8 @@ class InvitationsController < ApplicationController
     end
 
     #check if category is paid
-    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
-    categories_ids = player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id)
+    player = Player.where(user_id: @resource.id).where(event_id: event_id).first
+    categories_ids = player.present? ? player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id) : []
     if categories_ids.included_in? Category.doubles_categories
       invitatin_type << "partner_double"
     end
@@ -489,7 +489,7 @@ class InvitationsController < ApplicationController
         unless is_player.nil?
           #Create player
           types.delete(type_id)
-          player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first_or_create!
+          #player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
         end
         if types.length > 0
           participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
@@ -673,6 +673,7 @@ class InvitationsController < ApplicationController
   def partner
     to_user = User.find(partner_params[:partner_id])
     event = Event.find(partner_params[:event_id])
+    player = Player.where(user_id: @resource.id).where(event_id: event.id).first
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
     unless event.present?
       return response_no_event
@@ -681,7 +682,7 @@ class InvitationsController < ApplicationController
       return response_no_type
     end
     my_url = Rails.configuration.front_partner_url
-    if to_user.present?
+    if to_user.present? and player.present?
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
       @invitation.url = Invitation.short_url((my_url.gsub '{id}', @invitation.id.to_s))
@@ -694,7 +695,6 @@ class InvitationsController < ApplicationController
       elsif type == "partner_double"
         category_ids = Category.doubles_categories
       end
-      player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
       brackets = player.brackets.where(:category_id => category_ids).all
       brackets.each do |item|
         saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id).first
