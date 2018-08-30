@@ -442,6 +442,7 @@ class PlayersController < ApplicationController
     json_response_success(t("inactivated_success", model: Player.model_name.human), true)
   end
 
+=begin
   swagger_path '/players/:id/wait_list' do
     operation :get do
       key :summary, 'Wait list of players'
@@ -471,8 +472,10 @@ class PlayersController < ApplicationController
     end
   end
   def wait_list
+    #todo wait list
     json_response_serializer_collection(@player.brackets_wait_list, PlayerBracketSingleSerializer)
   end
+=end
   swagger_path '/players/:id/enrolled' do
     operation :get do
       key :summary, 'brackets enrolled of players'

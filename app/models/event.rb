@@ -656,10 +656,9 @@ class Event < ApplicationRecord
     data.each do |bracket|
       current_bracket = EventBracket.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
       category = self.internal_categories.where(:id => bracket[:category_id]).count
-      allow_wait_list = self.registration_rule.present? ? self.registration_rule.allow_wait_list : false
       if current_bracket.present? and category > 0
         status = current_bracket.get_status(bracket[:category_id])
-        if status == :enroll or (status == :waiting_list and allow_wait_list)
+        if status == :enroll
           bracket[:enroll_status] = status
           brackets << bracket
         end

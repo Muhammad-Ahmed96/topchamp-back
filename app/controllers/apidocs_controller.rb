@@ -75,6 +75,7 @@ class ApidocsController < ApplicationController
       PartnersController,
       Payments::CreditCardsController,
       Payments::CheckOutController,
+      WaitListController,
       ScoresController,
       ErrorModel,
       SuccessModel,
@@ -124,6 +125,7 @@ class ApidocsController < ApplicationController
       Round,
       Tournament,
       Score,
+      WaitList,
       self,
   ].freeze
 
