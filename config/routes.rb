@@ -155,7 +155,7 @@ Rails.application.routes.draw do
       member do
         put :activate
         put :inactive
-        get :wait_list
+        #get :wait_list
         get :enrolled
       end
     end
