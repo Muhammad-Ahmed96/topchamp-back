@@ -403,7 +403,10 @@ class User < ApplicationRecord
     if result.nil?
       return nil
     end
-    partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first_or_create!
+    partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
+    if partner_player.nil?
+      return nil
+    end
     self.create_team(user_root_id, event_id, event_bracket_id, category_id, [player.id, partner_player.id])
   end
 

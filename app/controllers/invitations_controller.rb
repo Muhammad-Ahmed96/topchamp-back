@@ -511,9 +511,11 @@ class InvitationsController < ApplicationController
             end
           end
         end
-        #ckeck partner brackets
-        @invitation.brackets.each do |item|
-          result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
+        if @invitation.invitation_type == "partner_mixed" or @invitation.invitation_type == "partner_double"
+          #ckeck partner brackets
+          @invitation.brackets.each do |item|
+            result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
+          end
         end
       end
     end
@@ -683,6 +685,7 @@ class InvitationsController < ApplicationController
     end
     my_url = Rails.configuration.front_partner_url
     if to_user.present? and player.present?
+      my_url = my_url.gsub '{event_id}', event.id.to_s
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
       @invitation.url = Invitation.short_url((my_url.gsub '{id}', @invitation.id.to_s))
