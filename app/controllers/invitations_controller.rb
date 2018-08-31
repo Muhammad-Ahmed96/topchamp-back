@@ -688,6 +688,7 @@ class InvitationsController < ApplicationController
       my_url = my_url.gsub '{event_id}', event.id.to_s
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
+      my_url = my_url.gsub '{invitation_type}', @invitation.invitation_type
       @invitation.url = Invitation.short_url((my_url.gsub '{id}', @invitation.id.to_s))
       @invitation.save!
       @invitation.send_mail(true)
