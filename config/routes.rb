@@ -105,6 +105,7 @@ Rails.application.routes.draw do
         end
       end
       resources :scores, only: [:create, :index]
+      resources :wait_list, only: [:create, :index]
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
@@ -154,7 +155,7 @@ Rails.application.routes.draw do
       member do
         put :activate
         put :inactive
-        get :wait_list
+        #get :wait_list
         get :enrolled
       end
     end

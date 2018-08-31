@@ -15,6 +15,7 @@ class User < ApplicationRecord
   has_one :medical_information, :dependent => :destroy
   has_many :players, :dependent => :destroy
   has_many :participants, :dependent => :destroy
+  has_many :wait_lists, :dependent => :destroy
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
@@ -429,6 +430,15 @@ class User < ApplicationRecord
     end
   end
 
+  def sync_wait_list(data, event_id)
+    if data.present? and data.kind_of?(Array)
+      data.each do |bracket|
+        saveData = {:event_bracket_id => bracket[:event_bracket_id], :category_id => bracket[:category_id], :event_id => event_id}
+        self.wait_lists.where(:event_bracket_id => saveData[:event_bracket_id]).where(:category_id => saveData[:category_id])
+            .update_or_create!(saveData)
+      end
+    end
+  end
   private
 
   def check_dimensions

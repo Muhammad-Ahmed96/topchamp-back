@@ -166,8 +166,6 @@ class Payments::CheckOutController < ApplicationController
   def subscribe
     event = Event.find(subscribe_params[:event_id])
     brackets = event.available_brackets(player_brackets_params)
-    logger::info "dadadadada"
-    logger::info brackets.inspect
     if brackets.length <= 0
       return response_no_enroll_error
     end

@@ -51,6 +51,7 @@ class Player < ApplicationRecord
     schedules_ids = self.schedule_ids
     any_one = false
     event = self.event
+    user = self.user
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
         #get bracket to enroll
@@ -59,7 +60,7 @@ class Player < ApplicationRecord
         category = self.event.internal_categories.where(:id => bracket[:category_id]).count
         if current_bracket.present? and category > 0
           status = current_bracket.get_status(bracket[:category_id])
-          save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id]}
+          save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status}
           saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
           if saved_bracket.enroll_status != "enroll"
             saved_bracket.enroll_status = status
@@ -71,6 +72,10 @@ class Player < ApplicationRecord
           schedules_ids = schedules_ids + shedules
           if any_one == false and shedules.length > 0
             any_one = true
+          end
+          if saved_bracket.enroll_status == "enroll"
+            WaitList.where(:event_bracket_id => bracket[:event_bracket_id]).where(:category_id => bracket[:category_id])
+                .where(:user_id => user.id).where(:event_id => event.id).destroy_all
           end
         end
       end
@@ -84,28 +89,6 @@ class Player < ApplicationRecord
       self.activate
     end
   end
-
-  def sync_brackets_wait_list!(data)
-    event = self.event
-    if data.present? and data.kind_of?(Array)
-      data.each do |bracket|
-        #get bracket to enroll
-        current_bracket = EventBracket.where(:event_id => event.id).where(:id => bracket[:event_bracket_id]).first
-        # check if category exist in event
-        category = self.event.internal_categories.where(:id => bracket[:category_id]).count
-        if current_bracket.present? and category > 0
-          status = current_bracket.get_status(bracket[:category_id])
-          if status == :waiting_list
-            save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id]}
-            saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
-            saved_bracket.enroll_status = status
-            saved_bracket.save!
-          end
-        end
-      end
-    end
-  end
-
 
   def set_teams
     User.create_teams(self.brackets_enroll, self.user_id, event.id)
@@ -259,17 +242,18 @@ class Player < ApplicationRecord
 
     free_spaces = bracket.get_free_count(category_id)
     if free_spaces.present? and free_spaces == 1
-      url =  Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
-      url =  url.gsub "{event_bracket_id}", bracket.id.to_s
-      url =  url.gsub "{category_id}", category.id.to_s
+      url = Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
+      url = url.gsub "{event_bracket_id}", bracket.id.to_s
+      url = url.gsub "{category_id}", category.id.to_s
       url = Invitation.short_url url
-      players = self.event.players.joins(:brackets_wait_list).merge(PlayerBracket.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)).all
-      players.each do |player|
-        UnsubscribeMailer.spot_open(player, event, url).deliver
+      users = User.joins(:wait_lists).merge(WaitList.where.(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
+                                                .where(:event_id => event.id)).all
+      users.each do |user|
+        UnsubscribeMailer.spot_open(user, event, url).deliver
       end
       EventBracketFree.where(:event_bracket_id => bracket.id).where(:category_id => category.id)
           .update_or_create!({:event_bracket_id => bracket.id, :category_id => category.id, :free_at => DateTime.now,
-                             :url => url})
+                              :url => url})
     end
 
   end
@@ -286,7 +270,7 @@ class Player < ApplicationRecord
 
   def tournaments
     self.event.tournaments.joins(rounds: [matches: [team_a: :players]]).merge(Player.where(:id => self.id))
-    .joins(rounds: [matches: [team_b: :players]]).merge(Player.where(:id => self.id))
+        .joins(rounds: [matches: [team_b: :players]]).merge(Player.where(:id => self.id))
   end
 
   private
