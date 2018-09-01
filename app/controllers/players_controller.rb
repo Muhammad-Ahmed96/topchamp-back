@@ -330,6 +330,7 @@ class PlayersController < ApplicationController
   def update
     authorize @player
     enrolls_old = @player.brackets_enroll.all
+    event = @player.event
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
     @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
@@ -339,6 +340,11 @@ class PlayersController < ApplicationController
                    .where(:category_id  => item.category_id).first
       if enroll.nil?
         @player.unsubscribe(item.category_id, item.event_bracket_id)
+      end
+      tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item.event_bracket_id)
+                       .where(:category_id => item.category_id).first
+      if tournament.present?
+        tournament.update_internal_data
       end
     end
     @player.set_teams
@@ -547,6 +553,13 @@ class PlayersController < ApplicationController
   end
   def signature
     player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first_or_create!
+    #todo not create default user
+=begin
+    player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first
+    if player.nil?
+      return  json_response_error([t("no_player")], 422)
+    end
+=end
     player.signature = signature_param[:signature]
     player.save!(:validate => false)
     json_response_success(t("edited_success", model: Player.model_name.human), true)
@@ -654,7 +667,7 @@ class PlayersController < ApplicationController
     if player.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
-    result = player.validate_partner(validate_partner_params[:partner_id], validate_partner_params[:bracket_id], validate_partner_params[:category_id])
+    result = player.validate_partner(validate_partner_params[:partner_id],  @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
     if result.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end

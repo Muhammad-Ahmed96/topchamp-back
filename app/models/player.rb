@@ -167,7 +167,7 @@ class Player < ApplicationRecord
   end
 
   #validate partner complete information
-  def validate_partner(partner_id, bracket_id, category_id)
+  def validate_partner(partner_id, user_root_id, bracket_id, category_id)
     total = 4
     current = 0
     category_type = ""
@@ -176,7 +176,7 @@ class Player < ApplicationRecord
     elsif [category_id.to_i].included_in? Category.mixed_categories
       category_type = "partner_mixed"
     end
-    invitation = Invitation.where(:user_id => partner_id, :sender_id => self.user_id, :status => :role).where(:invitation_type => category_type)
+    invitation = Invitation.where(:user_id => partner_id, :sender_id => user_root_id, :status => :role).where(:invitation_type => category_type)
                      .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket_id)).first
     partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
     if partner_player.present?
@@ -256,6 +256,11 @@ class Player < ApplicationRecord
                               :url => url})
     end
 
+    tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => event_bracket_id)
+                     .where(:category_id => category_id).first
+    if tournament.present?
+      tournament.update_internal_data
+    end
   end
 
   def inactivate
