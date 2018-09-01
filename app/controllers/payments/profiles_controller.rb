@@ -15,7 +15,7 @@ class Payments::ProfilesController < ApplicationController
   end
 
   def destroy
-    response = Payments::Profile.delete("1914872509")
+    response = Payments::Profile.delete("1915335180")
     json_response_success(response.messages.resultCode, 200)
   end
 

@@ -4,7 +4,8 @@ module Payments
     def self.get(user)
       profile = Payments::Profile.get(user.customer_profile_id)
       if profile.nil?
-        profile = Payments::Profile.create(user)
+        result = Payments::Profile.create(user)
+        profile = Payments::Profile.get(result.customerProfileId)
       end
       return profile
     end
