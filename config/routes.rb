@@ -163,7 +163,7 @@ Rails.application.routes.draw do
     resources :partners, only: [:index]
 
     namespace :payments do
-      resources :profile, only: [:create, :destroy, :show]
+      resources :profiles, only: [:create, :destroy, :show]
       resources :credit_cards, only: [:index, :create, :destroy]
       resources :check_out, only: [] do
         collection do
