@@ -398,8 +398,11 @@ class User < ApplicationRecord
   end
 
   def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id)
-    player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
-    result = player.validate_partner(partner_id, event_bracket_id, category_id)
+    player = Player.where(user_id: user_root_id).where(event_id: event_id).first
+    if player.nil?
+      return nil
+    end
+    result = player.validate_partner(partner_id, user_root_id, event_bracket_id, category_id)
     if result.nil?
       return nil
     end

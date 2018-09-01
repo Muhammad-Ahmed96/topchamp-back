@@ -45,8 +45,7 @@ class Tournament < ApplicationRecord
     else
       self.rounds.where.not(id: deleteIds).destroy_all
     end
-    self.set_team_count
-    self.set_matches_status
+    self.update_internal_data
   end
 
   def total_teams
@@ -72,6 +71,11 @@ class Tournament < ApplicationRecord
         self.update_attributes(:matches_status => :not_complete)
       end
     end
+  end
+
+  def update_internal_data
+    self.set_team_count
+    self.set_matches_status
   end
 
   def teams
