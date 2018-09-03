@@ -53,7 +53,7 @@ class Player < ApplicationRecord
     event = self.event
     user = self.user
     if old_enrolls
-      brackets_ids = brackets_ids + self.brackets_enroll.pluck(:event_bracket_id)
+      brackets_ids = brackets_ids + self.brackets_enroll.pluck(:id)
     end
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
