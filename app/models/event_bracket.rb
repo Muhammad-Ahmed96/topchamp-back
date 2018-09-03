@@ -42,7 +42,7 @@ class EventBracket < ApplicationRecord
   end
 
   def get_enroll_count(category_id)
-    count  = PlayerBracket.where(:event_bracket_id => self.id).where(:category_id => category_id).where(:enroll_status => :enroll).count
+    count  = PlayerBracket.joins(:player).where(:event_bracket_id => self.id).where(:category_id => category_id).where(:enroll_status => :enroll).count
   end
 
   def get_free_count(category_id)
