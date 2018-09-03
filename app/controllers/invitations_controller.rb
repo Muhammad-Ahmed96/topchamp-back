@@ -677,6 +677,17 @@ class InvitationsController < ApplicationController
     event = Event.find(partner_params[:event_id])
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
+    #set brackets
+    category_ids = []
+    if type == "partner_mixed"
+      category_ids = Category.mixed_categories
+    elsif type == "partner_double"
+      category_ids = Category.doubles_categories
+    end
+    brackets = player.brackets.where(:category_id => category_ids).all
+    if brackets.count <= 0
+      return response_no_category
+    end
     unless event.present?
       return response_no_event
     end
@@ -692,14 +703,6 @@ class InvitationsController < ApplicationController
       @invitation.url = Invitation.short_url((my_url.gsub '{id}', @invitation.id.to_s))
       @invitation.save!
       @invitation.send_mail(true)
-      #set brackets
-      category_ids = []
-      if type == "partner_mixed"
-        category_ids = Category.mixed_categories
-      elsif type == "partner_double"
-        category_ids = Category.doubles_categories
-      end
-      brackets = player.brackets.where(:category_id => category_ids).all
       brackets.each do |item|
         saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id).first
         if saved.nil?
@@ -810,6 +813,9 @@ class InvitationsController < ApplicationController
 
   def response_no_type
     json_response_error([t("not_type")], 422)
+  end
+  def response_no_category
+    json_response_error([t("not_subscribe_to_category")], 422)
   end
 
   def index_partners_params

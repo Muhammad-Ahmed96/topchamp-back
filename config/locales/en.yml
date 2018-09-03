@@ -224,6 +224,7 @@ en:
   refuse_success: "%{model} refuse success"
   not_brackets_to_enrroll: "No brackets to enroll"
   not_type: "Type required"
+  not_subscribe_to_category: "No subscribe to category"
   player:
     partner:
       validation:
