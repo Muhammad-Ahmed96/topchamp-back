@@ -11,6 +11,20 @@ class EventSchedulersController < ApplicationController
       key :operationId, 'eventsSchedulesList'
       key :produces, ['application/json',]
       key :tags, ['events']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :title
+        key :in, :query
+        key :description, 'Event filter'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, 'Event Schedule response'
         schema do
@@ -36,7 +50,8 @@ class EventSchedulersController < ApplicationController
     end
   end
   def index
-    json_response_serializer_collection( @event.schedules, EventScheduleSerializer)
+    title = params[:title]
+    json_response_serializer_collection( @event.schedules.title_like(title), EventScheduleSerializer)
   end
 
   swagger_path '/events/:event_id/schedules' do

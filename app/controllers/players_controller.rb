@@ -579,6 +579,13 @@ class PlayersController < ApplicationController
         key :type, :integer
         key :format, :int64
       end
+      parameter do
+        key :name, :title
+        key :in, :query
+        key :description, 'Event filter'
+        key :required, false
+        key :type, :string
+      end
       response 200 do
         key :description, 'Schedules Response'
         schema do
@@ -604,8 +611,9 @@ class PlayersController < ApplicationController
     end
   end
   def get_schedules
+    title = params[:title]
     player = Player.where(user_id: @resource.id).where(event_id: schedules_param[:event_id]).first
-    schedules = player.present? ? player.schedules : []
+    schedules = player.present? ? player.schedules.title_like(title) : []
     json_response_serializer_collection(schedules, EventScheduleSerializer)
   end
 
