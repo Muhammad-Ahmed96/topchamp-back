@@ -32,7 +32,7 @@ class EventsController < ApplicationController
       parameter do
         key :name, :title
         key :in, :query
-        key :description, 'State filter'
+        key :description, 'Event filter'
         key :required, false
         key :type, :string
       end

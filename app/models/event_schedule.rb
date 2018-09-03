@@ -8,6 +8,9 @@ class EventSchedule < ApplicationRecord
   validates :cost, numericality: true, :allow_nil => true
   validates :capacity, numericality: {only_integer: true}, :allow_nil => true
 
+  scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+
+
 
   swagger_schema :EventSchedule do
     property :id do
