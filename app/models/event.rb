@@ -638,7 +638,7 @@ class Event < ApplicationRecord
 
   def add_player(user_id, data)
     player = Player.where(user_id: user_id).where(event_id: self.id).first_or_create!
-    player.sync_brackets! data
+    player.sync_brackets!(data, true)
   end
 
   def only_for_men

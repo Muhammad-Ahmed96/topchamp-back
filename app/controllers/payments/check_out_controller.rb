@@ -246,7 +246,7 @@ class Payments::CheckOutController < ApplicationController
     end
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
-    player.sync_brackets! brackets
+    player.sync_brackets!(brackets, true)
     player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => number_with_precision(tax.present? ? tax[:amount] : 0, precision: 2),
                                          :description => "Bracket subscribe payment"})
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)

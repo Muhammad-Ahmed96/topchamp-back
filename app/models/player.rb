@@ -46,12 +46,15 @@ class Player < ApplicationRecord
     end
   end
 
-  def sync_brackets!(data)
+  def sync_brackets!(data, old_enrolls = false)
     brackets_ids = []
     schedules_ids = self.schedule_ids
     any_one = false
     event = self.event
     user = self.user
+    if old_enrolls
+      brackets_ids = brackets_ids + self.brackets_enroll.pluck(:id)
+    end
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
         #get bracket to enroll
