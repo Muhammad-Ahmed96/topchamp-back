@@ -404,6 +404,7 @@ class User < ApplicationRecord
     end
     result = player.validate_partner(partner_id, user_root_id, event_bracket_id, category_id)
     if result.nil?
+      self.create_team(user_root_id, event_id, event_bracket_id, category_id, [player.id])
       return nil
     end
     partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
