@@ -1,8 +1,8 @@
 class PlayersController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :partner, :wait_list, :enrolled]
-  around_action :transactions_filter, only: [:update, :create, :partner, :signature]
+  before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :enrolled]
+  around_action :transactions_filter, only: [:update, :create, :signature]
   swagger_path '/players' do
     operation :get do
       key :summary, 'List players'
@@ -552,14 +552,13 @@ class PlayersController < ApplicationController
     end
   end
   def signature
-    player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first_or_create!
+   # player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first_or_create!
     #todo not create default user
-=begin
+
     player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first
     if player.nil?
       return  json_response_error([t("no_player")], 422)
     end
-=end
     player.signature = signature_param[:signature]
     player.save!(:validate => false)
     json_response_success(t("edited_success", model: Player.model_name.human), true)
