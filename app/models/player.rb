@@ -246,7 +246,7 @@ class Player < ApplicationRecord
       url = url.gsub "{event_bracket_id}", bracket.id.to_s
       url = url.gsub "{category_id}", category.id.to_s
       url = Invitation.short_url url
-      users = User.joins(:wait_lists).merge(WaitList.where.(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
+      users = User.joins(:wait_lists).merge(WaitList.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
                                                 .where(:event_id => event.id)).all
       users.each do |user|
         UnsubscribeMailer.spot_open(user, event, url).deliver
