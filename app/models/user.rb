@@ -389,8 +389,8 @@ class User < ApplicationRecord
                                      parent_root)
       else
         #if [item[:category_id].to_i].included_in? Category.single_categories
-          player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
-          self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
+        player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
+        self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
         #end
       end
 
@@ -398,6 +398,8 @@ class User < ApplicationRecord
   end
 
   def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id, partner_main = false)
+    logger::info "segue"
+    logger::info "create_partner"
     user_id_main = partner_main ? partner_id : user_root_id
     user_id_partner = partner_main ? user_root_id : partner_id
     player = Player.where(user_id: user_id_main).where(event_id: event_id).first
@@ -405,9 +407,11 @@ class User < ApplicationRecord
     if player.nil?
       return nil
     end
-    result = player.validate_partner(partner_id, user_root_id, event_bracket_id, category_id)
+    result = player.validate_partner(user_id_partner, user_id_main, event_bracket_id, category_id)
     if result.nil?
-      self.create_team(user_id_main, event_id, event_bracket_id, category_id, [player.id])
+      if partner_main
+        self.create_team(user_id_main, event_id, event_bracket_id, category_id, [player.id])
+      end
       return nil
     end
     if partner_player.nil?
@@ -421,6 +425,26 @@ class User < ApplicationRecord
     team = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
                .where(:creator_user_id => user_root_id).where(:category_id => category_id).first_or_create!
     team.player_ids = players_ids
+    #find and delete old teams
+    players = team.players.where.not(:user_id => user_root_id).all
+    players.each do |player|
+      team_fetch = Team.joins(:players).merge(Player.where(:id => player.id)).where(:event_id => event_id)
+                       .where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).first
+      if team_fetch.present?
+        player.teams.destroy(team_fetch)
+      end
+    end
+    teams_ids = Team.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).where(:event_id => event_id).pluck(:id)
+    teams_to_destroy = []
+    teams_ids.each do |team_id|
+      count = Team.where(:id => team_id).first.players.count
+      if count == 0
+        teams_to_destroy << team_id
+      end
+    end
+    if teams_to_destroy.length > 0
+      Team.where(:id => teams_to_destroy).destroy_all
+    end
   end
 
 
@@ -448,6 +472,7 @@ class User < ApplicationRecord
       end
     end
   end
+
   private
 
   def check_dimensions
