@@ -94,11 +94,12 @@ class Player < ApplicationRecord
   end
 
   def set_teams
-    User.create_teams(self.brackets_enroll, self.user_id, event.id)
+    User.create_teams(self.brackets_enroll, self.user_id, event.id, true)
   end
 
   def set_paid(data, reference)
-    User.create_teams(self.brackets_enroll, self.user_id, event.id)
+    self.set_teams
+    #User.create_teams(self.brackets_enroll, self.user_id, event.id)
   end
 
   swagger_schema :Player do
