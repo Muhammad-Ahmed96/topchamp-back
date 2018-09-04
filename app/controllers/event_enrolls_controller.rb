@@ -83,6 +83,7 @@ class EventEnrollsController < ApplicationController
     @event.players.where(:user_id => @resource.id).each do |player|
       player.inactivate
       player.unsubscribe_event
+      player.destroy
     end
     @event.participants.where(:user_id => @resource.id).destroy_all
     json_response_success(t("success"), true)

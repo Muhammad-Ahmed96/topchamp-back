@@ -148,6 +148,19 @@ class Event < ApplicationRecord
     unless deleteIds.nil?
       self.schedules.where.not(id: deleteIds).destroy_all
     end
+
+
+    #sync schedules
+    self.schedules.where(:agenda_type_id => AgendaType.competition_id).each do |schedule|
+      player_ids = schedule.players_ids
+      self.players.each do |player|
+        bracket = player.brackets_enroll.where(:category_id => schedule.category_id)
+        if bracket.present?
+          player_ids << player.id
+        end
+      end
+      schedule.players_ids = player_ids
+    end
   end
 
   # sync all brackets of event
