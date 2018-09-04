@@ -99,5 +99,6 @@ Rails.application.configure do
   config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
   config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"
   config.front_partner_url = config.front_url + "?type=need_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}"
+  config.front_partner_choose_url = config.front_url + "?type=choose_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}"
   config.front_new_spot_url = config.front_url + "?type=new_spot&event_id={event_id}&event_bracket_id={event_bracket_id}&category_id={category_id}"
 end
