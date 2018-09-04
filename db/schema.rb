@@ -356,7 +356,7 @@ ActiveRecord::Schema.define(version: 2018_09_04_014916) do
     t.string "token"
     t.string "email"
     t.datetime "send_at"
-    t.string "status", default: "pending_invitation"
+    t.string "status", default: "pending_confirmation"
     t.string "invitation_type", default: "event"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

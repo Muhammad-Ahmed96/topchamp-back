@@ -180,7 +180,7 @@ class Player < ApplicationRecord
     elsif [category_id.to_i].included_in? Category.mixed_categories
       category_type = "partner_mixed"
     end
-    invitation = Invitation.where(:user_id => partner_id, :sender_id => user_root_id, :status => :role).where(:invitation_type => category_type)
+    invitation = Invitation.where(:user_id => partner_id, :sender_id => user_root_id, :status => :accepted).where(:invitation_type => category_type)
                      .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket_id)).first
     partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
     if partner_player.present?

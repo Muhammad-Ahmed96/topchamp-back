@@ -222,7 +222,7 @@ class InvitationsController < ApplicationController
     invitations = Invitation.my_order(column, direction).event_like(event)
                       .email_like(email).first_name_like(first_name).last_name_like(last_name).event_order(eventColumn, direction).user_order(userColumn, direction)
                       .in_status(status).phone_like(phone).phone_order(phoneColumn, direction).in_type(type).where(:user_id => @resource.id).where(:event_id => event_id)
-                      .where(:status => "pending_invitation").where(:invitation_type => type)
+                      .where(:status => "pending_confirmation").where(:invitation_type => type)
     if paginate.to_s == "0"
       json_response_serializer_collection(invitations.all, InvitationSerializer)
     else
@@ -477,7 +477,7 @@ class InvitationsController < ApplicationController
 
   def enroll
     @invitation = Invitation.find(params[:id])
-    if @invitation.status != "role"
+    if @invitation.status != "accepted"
       event = @invitation.event
       if event.present?
         types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
@@ -496,7 +496,7 @@ class InvitationsController < ApplicationController
           types = types + participant.attendee_type_ids.to_a
           participant.attendee_type_ids = types
         end
-        @invitation.status = :role
+        @invitation.status = :accepted
         @invitation.save!
         category_id = nil
         if @invitation.invitation_type == "partner_mixed"
@@ -617,7 +617,7 @@ class InvitationsController < ApplicationController
 
   def refuse
     @invitation = Invitation.find(params[:id])
-    @invitation.status = "refuse"
+    @invitation.status = "declined"
     @invitation.save!(:validate => false)
     json_response_success(t("refuse_success", model: Invitation.model_name.human), true)
   end
