@@ -172,6 +172,8 @@ class Payments::CheckOutController < ApplicationController
     config = Payments::ItemsConfig.get_bracket
     items = []
     amount = 0
+    tax_for_registration = 0
+    tax_for_bracket = 0
     enroll_fee = event.registration_fee
     bracket_fee = event.payment_method.present? ? event.payment_method.bracket_fee : 0
     #aply discounts
@@ -212,8 +214,12 @@ class Payments::CheckOutController < ApplicationController
     if event.tax.present?
       if event.tax.is_percent
         tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = ((event.tax.tax * enroll_fee) / 100)
+        tax_for_bracket = ((event.tax.tax * bracket_fee) / 100)
       else
         tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = event.tax.tax/ (1 + (brackets.length))
+        tax_for_bracket = event.tax.tax/ (1 + (brackets.length))
       end
 
     end
@@ -247,8 +253,15 @@ class Payments::CheckOutController < ApplicationController
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
-    player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => number_with_precision(tax.present? ? tax[:amount] : 0, precision: 2),
-                                         :description => "Bracket subscribe payment"})
+    brackets.each do |item|
+      player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
+                                           :description => "Bracket subscribe payment", :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
+                                          :event_id => player.event_id, :type_payment => "bracket"})
+    end
+
+    player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
+                                         :description => "Event subscribe payment", :event_id => player.event_id, :type_payment => "event"})
+
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id  => brackets.pluck(:category_id))
         .update(:payment_transaction_id =>  response.transactionResponse.transId)
