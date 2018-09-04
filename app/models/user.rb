@@ -374,8 +374,6 @@ class User < ApplicationRecord
   end
 
   def self.create_teams(brackets, user_root_id, event_id, parent_root = false)
-    logger::info "segue"
-    logger::info "create_teams"
     #ckeck partner brackets
     brackets.each do |item|
       category_type = ""
@@ -387,8 +385,6 @@ class User < ApplicationRecord
       invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :role).where(:invitation_type => category_type)
                        .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
       if invitation.present?
-        logger::info "segue"
-        logger::info "invitation"
         result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
                                      parent_root)
       else
@@ -402,8 +398,6 @@ class User < ApplicationRecord
   end
 
   def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id, partner_main = false)
-    logger::info "segue"
-    logger::info "create_partner"
     user_id_main = partner_main ? partner_id : user_root_id
     user_id_partner = partner_main ? user_root_id : partner_id
     player = Player.where(user_id: user_id_main).where(event_id: event_id).first
@@ -429,12 +423,6 @@ class User < ApplicationRecord
     team = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
                .where(:creator_user_id => user_root_id).where(:category_id => category_id).first_or_create!
     team.player_ids = players_ids
-    logger::info "segue"
-    logger::info "players_ids"
-    logger::info players_ids
-
-    logger::info "segue"
-    logger::info user_root_id
     #find and delete old teams
     players = team.players.where.not(:user_id => user_root_id).all
     players.each do |player|

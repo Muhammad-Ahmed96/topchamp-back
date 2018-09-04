@@ -48,6 +48,6 @@ class UnsubscribeMailer < ApplicationMailer
     @user = user
     @url = url
     attachments.inline['top-logo.png'] = File.read('app/assets/images/top-logo.png')
-    mail(to: user.email, subject: "Registry cancellation")
+    mail(to: user.email, subject: "New spot open!")
   end
 end

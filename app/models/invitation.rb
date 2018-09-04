@@ -172,7 +172,6 @@ class Invitation < ApplicationRecord
       response = webmaster.create_short_link_short_dynamic_link(request)
       link = response.short_link
     rescue Google::Apis::ClientError => e
-      logger::info("dadaddada")
       logger::info(e.to_json)
     end
     link

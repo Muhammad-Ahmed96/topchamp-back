@@ -87,7 +87,6 @@ class Tournament < ApplicationRecord
   end
 
   def set_winner(match)
-    logger::info("set_winner")
     next_round = self.rounds.where("index > ?", match.round.index).order(index: :asc).first
     if next_round.present?
       next_match_info = self.get_index_match(match.index)

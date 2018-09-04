@@ -476,8 +476,6 @@ class InvitationsController < ApplicationController
   end
 
   def enroll
-    logger::info "segue"
-    logger::info "enroll"
     @invitation = Invitation.find(params[:id])
     if @invitation.status != "role"
       event = @invitation.event
