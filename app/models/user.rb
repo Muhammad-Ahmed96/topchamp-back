@@ -386,7 +386,6 @@ class User < ApplicationRecord
                        .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
       if invitation.present?
         result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id])
-
       else
         #if [item[:category_id].to_i].included_in? Category.single_categories
           player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
@@ -400,6 +399,10 @@ class User < ApplicationRecord
   def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id)
     player = Player.where(user_id: user_root_id).where(event_id: event_id).first
     if player.nil?
+      player_main = Player.where(user_id: partner_id).where(event_id: event_id).first
+      if player_main.present?
+        self.create_team(partner_id, event_id, event_bracket_id, category_id, [player_main.id])
+      end
       return nil
     end
     result = player.validate_partner(partner_id, user_root_id, event_bracket_id, category_id)
