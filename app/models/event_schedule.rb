@@ -4,7 +4,7 @@ class EventSchedule < ApplicationRecord
   belongs_to :event
   belongs_to :agenda_type
   belongs_to :category,  optional: true
-  has_and_belongs_to_many :players, :class_name => "EventSchedule"
+  has_and_belongs_to_many :players
 
   validates :cost, numericality: true, :allow_nil => true
   validates :capacity, numericality: {only_integer: true}, :allow_nil => true
