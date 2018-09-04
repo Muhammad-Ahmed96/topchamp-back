@@ -51,7 +51,7 @@ class EventSchedulersController < ApplicationController
   end
   def index
     title = params[:title]
-    json_response_serializer_collection( @event.schedules.title_like(title), EventScheduleSerializer)
+    json_response_serializer_collection( @event.schedules.title_like(title).category_like(title), EventScheduleSerializer)
   end
 
   swagger_path '/events/:event_id/schedules' do
