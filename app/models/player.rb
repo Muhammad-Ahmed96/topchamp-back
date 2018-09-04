@@ -76,6 +76,7 @@ class Player < ApplicationRecord
           if any_one == false and shedules.length > 0
             any_one = true
           end
+          #delete of wait list
           if saved_bracket.enroll_status == "enroll"
             WaitList.where(:event_bracket_id => bracket[:event_bracket_id]).where(:category_id => bracket[:category_id])
                 .where(:user_id => user.id).where(:event_id => event.id).destroy_all
@@ -184,16 +185,16 @@ class Player < ApplicationRecord
                      .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket_id)).first
     partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
     if partner_player.present?
+      partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id, :category_id => category_id).first
       #Complete requiered fields in their profiles
       if partner_player.user.first_name.present? and partner_player.user.last_name.present?
         current = current + 1
       end
       #Event fee paid
-      if partner_player.is_event_paid?
+      if partner_player.is_event_paid? or partner_bracket.payment_transaction_id == "000"
         current = current + 1
       end
       #Brackets fee paid
-      partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id, :category_id => category_id).first
       if partner_bracket.present? and partner_bracket.payment_transaction_id.present?
         current = current + 1
       end

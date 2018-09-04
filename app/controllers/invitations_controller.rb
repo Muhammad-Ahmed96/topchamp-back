@@ -654,6 +654,13 @@ class InvitationsController < ApplicationController
         key :required, true
         key :type, :string
       end
+      parameter do
+        key :name, :for_registered
+        key :description, '1 for need a partner or 0 for choose a partner'
+        key :in, :body
+        key :required, true
+        key :type, :integer
+      end
       response 200 do
         key :description, ''
         schema do
@@ -677,6 +684,7 @@ class InvitationsController < ApplicationController
     event = Event.find(partner_params[:event_id])
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
+    selector = [1, 0, "1", "0"].include?(partner_params[:for_registered]) ? partner_params[:for_registered] : nil
     #set brackets
     category_ids = []
     if type == "partner_mixed"
@@ -688,13 +696,22 @@ class InvitationsController < ApplicationController
     if brackets.count <= 0
       return response_no_category
     end
+    unless selector.present?
+      return response_no_param
+    end
     unless event.present?
       return response_no_event
     end
     unless type.present?
       return response_no_type
     end
-    my_url = Rails.configuration.front_partner_url
+    my_url = ""
+    if selector.to_s == "1"
+      my_url = Rails.configuration.front_partner_url
+    elsif selector.to_s == "0"
+      my_url = Rails.configuration.front_partner_choose_url
+    end
+
     if to_user.present? and player.present?
       my_url = my_url.gsub '{event_id}', event.id.to_s
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
@@ -804,11 +821,17 @@ class InvitationsController < ApplicationController
   end
 
   def partner_params
-    params.permit(:event_id, :partner_id, :type, :url)
+    params.required(:for_registered)
+    params.required(:event_id)
+    params.permit(:event_id, :partner_id, :type, :url, :for_registered)
   end
 
   def response_no_event
     json_response_error([t("not_event")], 422)
+  end
+
+  def response_no_param
+    json_response_error([t("not_param")], 422)
   end
 
   def response_no_type

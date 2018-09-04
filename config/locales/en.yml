@@ -215,6 +215,7 @@ en:
   events_required: "Event required"
   no_player: "No player found"
   not_event: "Event required"
+  not_param: "Param required"
   only_for_men_event: "This event is only for male members"
   only_for_women_event: "This event is only for female members"
   not_age_bracket: "This event does not have a bracket for your age"
