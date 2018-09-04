@@ -373,7 +373,7 @@ class User < ApplicationRecord
 
   end
 
-  def self.create_teams(brackets, user_root_id, event_id)
+  def self.create_teams(brackets, user_root_id, event_id, parent_root = false)
     #ckeck partner brackets
     brackets.each do |item|
       category_type = ""
@@ -385,7 +385,8 @@ class User < ApplicationRecord
       invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :role).where(:invitation_type => category_type)
                        .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
       if invitation.present?
-        result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id])
+        result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
+                                     parent_root)
       else
         #if [item[:category_id].to_i].included_in? Category.single_categories
           player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
@@ -396,21 +397,19 @@ class User < ApplicationRecord
     end
   end
 
-  def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id)
-    player = Player.where(user_id: user_root_id).where(event_id: event_id).first
+  def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id, partner_main = false)
+    user_id_main = partner_main ? partner_id : user_root_id
+    user_id_partner = partner_main ? user_root_id : partner_id
+    player = Player.where(user_id: user_id_main).where(event_id: event_id).first
+    partner_player = Player.where(user_id: user_id_partner).where(event_id: event_id).first
     if player.nil?
-      player_main = Player.where(user_id: partner_id).where(event_id: event_id).first
-      if player_main.present?
-        self.create_team(partner_id, event_id, event_bracket_id, category_id, [player_main.id])
-      end
       return nil
     end
     result = player.validate_partner(partner_id, user_root_id, event_bracket_id, category_id)
     if result.nil?
-      self.create_team(user_root_id, event_id, event_bracket_id, category_id, [player.id])
+      self.create_team(user_id_main, event_id, event_bracket_id, category_id, [player.id])
       return nil
     end
-    partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
     if partner_player.nil?
       return nil
     end
