@@ -8,7 +8,7 @@ class CreateInvitations < ActiveRecord::Migration[5.2]
       t.string :token, :null => true
       t.string :email, :null => true
       t.datetime :send_at, :null => true
-      t.string :status, default: "pending_invitation"
+      t.string :status, default: "pending_confirmation"
       t.string :invitation_type, default: "event"
       t.timestamps
       t.datetime :deleted_at, :null => true
