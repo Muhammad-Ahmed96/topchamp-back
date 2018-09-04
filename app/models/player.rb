@@ -172,8 +172,6 @@ class Player < ApplicationRecord
 
   #validate partner complete information
   def validate_partner(partner_id, user_root_id, bracket_id, category_id)
-    logger::info "segue"
-    logger::info "validate_partner"
     total = 4
     current = 0
     category_type = ""
@@ -186,37 +184,24 @@ class Player < ApplicationRecord
                      .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket_id)).first
     partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
     if partner_player.present?
-      logger::info "segue"
-      logger::info "partner_player"
       #Complete requiered fields in their profiles
       if partner_player.user.first_name.present? and partner_player.user.last_name.present?
-        logger::info "segue"
-        logger::info "name"
         current = current + 1
       end
       #Event fee paid
       if partner_player.is_event_paid?
-        logger::info "segue"
-        logger::info "event paid"
         current = current + 1
       end
       #Brackets fee paid
       partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id, :category_id => category_id).first
       if partner_bracket.present? and partner_bracket.payment_transaction_id.present?
-        logger::info "segue"
-        logger::info "fee paid"
         current = current + 1
       end
     end
     #Invitation accepted
     if invitation.present?
       current = current + 1
-      logger::info "segue"
-      logger::info "invitation"
     end
-    logger::info "segue"
-    logger::info total
-    logger::info current
     if current == total
       return invitation
     else
