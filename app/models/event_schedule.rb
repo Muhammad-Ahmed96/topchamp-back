@@ -9,8 +9,7 @@ class EventSchedule < ApplicationRecord
   validates :cost, numericality: true, :allow_nil => true
   validates :capacity, numericality: {only_integer: true}, :allow_nil => true
 
-  scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
-  scope :category_like, lambda {|search| left_outer_joins(:category).merge(Category.where ["LOWER(name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :title_like, lambda {|search| left_outer_joins(:category).where("LOWER(title) LIKE LOWER(?) OR LOWER(categories.name) LIKE LOWER(?)", "%#{search}%",  "%#{search}%") if search.present?}
 
 
 
