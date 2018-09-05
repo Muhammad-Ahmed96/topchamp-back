@@ -37,6 +37,13 @@ class PartnersController < ApplicationController
         key :type, :string
       end
       parameter do
+        key :name, :event_bracket_id
+        key :in, :query
+        key :description, 'Bracket id'
+        key :required, true
+        key :type, :integer
+      end
+      parameter do
         key :name, :paginate
         key :in, :query
         key :description, 'paginate {any} = paginate, 0 = no paginate'
@@ -92,6 +99,7 @@ class PartnersController < ApplicationController
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     event_id = params[:event_id]
     event = Event.where(id: event_id).first
+    category_id = 0
     if event.nil?
       return json_response_error([t("not_event")], 422)
     end
@@ -105,16 +113,18 @@ class PartnersController < ApplicationController
       if player.present?
         not_in << player.partner_double_id
         gender = player.user.gender
+        category_id = player.user.gender == "Male" ?  Category.single_men_double_category :  Category.single_women_double_category
       end
     elsif type == "mixed"
       if player.present?
         not_in << player.partner_mixed_id
         gender = player.user.gender == "Male" ? "Female" : "Male"
       end
+      category_id = Category.single_mixed_category
     end
     users_in = nil
     if type_users == "registered"
-      users_in = event.players.pluck(:user_id)
+      users_in = event.players.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => params[:event_bracket_id]).where(:category_id =>  category_id)).pluck(:user_id)
     else
       in_event = event.players.pluck(:user_id)
       not_in = not_in + in_event
