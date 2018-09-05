@@ -613,7 +613,7 @@ class PlayersController < ApplicationController
   def get_schedules
     title = params[:title]
     player = Player.where(user_id: @resource.id).where(event_id: schedules_param[:event_id]).first
-    schedules = player.present? ? player.schedules.title_like(title).category_like(title) : []
+    schedules = player.present? ? player.schedules.title_like(title) : []
     json_response_serializer_collection(schedules, EventScheduleSerializer)
   end
 
