@@ -65,7 +65,7 @@ class Tournament < ApplicationRecord
     event = Event.where(:id => self.event_id).first
     if event.present?
       count = event.teams.where(:event_bracket_id => self.event_bracket_id).where(:category_id => self.category_id).count
-      if count == self.total_teams
+      if count == self.total_teams and self.total_teams > 0
         self.update_attributes(:matches_status => :complete)
       else
         self.update_attributes(:matches_status => :not_complete)
