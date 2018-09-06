@@ -743,8 +743,11 @@ class PlayersController < ApplicationController
     @tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
                       .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
     team_id = team.present? ? team.id : 0
-    rounds = @tournament.rounds.joins(:matches).merge(Match.where(:team_a_id => team_id))
-    json_response_serializer_collection(rounds, RoundSingleSerializer)
+    rounds = @tournament.rounds.joins(:matches).merge(Match.where(:team_a_id => team_id).or(Match.where(:team_b_id => team_id)))
+    rounds.each do |item|
+      item.for_team_id = team_id
+    end
+    json_response_serializer_collection(rounds, RoundMyMatchesSerializer)
   end
   swagger_path '/players/categories' do
     operation :get do
