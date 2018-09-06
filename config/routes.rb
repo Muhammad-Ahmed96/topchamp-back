@@ -151,6 +151,7 @@ Rails.application.routes.draw do
         get :brackets
         post :partners, action: :add_partner, controller: :player_partner
         get :partners, action: :get_my_partners, controller: :player_partner
+        get :rival_info
       end
       member do
         put :activate
