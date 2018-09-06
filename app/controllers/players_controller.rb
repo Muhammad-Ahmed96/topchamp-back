@@ -675,7 +675,7 @@ class PlayersController < ApplicationController
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
     result = player.validate_partner(validate_partner_params[:partner_id],  @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
-    if result.nil?
+    if result != true
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
     json_response_success(t("player.partner.validation.valid"), response)

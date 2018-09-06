@@ -28,14 +28,14 @@ development:
 #  password: password
 #  host: ec2-54-203-30-224.us-west-2.compute.amazonaws.com
 
-  database: top_champ_production
-  username: deploy
-  password: password
-  host: ec2-54-68-230-26.us-west-2.compute.amazonaws.com
-#  database: topchamp_development
-#  username: daniel
+#  database: top_champ_production
+#  username: deploy
 #  password: password
-#  host: localhost
+#  host: ec2-54-68-230-26.us-west-2.compute.amazonaws.com
+  database: topchamp_development
+  username: daniel
+  password: password
+  host: localhost
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
