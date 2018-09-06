@@ -849,6 +849,48 @@ class PlayersController < ApplicationController
     brackets = player.brackets_enroll.where(:category_id => brackets_list_params[:category_id])
     json_response_serializer_collection(brackets, PlayerBracketSingleSerializer)
   end
+  swagger_path '/players/rival_info' do
+    operation :get do
+      key :summary, 'Get rival info'
+      key :description, 'Event Catalog'
+      key :operationId, 'playersRivalInfo'
+      key :produces, ['application/json',]
+      key :tags, ['players']
+      parameter do
+        key :name, :team_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, 'Rival Response'
+        schema do
+          key :type, :object
+          property :data do
+            key :type, :array
+            items do
+              key :'$ref', :Player
+            end
+            key :description, "Information container"
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def rival_info
+    players = Player.joins(:teams).merge(Team.where(:id => rival_params[:team_id]))
+    json_response_serializer_collection(players, RivalInfoSerializer)
+  end
 
   private
 
@@ -917,5 +959,11 @@ class PlayersController < ApplicationController
     params.required(:event_id)
     params.required(:category_id)
     params.permit(:event_id, :category_id)
+  end
+
+  def rival_params
+    #params.required(:match_id)
+    params.required(:team_id)
+    params.permit(:match_id, :team_id)
   end
 end
