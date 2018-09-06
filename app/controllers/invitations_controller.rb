@@ -479,7 +479,35 @@ class InvitationsController < ApplicationController
     @invitation = Invitation.find(params[:id])
     if @invitation.status != "accepted"
       event = @invitation.event
+      for_validate_partner = false
+      category_id = nil
       if event.present?
+        if @invitation.invitation_type == "partner_mixed"
+          category_id = Category.single_mixed_category
+          for_validate_partner = true
+        elsif @invitation.invitation_type == "partner_double"
+          user = User.find(@invitation.user_id)
+          if user.present?
+            if user.gender == "Male"
+              category_id = Category.single_men_double_category
+            elsif user.gender == "Female"
+              category_id = Category.single_women_double_category
+            end
+          end
+          for_validate_partner = true
+        end
+        if for_validate_partner
+          player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
+          if player.present?
+            @invitation.brackets.each do |item|
+              if player.have_partner?(category_id,  item.event_bracket_id)
+                return json_response_error([t("player.partner.validation.already_partner")])
+              end
+            end
+          else
+            return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+          end
+        end
         types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
         if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
           types = []
@@ -498,23 +526,15 @@ class InvitationsController < ApplicationController
         end
         @invitation.status = :accepted
         @invitation.save!
-        category_id = nil
-        if @invitation.invitation_type == "partner_mixed"
-          category_id = Category.single_mixed_category
-        elsif @invitation.invitation_type == "partner_double"
-          user = User.find(@invitation.user_id)
-          if user.present?
-            if user.gender == "Male"
-              category_id = Category.single_men_double_category
-            elsif user.gender == "Female"
-              category_id = Category.single_women_double_category
-            end
-          end
-        end
         if @invitation.invitation_type == "partner_mixed" or @invitation.invitation_type == "partner_double"
           #ckeck partner brackets
           @invitation.brackets.each do |item|
             result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
+            if result == false
+              @invitation.status = :pending_confirmation
+              @invitation.save!
+              return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+            end
           end
         end
       end

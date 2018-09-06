@@ -403,19 +403,20 @@ class User < ApplicationRecord
     player = Player.where(user_id: user_id_main).where(event_id: event_id).first
     partner_player = Player.where(user_id: user_id_partner).where(event_id: event_id).first
     if player.nil?
-      return nil
+      return false
     end
     result = player.validate_partner(user_id_partner, user_id_main, event_bracket_id, category_id)
-    if result.nil?
+    if result != true
       if partner_main
         self.create_team(user_id_main, event_id, event_bracket_id, category_id, [player.id])
       end
-      return nil
+      return false
     end
     if partner_player.nil?
-      return nil
+      return false
     end
     self.create_team(user_root_id, event_id, event_bracket_id, category_id, [player.id, partner_player.id])
+    return true
   end
 
 

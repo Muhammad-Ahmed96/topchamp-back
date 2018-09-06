@@ -57,7 +57,7 @@ class PlayerPartnerController < ApplicationController
   def add_partner
     result = User.create_partner(@resource.id, add_partner_params[:event_id], add_partner_params[:partner_id],  add_partner_params[:bracket_id],
                                  add_partner_params[:category_id])
-    if result.nil?
+    if result == false
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
     json_response_success(t("created_success", model: Team.model_name.human), true )

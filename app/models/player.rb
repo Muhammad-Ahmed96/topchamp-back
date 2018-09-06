@@ -174,6 +174,7 @@ class Player < ApplicationRecord
   #validate partner complete information
   def validate_partner(partner_id, user_root_id, bracket_id, category_id)
     total = 4
+    message = nil
     current = 0
     category_type = ""
     if [category_id.to_i].included_in? Category.doubles_categories
@@ -204,9 +205,9 @@ class Player < ApplicationRecord
       current = current + 1
     end
     if current == total
-      return invitation
+      return true
     else
-      nil
+      return "Partner not valid"
     end
   end
 
@@ -288,6 +289,16 @@ class Player < ApplicationRecord
     result = false
     if self.payment_transactions.where(:type_payment => "event").where(:status => 1).count > 0
       result = true
+    end
+    return result
+  end
+
+  def have_partner?(category_id, event_bracket_id)
+    result = false
+    self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+      if team.players.count > 1
+        result = true
+      end
     end
     return result
   end
