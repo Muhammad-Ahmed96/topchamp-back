@@ -499,7 +499,7 @@ class TournamentsController < ApplicationController
   def rounds_params
     unless params[:rounds].nil? and !params[:rounds].kind_of?(Array)
       params[:rounds].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b, :match_number])
       end
     end
   end
