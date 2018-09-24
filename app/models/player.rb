@@ -302,6 +302,16 @@ class Player < ApplicationRecord
     end
     return result
   end
+
+  def is_partner?(category_id, event_bracket_id)
+    result = false
+    self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+      if team.players.count > 1
+        result = true
+      end
+    end
+    return result
+  end
   private
 
   def set_status

@@ -37,6 +37,11 @@ class EventBracket < ApplicationRecord
       hours = TimeDifference.between(Time.current, free.free_at).in_hours
       in_wait_list = WaitList.where(:user_id => Current.user.id).where(:category_id => category_id)
                          .where(:event_bracket_id => self.id).where(:event_id => self.event_id).where("created_at <= ?", free.free_at).count
+      general_wait_list = WaitList.where(:category_id => category_id)
+                              .where(:event_bracket_id => self.id).where(:event_id => self.event_id).where("created_at <= ?", free.free_at).count
+    end
+    if general_wait_list == 0
+      in_wait_list = 1
     end
     if self.quantity.present? and (self.quantity > count and (hours.nil? or (hours > Rails.configuration.hours_bracket or in_wait_list > 0)))
       result = true
