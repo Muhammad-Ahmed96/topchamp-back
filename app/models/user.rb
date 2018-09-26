@@ -421,8 +421,25 @@ class User < ApplicationRecord
 
 
   def self.create_team(user_root_id, event_id, event_bracket_id, category_id, players_ids)
+    count =  Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
+                 .where(:creator_user_id => user_root_id).where(:category_id => category_id).count
+    team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
+        .where(:creator_user_id => user_root_id).where(:category_id => category_id).first
+    team_name = 'Team'
+    if team_exist.present?
+      if team_exist.name.nil?
+        team_name = "Team #{count + 1}"
+      else
+        team_name = team_exist.name
+      end
+    else
+      team_name = "Team #{count + 1}"
+    end
+
     team = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-               .where(:creator_user_id => user_root_id).where(:category_id => category_id).first_or_create!
+               .where(:creator_user_id => user_root_id).where(:category_id => category_id)
+               .update_or_create!({:name => team_name, :event_id => event_id, :event_bracket_id => event_bracket_id,
+                                   :creator_user_id => user_root_id, :category_id => category_id})
     team.player_ids = players_ids
     #find and delete old teams
     players = team.players.where.not(:user_id => user_root_id).all

@@ -43,12 +43,37 @@ class Match < ApplicationRecord
     property :seed_team_a do
       key :type, :integer
       key :format, :int64
-      key :description, "Seed team a associated with round"
+      key :description, "Seed team a associated with match"
     end
     property :seed_team_b do
       key :type, :integer
       key :format, :int64
-      key :description, "Seed team b associated with round"
+      key :description, "Seed team b associated with match"
+    end
+
+    property :match_number do
+      key :type, :string
+      key :description, "Match number associated with match"
+    end
+
+    property :court do
+      key :type, :string
+      key :description, "Court associated with match"
+    end
+
+    property :date do
+      key :type, :string
+      key :description, "Date  associated with match"
+    end
+
+    property :start_time do
+      key :type, :string
+      key :description, "Start time associated with match"
+    end
+
+    property :end_time do
+      key :type, :string
+      key :description, "End time associated with match"
     end
   end
 
@@ -71,12 +96,38 @@ class Match < ApplicationRecord
     property :seed_team_a do
       key :type, :integer
       key :format, :int64
-      key :description, "Seed team a associated with round"
+      key :description, "Seed team a associated with match"
     end
     property :seed_team_b do
       key :type, :integer
       key :format, :int64
-      key :description, "Seed team b associated with round"
+      key :description, "Seed team b associated with match"
+    end
+
+
+    property :match_number do
+      key :type, :string
+      key :description, "Match number associated with match"
+    end
+
+    property :court do
+      key :type, :string
+      key :description, "Court associated with match"
+    end
+
+    property :date do
+      key :type, :string
+      key :description, "Date  associated with match"
+    end
+
+    property :start_time do
+      key :type, :string
+      key :description, "Start time associated with match"
+    end
+
+    property :end_time do
+      key :type, :string
+      key :description, "End time associated with match"
     end
   end
 
