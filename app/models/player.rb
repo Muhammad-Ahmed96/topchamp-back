@@ -295,7 +295,8 @@ class Player < ApplicationRecord
 
   def have_partner?(category_id, event_bracket_id)
     result = false
-    self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+    #self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+    self.teams.where(:category_id => category_id).each do |team|
       if team.players.count > 1
         result = true
       end
