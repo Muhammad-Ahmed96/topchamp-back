@@ -20,6 +20,7 @@ class Tournament < ApplicationRecord
                                                                  .order("event_brackets.highest_skill #{direction}").order("event_brackets.young_age #{direction}").order("event_brackets.old_age #{direction}") if column.present?}
 
   def sync_matches!(data)
+    Score.joins(set: [match: [round: [:tournament]]]).merge(Tournament.where :id => self.id).destroy_all
     deleteIds = []
     if data.present?
       data.each do |item|
