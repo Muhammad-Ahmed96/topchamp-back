@@ -26,6 +26,13 @@ class Payments::CheckOutController < ApplicationController
         key :format, :float
       end
       parameter do
+        key :name, :code
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :float
+      end
+      parameter do
         key :name, :tax
         key :in, :body
         key :required, true
@@ -66,11 +73,37 @@ class Payments::CheckOutController < ApplicationController
   def event
     event = Event.find(event_params[:event_id])
     if event.is_paid == false
+      director = event.director
       customer = Payments::Customer.get(@resource)
       config = Payments::ItemsConfig.get_event
-      items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: config[:unit_price],
+      amount = 0
+      fees = EventFee.first
+      personalized_discount = EventPersonalizedDiscount.where(:code => subscribe_params[:code]).where(:email => director.email).first
+
+      if fees.present?
+        amount = fees.base_fee
+      end
+      if personalized_discount.present?
+        if personalized_discount.is_discount_percent
+          amount =  amount - ((personalized_discount.discount * amount) / 100)
+        else
+          amount =  amount - personalized_discount.discount
+        end
+        personalized_discount.usage = general_discount.usage + 1
+        personalized_discount.save!(:validate => false)
+      end
+
+      if fees.present?
+        if fees.is_transaction_fee_percent
+          amount =  amount + ((fees.transaction_fee * amount) / 100)
+        else
+          amount = amount + fees.transaction_fee
+        end
+      end
+
+      items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
                 taxable: config[:taxable]}]
-      tax = {:amount => ((config[:tax] * config[:unit_price]) / 100), :name => "tax", :description => "Tax venue top champ"}
+      tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
                                            config[:unit_price], items, tax)
       if response.messages.resultCode == MessageTypeEnum::Ok
@@ -278,7 +311,7 @@ class Payments::CheckOutController < ApplicationController
     #params.required(:tax)
     params.required(:card_id)
     params.required(:cvv)
-    params.permit(:event_id, :amount, :tax, :card_id, :cvv)
+    params.permit(:event_id, :amount, :tax, :card_id, :cvv, :code)
   end
 
   def subscribe_params

@@ -490,6 +490,19 @@ class User < ApplicationRecord
     end
   end
 
+  def sync_personalized_discount(data)
+    deleteIds = []
+    if data.present? and data.kind_of?(Array)
+      data.each do |discount|
+        discount.delete(:id)
+        discount = EventPersonalizedDiscount.where(:email => discount[:email]).where(:code => discount[:code])
+            .update_or_create!(discount)
+        deleteIds << discount.id
+      end
+    end
+    EventPersonalizedDiscount.where.not(id: deleteIds).destroy_all
+  end
+
   private
 
   def check_dimensions

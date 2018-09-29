@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_09_24_230647) do
+ActiveRecord::Schema.define(version: 2018_09_29_221038) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -185,6 +185,16 @@ ActiveRecord::Schema.define(version: 2018_09_24_230647) do
     t.date "on_site_date_end"
   end
 
+  create_table "event_fees", force: :cascade do |t|
+    t.float "base_fee"
+    t.float "transaction_fee"
+    t.boolean "is_transaction_fee_percent", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_fees_on_deleted_at"
+  end
+
   create_table "event_payment_informations", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "bank_name"
@@ -204,6 +214,19 @@ ActiveRecord::Schema.define(version: 2018_09_24_230647) do
     t.string "currency"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "event_personalized_discounts", force: :cascade do |t|
+    t.string "name"
+    t.string "email"
+    t.string "code"
+    t.float "discount"
+    t.integer "usage", default: 0
+    t.boolean "is_discount_percent", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_personalized_discounts_on_deleted_at"
   end
 
   create_table "event_registration_rules", force: :cascade do |t|

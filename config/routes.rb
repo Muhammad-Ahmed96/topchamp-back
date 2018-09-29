@@ -176,6 +176,12 @@ Rails.application.routes.draw do
 
     resources :tournaments, only: [:index]
     resources :tournament_matches_status, only: [:index]
+
+    resources :event_fees, only: [:create, :index] do
+      collection do
+        get :calculate
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

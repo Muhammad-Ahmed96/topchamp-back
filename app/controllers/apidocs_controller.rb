@@ -77,6 +77,7 @@ class ApidocsController < ApplicationController
       Payments::CheckOutController,
       WaitListController,
       ScoresController,
+      EventFeesController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -126,6 +127,8 @@ class ApidocsController < ApplicationController
       Tournament,
       Score,
       WaitList,
+      EventFee,
+      EventPersonalizedDiscount,
       self,
   ].freeze
 
