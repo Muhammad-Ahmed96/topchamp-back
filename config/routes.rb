@@ -104,7 +104,11 @@ Rails.application.routes.draw do
           get :details
         end
       end
-      resources :scores, only: [:create, :index]
+      resources :scores, only: [:create, :index] do
+        collection do
+          get :match_details
+        end
+      end
       resources :wait_list, only: [:create, :index]
     end
     get 'events_validate_url', to: 'events#validate_url'
