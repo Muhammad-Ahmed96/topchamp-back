@@ -84,7 +84,6 @@ class Event < ApplicationRecord
   def sync_discount_generals!(data)
     deleteIds = []
     if data.present?
-
       discounts_general = nil
       data.each {|discount|
         if discount[:id].present?

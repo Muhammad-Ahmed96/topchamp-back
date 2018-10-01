@@ -5,7 +5,7 @@ module Payments
     end
 
     def self.get_bracket
-      return {id: "Bracket", tax: 2.5}
+      return {id: "Bracket", tax: 0}
     end
   end
 end
