@@ -136,9 +136,56 @@ class ScoresController < ApplicationController
     end
   end
   def index
-    scores = Score.joins(set: [match: [round: [tournament: :event ]]]).merge(Event.where(:id => @event.id))
+    scores = Score.joins(set: [match: [round: [tournament: :event ]]])
                  .merge(MatchSet.where(:match_id => score_list_params[:match_id])).all
     json_response_serializer_collection(scores, ScoreSerializer)
+  end
+
+  swagger_path '/events/:id/scores/match_details' do
+    operation :get do
+      key :summary, 'List score match'
+      key :description, 'Event Catalog'
+      key :operationId, 'scoreIndex'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :match_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          property :data do
+            items do
+              key :type, :string
+            end
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def match_details
+    match = Match.find(score_list_params[:match_id])
+    json_response(match)
   end
 
   private
