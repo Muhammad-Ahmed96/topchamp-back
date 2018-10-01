@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_09_29_221038) do
+ActiveRecord::Schema.define(version: 2018_10_01_222721) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -346,6 +346,8 @@ ActiveRecord::Schema.define(version: 2018_09_29_221038) do
     t.string "awards_through"
     t.string "awards_plus"
     t.boolean "is_paid", default: false
+    t.integer "personalized_discount_code_id"
+    t.float "personalized_discount"
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
