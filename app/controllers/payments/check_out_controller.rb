@@ -129,6 +129,10 @@ class Payments::CheckOutController < ApplicationController
                                          :description => "Event payment"})
       event.is_paid = true
       event.status = :Active
+      if personalized_discount
+        event.personalized_discount_code_id = personalized_discount.id
+        event.personalized_discount = personalized_discount.discount
+      end
       event.save!(:validate => false)
       event.public_url
       json_response_data([:transaction => response.transactionResponse.transId ], :ok)

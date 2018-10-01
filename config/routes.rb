@@ -184,6 +184,7 @@ Rails.application.routes.draw do
     resources :event_fees, only: [:create, :index] do
       collection do
         get :calculate
+        delete :delete_discount
       end
     end
   end

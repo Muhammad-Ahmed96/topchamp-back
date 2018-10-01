@@ -162,6 +162,46 @@ class EventFeesController < ApplicationController
                    amount: amount})
   end
 
+  swagger_path '/event_fees/delete_discount/:id' do
+    operation :delete do
+      key :summary, 'calculate event fee user'
+      key :description, 'User Catalog'
+      key :operationId, 'userEventFeeCalculate'
+      key :produces, ['application/json',]
+      key :tags, ['users']
+      parameter do
+        key :name, :id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def delete_discount
+    discount  = EventPersonalizedDiscount.where(:id => delete_discounts_params[:id]).first
+    if discount.present?
+      if discount.usage > 0
+        return response_redeemed
+      end
+    end
+
+  end
+
   private
 
   def fees_params
@@ -174,11 +214,19 @@ class EventFeesController < ApplicationController
     params.permit(:code)
   end
 
+  def delete_discounts_params
+    params.permit(:id)
+  end
+
   def discounts_params
     unless params[:discounts].nil? and !params[:discounts].kind_of?(Array)
       params[:discounts].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :name, :email, :code, :discount)
       end
     end
+  end
+
+  def response_redeemed
+    json_response_error(["Discount code has been redeemed and cannot be deleted."], 422)
   end
 end
