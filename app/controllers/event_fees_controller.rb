@@ -134,6 +134,12 @@ class EventFeesController < ApplicationController
     amount = 0
     fees = EventFee.first
     personalized_discount = EventPersonalizedDiscount.where(:code => calculate_params[:code]).where(:email => @resource.email).first
+
+    if calculate_params[:code].present? and personalized_discount.nil?
+      return response_invalid
+    elsif calculate_params[:code].present? and personalized_discount.usage > 0
+      return response_usage
+    end
     if fees.present?
       base_fee = fees.base_fee
       transaction_fee = fees.transaction_fee
@@ -141,7 +147,13 @@ class EventFeesController < ApplicationController
 
     if fees.present?
       amount = fees.base_fee
+      if fees.is_transaction_fee_percent
+        amount =  amount + ((fees.transaction_fee * amount) / 100)
+      else
+        amount = amount + fees.transaction_fee
+      end
     end
+
     if personalized_discount.present?
       if personalized_discount.is_discount_percent
         amount =  amount - ((personalized_discount.discount * amount) / 100)
@@ -150,13 +162,6 @@ class EventFeesController < ApplicationController
       end
     end
 
-    if fees.present?
-      if fees.is_transaction_fee_percent
-        amount =  amount + ((fees.transaction_fee * amount) / 100)
-      else
-        amount = amount + fees.transaction_fee
-      end
-    end
 
     json_response({event_fee: {base_fee: base_fee, transaction_fee: transaction_fee }, personalized_discount: personalized_discount,
                    amount: amount})
@@ -228,5 +233,13 @@ class EventFeesController < ApplicationController
 
   def response_redeemed
     json_response_error(["Discount code has been redeemed and cannot be deleted."], 422)
+  end
+
+  def response_invalid
+    json_response_error(["Invalid discount code."], 422)
+  end
+
+  def response_usage
+    json_response_error(["Your discount code has reached its usage limit."], 422)
   end
 end
