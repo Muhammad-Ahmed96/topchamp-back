@@ -88,10 +88,10 @@ class Tournament < ApplicationRecord
   end
 
   def set_winner(match)
+    event = self.event.rules
     next_round = self.rounds.where("index > ?", match.round.index).order(index: :asc).first
     if next_round.present?
       next_match_info = self.get_index_match(match.index)
-      logger::info next_match_info
       next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
       if next_match.present?
         winner_team_id = match.get_winner_team_id
