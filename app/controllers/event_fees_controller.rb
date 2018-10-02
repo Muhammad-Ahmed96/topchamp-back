@@ -199,7 +199,7 @@ class EventFeesController < ApplicationController
         return response_redeemed
       end
     end
-
+    json_response_success(t("deleted_success", model: EventPersonalizedDiscount.model_name.human), true)
   end
 
   private
