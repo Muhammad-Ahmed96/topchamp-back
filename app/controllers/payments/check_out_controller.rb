@@ -79,7 +79,11 @@ class Payments::CheckOutController < ApplicationController
       amount = 0
       fees = EventFee.first
       personalized_discount = EventPersonalizedDiscount.where(:code => subscribe_params[:code]).where(:email => director.email).first
-
+      if subscribe_params[:code].present? and personalized_discount.nil?
+        return response_invalid
+      elsif subscribe_params[:code].present? and personalized_discount.usage > 0
+        return response_usage
+      end
       if fees.present?
         amount = fees.base_fee
       end
@@ -341,5 +345,14 @@ class Payments::CheckOutController < ApplicationController
 
   def response_no_enroll_error
     json_response_error([t("not_brackets_to_enrroll")], 422)
+  end
+
+
+  def response_invalid
+    json_response_error(["Invalid discount code."], 422)
+  end
+
+  def response_usage
+    json_response_error(["Your discount code has reached its usage limit."], 422)
   end
 end
