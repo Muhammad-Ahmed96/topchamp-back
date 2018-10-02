@@ -88,19 +88,29 @@ class Tournament < ApplicationRecord
   end
 
   def set_winner(match)
-    event = self.event.rules
-    next_round = self.rounds.where("index > ?", match.round.index).order(index: :asc).first
-    if next_round.present?
-      next_match_info = self.get_index_match(match.index)
-      next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
-      if next_match.present?
-        winner_team_id = match.get_winner_team_id
-        if next_match_info[:type] == 'A'
-          next_match.team_a_id = winner_team_id
-        elsif next_match_info[:type] == 'B'
-          next_match.team_b_id = winner_team_id
+    elimination_format = self.event.elimination_format
+    unless elimination_format.nil?
+      #Logic for single elimination
+      if elimination_format.slug == 'single'
+        next_round = self.rounds.where("index > ?", match.round.index).order(index: :asc).first
+        if next_round.present?
+          next_match_info = self.get_index_match(match.index)
+          next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
+          if next_match.present?
+            winner_team_id = match.get_winner_team_id
+            if next_match_info[:type] == 'A'
+              next_match.team_a_id = winner_team_id
+            elsif next_match_info[:type] == 'B'
+              next_match.team_b_id = winner_team_id
+            end
+            next_match.save!(:validate => false)
+          end
         end
-        next_match.save!(:validate => false)
+        #Logic for round_robin elimination
+      elsif elimination_format.slug == 'round_robin'
+        match.get_winner_team_id
+      elsif elimination_format.slug == 'double'
+        match.get_winner_team_id
       end
     end
 
