@@ -208,21 +208,21 @@ class InvitationsController < ApplicationController
     end
 
     #check if category is paid
-    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
-    categories_ids = player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id)
-    if categories_ids.included_in? Category.doubles_categories
-      invitatin_type << "partner_double"
-    end
-
-    if categories_ids.included_in? Category.mixed_categories
-      invitatin_type << "partner_mixed"
-    end
+   # player = Player.where(user_id: @resource.id).where(event_id: event_id).first
+   #  categories_ids = player.present? ? player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id) : []
+   #  if categories_ids.included_in? Category.doubles_categories
+   #    invitatin_type << "partner_double"
+   #  end
+   #
+   #  if categories_ids.included_in? Category.mixed_categories
+   #    invitatin_type << "partner_mixed"
+   #  end
     #end check if category is paid
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     invitations = Invitation.my_order(column, direction).event_like(event)
                       .email_like(email).first_name_like(first_name).last_name_like(last_name).event_order(eventColumn, direction).user_order(userColumn, direction)
                       .in_status(status).phone_like(phone).phone_order(phoneColumn, direction).in_type(type).where(:user_id => @resource.id).where(:event_id => event_id)
-                      .where(:status => "pending_invitation").where(:invitation_type => invitatin_type)
+                      .where(:status => "pending_confirmation").where(:invitation_type => type)
     if paginate.to_s == "0"
       json_response_serializer_collection(invitations.all, InvitationSerializer)
     else
@@ -477,30 +477,14 @@ class InvitationsController < ApplicationController
 
   def enroll
     @invitation = Invitation.find(params[:id])
-    if @invitation.status != "role"
+    if @invitation.status != "accepted"
       event = @invitation.event
+      for_validate_partner = false
+      category_id = nil
       if event.present?
-        types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
-        if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
-          types = []
-        end
-        type_id = AttendeeType.player_id
-        is_player = types.detect {|w| w == type_id}
-        unless is_player.nil?
-          #Create player
-          types.delete(type_id)
-          player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first_or_create!
-        end
-        if types.length > 0
-          participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
-          types = types + participant.attendee_type_ids.to_a
-          participant.attendee_type_ids = types
-        end
-        @invitation.status = :role
-        @invitation.save!
-        category_id = nil
         if @invitation.invitation_type == "partner_mixed"
           category_id = Category.single_mixed_category
+          for_validate_partner = true
         elsif @invitation.invitation_type == "partner_double"
           user = User.find(@invitation.user_id)
           if user.present?
@@ -510,10 +494,48 @@ class InvitationsController < ApplicationController
               category_id = Category.single_women_double_category
             end
           end
+          for_validate_partner = true
         end
-        #ckeck partner brackets
-        @invitation.brackets.each do |item|
-          result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
+        if for_validate_partner
+          player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
+          if player.present?
+            @invitation.brackets.each do |item|
+              if player.have_partner?(category_id,  item.event_bracket_id)
+                return json_response_error([t("player.partner.validation.already_partner")])
+              end
+            end
+          else
+            return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+          end
+        end
+        types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
+        if types.nil? or (!types.kind_of?(Array) or types.length <= 0)
+          types = []
+        end
+        type_id = AttendeeType.player_id
+        is_player = types.detect {|w| w == type_id}
+        unless is_player.nil?
+          #Create player
+          types.delete(type_id)
+          #player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
+        end
+        if types.length > 0
+          participant = Participant.where(:user_id => @invitation.user_id).where(:event_id => event.id).first_or_create!
+          types = types + participant.attendee_type_ids.to_a
+          participant.attendee_type_ids = types
+        end
+        @invitation.status = :accepted
+        @invitation.save!
+        if @invitation.invitation_type == "partner_mixed" or @invitation.invitation_type == "partner_double"
+          #ckeck partner brackets
+          @invitation.brackets.each do |item|
+            result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
+            if result == false
+              @invitation.status = :pending_confirmation
+              @invitation.save!
+              return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+            end
+          end
         end
       end
     end
@@ -615,7 +637,7 @@ class InvitationsController < ApplicationController
 
   def refuse
     @invitation = Invitation.find(params[:id])
-    @invitation.status = "refuse"
+    @invitation.status = "declined"
     @invitation.save!(:validate => false)
     json_response_success(t("refuse_success", model: Invitation.model_name.human), true)
   end
@@ -652,6 +674,13 @@ class InvitationsController < ApplicationController
         key :required, true
         key :type, :string
       end
+      parameter do
+        key :name, :for_registered
+        key :description, '1 for need a partner or 0 for choose a partner'
+        key :in, :body
+        key :required, true
+        key :type, :integer
+      end
       response 200 do
         key :description, ''
         schema do
@@ -673,29 +702,44 @@ class InvitationsController < ApplicationController
   def partner
     to_user = User.find(partner_params[:partner_id])
     event = Event.find(partner_params[:event_id])
+    player = Player.where(user_id: @resource.id).where(event_id: event.id).first
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
+    selector = [1, 0, "1", "0"].include?(partner_params[:for_registered]) ? partner_params[:for_registered] : nil
+    #set brackets
+    category_ids = []
+    if type == "partner_mixed"
+      category_ids = Category.mixed_categories
+    elsif type == "partner_double"
+      category_ids = Category.doubles_categories
+    end
+    brackets = player.brackets.where(:category_id => category_ids).all
+    if brackets.count <= 0
+      return response_no_category
+    end
+    unless selector.present?
+      return response_no_param
+    end
     unless event.present?
       return response_no_event
     end
     unless type.present?
       return response_no_type
     end
-    my_url = Rails.configuration.front_partner_url
-    if to_user.present?
+    my_url = ""
+    if selector.to_s == "1"
+      my_url = Rails.configuration.front_partner_url
+    elsif selector.to_s == "0"
+      my_url = Rails.configuration.front_partner_choose_url
+    end
+
+    if to_user.present? and player.present?
+      my_url = my_url.gsub '{event_id}', event.id.to_s
       data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
+      my_url = my_url.gsub '{invitation_type}', @invitation.invitation_type
       @invitation.url = Invitation.short_url((my_url.gsub '{id}', @invitation.id.to_s))
       @invitation.save!
       @invitation.send_mail(true)
-      #set brackets
-      category_ids = []
-      if type == "partner_mixed"
-        category_ids = Category.mixed_categories
-      elsif type == "partner_double"
-        category_ids = Category.doubles_categories
-      end
-      player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
-      brackets = player.brackets.where(:category_id => category_ids).all
       brackets.each do |item|
         saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id).first
         if saved.nil?
@@ -797,15 +841,24 @@ class InvitationsController < ApplicationController
   end
 
   def partner_params
-    params.permit(:event_id, :partner_id, :type, :url)
+    params.required(:for_registered)
+    params.required(:event_id)
+    params.permit(:event_id, :partner_id, :type, :url, :for_registered)
   end
 
   def response_no_event
     json_response_error([t("not_event")], 422)
   end
 
+  def response_no_param
+    json_response_error([t("not_param")], 422)
+  end
+
   def response_no_type
     json_response_error([t("not_type")], 422)
+  end
+  def response_no_category
+    json_response_error([t("not_subscribe_to_category")], 422)
   end
 
   def index_partners_params

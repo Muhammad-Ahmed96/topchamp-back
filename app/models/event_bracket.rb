@@ -32,17 +32,25 @@ class EventBracket < ApplicationRecord
     count = self.get_enroll_count category_id
     free = EventBracketFree.where(:event_bracket_id => self.id).where(:category_id => category_id).first
     hours = nil
+    in_wait_list = 0
     if free.present?
       hours = TimeDifference.between(Time.current, free.free_at).in_hours
+      in_wait_list = WaitList.where(:user_id => Current.user.id).where(:category_id => category_id)
+                         .where(:event_bracket_id => self.id).where(:event_id => self.event_id).where("created_at <= ?", free.free_at).count
+      general_wait_list = WaitList.where(:category_id => category_id)
+                              .where(:event_bracket_id => self.id).where(:event_id => self.event_id).where("created_at <= ?", free.free_at).count
     end
-    if self.quantity.present? and (self.quantity > count and (hours.nil? or hours > Rails.configuration.hours_bracket))
+    if general_wait_list == 0
+      in_wait_list = 1
+    end
+    if self.quantity.present? and (self.quantity > count and (hours.nil? or (hours > Rails.configuration.hours_bracket or in_wait_list > 0)))
       result = true
     end
     return result
   end
 
   def get_enroll_count(category_id)
-    count  = PlayerBracket.where(:event_bracket_id => self.id).where(:category_id => category_id).where(:enroll_status => :enroll).count
+    count  = PlayerBracket.joins(:player).where(:event_bracket_id => self.id).where(:category_id => category_id).where(:enroll_status => :enroll).count
   end
 
   def get_free_count(category_id)

@@ -1,5 +1,5 @@
 class TeamSerializer < ActiveModel::Serializer
-  attributes :id
+  attributes :id, :name
   has_many :players, :serializer => PlayerSingleSerializer
   belongs_to :event,  :serializer => EventSingleSerializer
   belongs_to :bracket, :serializer => EventBracketSerializer

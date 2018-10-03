@@ -13,8 +13,9 @@ class User < ApplicationRecord
   has_one :shipping_address, :dependent => :destroy
   has_one :association_information, :dependent => :destroy
   has_one :medical_information, :dependent => :destroy
-  has_many :players
-  has_many :participants
+  has_many :players, :dependent => :destroy
+  has_many :participants, :dependent => :destroy
+  has_many :wait_lists, :dependent => :destroy
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
@@ -372,7 +373,7 @@ class User < ApplicationRecord
 
   end
 
-  def self.create_teams(brackets, user_root_id, event_id)
+  def self.create_teams(brackets, user_root_id, event_id, parent_root = false)
     #ckeck partner brackets
     brackets.each do |item|
       category_type = ""
@@ -381,36 +382,86 @@ class User < ApplicationRecord
       elsif [item[:category_id].to_i].included_in? Category.mixed_categories
         category_type = "partner_mixed"
       end
-      invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :role).where(:invitation_type => category_type)
+      invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
                        .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
       if invitation.present?
-        result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id])
-
+        result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
+                                     parent_root)
       else
         #if [item[:category_id].to_i].included_in? Category.single_categories
-          player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
-          self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
+        player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
+        self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
         #end
       end
 
     end
   end
 
-  def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id)
-    player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
-    result = player.validate_partner(partner_id, event_bracket_id, category_id)
-    if result.nil?
-      return nil
+  def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id, partner_main = false)
+    user_id_main = partner_main ? partner_id : user_root_id
+    user_id_partner = partner_main ? user_root_id : partner_id
+    player = Player.where(user_id: user_id_main).where(event_id: event_id).first
+    partner_player = Player.where(user_id: user_id_partner).where(event_id: event_id).first
+    if player.nil?
+      return false
     end
-    partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first_or_create!
+    result = player.validate_partner(user_id_partner, user_id_main, event_bracket_id, category_id)
+    if result != true
+      if partner_main
+        self.create_team(user_id_main, event_id, event_bracket_id, category_id, [player.id])
+      end
+      return false
+    end
+    if partner_player.nil?
+      return false
+    end
     self.create_team(user_root_id, event_id, event_bracket_id, category_id, [player.id, partner_player.id])
+    return true
   end
 
 
   def self.create_team(user_root_id, event_id, event_bracket_id, category_id, players_ids)
+    count =  Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
+                 .where(:category_id => category_id).count
+    team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
+                     .where(:category_id => category_id).first
+    team_name = 'Team'
+    if team_exist.present?
+      if team_exist.name.nil?
+        team_name = "Team #{count + 1}"
+      else
+        team_name = team_exist.name
+      end
+    else
+      team_name = "Team #{count + 1}"
+    end
+
     team = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-               .where(:creator_user_id => user_root_id).where(:category_id => category_id).first_or_create!
+               .where(:creator_user_id => user_root_id).where(:category_id => category_id)
+               .update_or_create!({:name => team_name, :event_id => event_id, :event_bracket_id => event_bracket_id,
+                                   :creator_user_id => user_root_id, :category_id => category_id})
     team.player_ids = players_ids
+    #find and delete old teams
+    players = team.players.where.not(:user_id => user_root_id).all
+    players.each do |player|
+      team_fetch = Team.joins(:players).merge(Player.where(:id => player.id)).where(:event_id => event_id)
+                       .where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
+                       .where.not(:id => team.id).first
+      if team_fetch.present?
+        player.teams.destroy(team_fetch)
+      end
+    end
+    teams_ids = Team.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).where(:event_id => event_id).pluck(:id)
+    teams_to_destroy = []
+    teams_ids.each do |team_id|
+      count = Team.where(:id => team_id).first.players.count
+      if count == 0
+        teams_to_destroy << team_id
+      end
+    end
+    if teams_to_destroy.length > 0
+      Team.where(:id => teams_to_destroy).destroy_all
+    end
   end
 
 
@@ -421,6 +472,35 @@ class User < ApplicationRecord
     players_ids = Player.where.not(:id => my_players_ids).joins(:teams).merge(Team.where(:id => teams_ids)).pluck(:id)
     partners_ids = User.joins(:players).merge(Player.where(:id => players_ids)).pluck(:id)
     return [self.id].included_in? partners_ids
+  end
+
+  def skill_level
+    if self.association_information.present?
+      self.association_information.raking
+    end
+  end
+
+  def sync_wait_list(data, event_id)
+    if data.present? and data.kind_of?(Array)
+      data.each do |bracket|
+        saveData = {:event_bracket_id => bracket[:event_bracket_id], :category_id => bracket[:category_id], :event_id => event_id}
+        self.wait_lists.where(:event_bracket_id => saveData[:event_bracket_id]).where(:category_id => saveData[:category_id])
+            .update_or_create!(saveData)
+      end
+    end
+  end
+
+  def sync_personalized_discount(data)
+    deleteIds = []
+    if data.present? and data.kind_of?(Array)
+      data.each do |discount|
+        discount.delete(:id)
+        discount = EventPersonalizedDiscount.where(:email => discount[:email]).where(:code => discount[:code])
+            .update_or_create!(discount)
+        deleteIds << discount.id
+      end
+    end
+    EventPersonalizedDiscount.where.not(id: deleteIds).destroy_all
   end
 
   private

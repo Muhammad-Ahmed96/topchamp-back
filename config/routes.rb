@@ -104,7 +104,12 @@ Rails.application.routes.draw do
           get :details
         end
       end
-      resources :scores, only: [:create, :index]
+      resources :scores, only: [:create, :index] do
+        collection do
+          get :match_details
+        end
+      end
+      resources :wait_list, only: [:create, :index]
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
@@ -150,11 +155,12 @@ Rails.application.routes.draw do
         get :brackets
         post :partners, action: :add_partner, controller: :player_partner
         get :partners, action: :get_my_partners, controller: :player_partner
+        get :rival_info
       end
       member do
         put :activate
         put :inactive
-        get :wait_list
+        #get :wait_list
         get :enrolled
       end
     end
@@ -162,7 +168,7 @@ Rails.application.routes.draw do
     resources :partners, only: [:index]
 
     namespace :payments do
-      resources :profile, only: [:create, :destroy, :show]
+      resources :profiles, only: [:create, :destroy, :show]
       resources :credit_cards, only: [:index, :create, :destroy]
       resources :check_out, only: [] do
         collection do
@@ -174,6 +180,13 @@ Rails.application.routes.draw do
 
     resources :tournaments, only: [:index]
     resources :tournament_matches_status, only: [:index]
+
+    resources :event_fees, only: [:create, :index] do
+      collection do
+        get :calculate
+        delete :delete_discount
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

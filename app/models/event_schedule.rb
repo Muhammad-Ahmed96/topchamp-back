@@ -4,9 +4,13 @@ class EventSchedule < ApplicationRecord
   belongs_to :event
   belongs_to :agenda_type
   belongs_to :category,  optional: true
+  has_and_belongs_to_many :players
 
   validates :cost, numericality: true, :allow_nil => true
   validates :capacity, numericality: {only_integer: true}, :allow_nil => true
+
+  scope :title_like, lambda {|search| left_outer_joins(:category).where("LOWER(title) LIKE LOWER(?) OR LOWER(categories.name) LIKE LOWER(?)", "%#{search}%",  "%#{search}%") if search.present?}
+
 
 
   swagger_schema :EventSchedule do

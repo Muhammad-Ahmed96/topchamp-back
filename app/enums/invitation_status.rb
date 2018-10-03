@@ -10,11 +10,11 @@ class InvitationStatus < ClassyEnum::Base
 end
 
 
-class InvitationStatus::PendingInvitation < InvitationStatus
+class InvitationStatus::PendingConfirmation < InvitationStatus
 end
 
-class InvitationStatus::Role < InvitationStatus
+class InvitationStatus::Accepted < InvitationStatus
 end
 
-class InvitationStatus::Refuse < InvitationStatus
+class InvitationStatus::Declined < InvitationStatus
 end

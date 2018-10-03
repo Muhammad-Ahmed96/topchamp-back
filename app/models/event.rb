@@ -84,7 +84,6 @@ class Event < ApplicationRecord
   def sync_discount_generals!(data)
     deleteIds = []
     if data.present?
-
       discounts_general = nil
       data.each {|discount|
         if discount[:id].present?
@@ -147,6 +146,19 @@ class Event < ApplicationRecord
     end
     unless deleteIds.nil?
       self.schedules.where.not(id: deleteIds).destroy_all
+    end
+
+
+    #sync schedules
+    self.schedules.where(:agenda_type_id => AgendaType.competition_id).each do |schedule|
+      player_ids = schedule.player_ids
+      self.players.each do |player|
+        bracket = player.brackets_enroll.where(:category_id => schedule.category_id)
+        if bracket.present?
+          player_ids << player.id
+        end
+      end
+      schedule.player_ids = player_ids
     end
   end
 
@@ -638,7 +650,7 @@ class Event < ApplicationRecord
 
   def add_player(user_id, data)
     player = Player.where(user_id: user_id).where(event_id: self.id).first_or_create!
-    player.sync_brackets! data
+    player.sync_brackets!(data, true)
   end
 
   def only_for_men
@@ -656,10 +668,9 @@ class Event < ApplicationRecord
     data.each do |bracket|
       current_bracket = EventBracket.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
       category = self.internal_categories.where(:id => bracket[:category_id]).count
-      allow_wait_list = self.registration_rule.present? ? self.registration_rule.allow_wait_list : false
       if current_bracket.present? and category > 0
         status = current_bracket.get_status(bracket[:category_id])
-        if status == :enroll or (status == :waiting_list and allow_wait_list)
+        if status == :enroll
           bracket[:enroll_status] = status
           brackets << bracket
         end
