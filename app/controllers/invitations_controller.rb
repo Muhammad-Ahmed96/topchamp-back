@@ -499,7 +499,7 @@ class InvitationsController < ApplicationController
         if for_validate_partner
           player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
           if player.present?
-            @invitation.brackets.each do |item|
+            @invitation.brackets.where(:category_id => category_id).each do |item|
               if player.have_partner?(category_id,  item.event_bracket_id)
                 return json_response_error([t("player.partner.validation.already_partner")])
               end
@@ -528,7 +528,7 @@ class InvitationsController < ApplicationController
         @invitation.save!
         if @invitation.invitation_type == "partner_mixed" or @invitation.invitation_type == "partner_double"
           #ckeck partner brackets
-          @invitation.brackets.each do |item|
+          @invitation.brackets.where(:category_id => category_id).each do |item|
             result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
             if result == false
               @invitation.status = :pending_confirmation
@@ -706,13 +706,20 @@ class InvitationsController < ApplicationController
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
     selector = [1, 0, "1", "0"].include?(partner_params[:for_registered]) ? partner_params[:for_registered] : nil
     #set brackets
-    category_ids = []
+    category_id = 0
     if type == "partner_mixed"
-      category_ids = Category.mixed_categories
+      category_id = Category.single_mixed_category
     elsif type == "partner_double"
+      if @resource.present?
+        if @resource.gender == "Male"
+          category_id = Category.single_men_double_category
+        elsif @resource.gender == "Female"
+          category_id = Category.single_women_double_category
+        end
+      end
       category_ids = Category.doubles_categories
     end
-    brackets = player.brackets.where(:category_id => category_ids).all
+    brackets = player.brackets.where(:category_id => category_id).all
     if brackets.count <= 0
       return response_no_category
     end
@@ -741,9 +748,9 @@ class InvitationsController < ApplicationController
       @invitation.save!
       @invitation.send_mail(true)
       brackets.each do |item|
-        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id).first
+        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id, :category_id => category_id).first
         if saved.nil?
-          @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id})
+          @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id, :category_id => category_id})
         end
       end
     else
