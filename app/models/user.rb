@@ -422,9 +422,9 @@ class User < ApplicationRecord
 
   def self.create_team(user_root_id, event_id, event_bracket_id, category_id, players_ids)
     count =  Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-                 .where(:creator_user_id => user_root_id).where(:category_id => category_id).count
+                 .where(:category_id => category_id).count
     team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-        .where(:creator_user_id => user_root_id).where(:category_id => category_id).first
+                     .where(:category_id => category_id).first
     team_name = 'Team'
     if team_exist.present?
       if team_exist.name.nil?
