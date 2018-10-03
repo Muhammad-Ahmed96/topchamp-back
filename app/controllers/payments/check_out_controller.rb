@@ -26,6 +26,13 @@ class Payments::CheckOutController < ApplicationController
         key :format, :float
       end
       parameter do
+        key :name, :code
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :float
+      end
+      parameter do
         key :name, :tax
         key :in, :body
         key :required, true
@@ -66,11 +73,41 @@ class Payments::CheckOutController < ApplicationController
   def event
     event = Event.find(event_params[:event_id])
     if event.is_paid == false
+      director = event.director
       customer = Payments::Customer.get(@resource)
       config = Payments::ItemsConfig.get_event
-      items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: config[:unit_price],
+      amount = 0
+      fees = EventFee.first
+      personalized_discount = EventPersonalizedDiscount.where(:code => subscribe_params[:code]).where(:email => director.email).first
+      if subscribe_params[:code].present? and personalized_discount.nil?
+        return response_invalid
+      elsif subscribe_params[:code].present? and personalized_discount.usage > 0
+        return response_usage
+      end
+      if fees.present?
+        amount = fees.base_fee
+      end
+      if personalized_discount.present?
+        if personalized_discount.is_discount_percent
+          amount =  amount - ((personalized_discount.discount * amount) / 100)
+        else
+          amount =  amount - personalized_discount.discount
+        end
+        personalized_discount.usage = general_discount.usage + 1
+        personalized_discount.save!(:validate => false)
+      end
+
+      if fees.present?
+        if fees.is_transaction_fee_percent
+          amount =  amount + ((fees.transaction_fee * amount) / 100)
+        else
+          amount = amount + fees.transaction_fee
+        end
+      end
+
+      items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
                 taxable: config[:taxable]}]
-      tax = {:amount => ((config[:tax] * config[:unit_price]) / 100), :name => "tax", :description => "Tax venue top champ"}
+      tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
                                            config[:unit_price], items, tax)
       if response.messages.resultCode == MessageTypeEnum::Ok
@@ -96,6 +133,10 @@ class Payments::CheckOutController < ApplicationController
                                          :description => "Event payment"})
       event.is_paid = true
       event.status = :Active
+      if personalized_discount
+        event.personalized_discount_code_id = personalized_discount.id
+        event.personalized_discount = personalized_discount.discount
+      end
       event.save!(:validate => false)
       event.public_url
       json_response_data([:transaction => response.transactionResponse.transId ], :ok)
@@ -140,6 +181,7 @@ class Payments::CheckOutController < ApplicationController
         key :name, :enrolls
         key :in, :body
         key :description, 'Enrolls'
+        key :required, true
         key :type, :array
         items do
           key :'$ref', :PlayerBracketInput
@@ -163,16 +205,18 @@ class Payments::CheckOutController < ApplicationController
     end
   end
   def subscribe
+    #only for test
+    #@resource = User.find(params[:user_id])
     event = Event.find(subscribe_params[:event_id])
     brackets = event.available_brackets(player_brackets_params)
-    logger::info "dadadadada"
-    logger::info brackets.inspect
     if brackets.length <= 0
       return response_no_enroll_error
     end
     config = Payments::ItemsConfig.get_bracket
     items = []
     amount = 0
+    tax_for_registration = 0
+    tax_for_bracket = 0
     enroll_fee = event.registration_fee
     bracket_fee = event.payment_method.present? ? event.payment_method.bracket_fee : 0
     #aply discounts
@@ -186,8 +230,8 @@ class Payments::CheckOutController < ApplicationController
 
     if personalized_discount.present?
       enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
-      #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
-    elsif general_discount.present? and general_discount.limit < general_discount.applied
+     # bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+    elsif general_discount.present? and general_discount.limited > general_discount.applied
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
       general_discount.applied = general_discount.applied + 1
@@ -213,12 +257,18 @@ class Payments::CheckOutController < ApplicationController
     if event.tax.present?
       if event.tax.is_percent
         tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = ((event.tax.tax * enroll_fee) / 100)
+        tax_for_bracket = ((event.tax.tax * bracket_fee) / 100)
       else
         tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = event.tax.tax/ (1 + (brackets.length))
+        tax_for_bracket = event.tax.tax/ (1 + (brackets.length))
       end
 
     end
-
+    if tax.present?
+     amount = amount + tax[:amount]
+    end
     # no payment if items is empty
     if items.length > 0
       amount = number_with_precision(amount, precision: 2)
@@ -243,11 +293,19 @@ class Payments::CheckOutController < ApplicationController
         end
       end
     end
+    #response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
-    player.sync_brackets! brackets
-    player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => number_with_precision(tax.present? ? tax[:amount] : 0, precision: 2),
-                                         :description => "Bracket subscribe payment"})
+    player.sync_brackets!(brackets, true)
+    brackets.each do |item|
+      player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
+                                           :description => "Bracket subscribe payment", :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
+                                          :event_id => player.event_id, :type_payment => "bracket"})
+    end
+
+    player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
+                                         :description => "Event subscribe payment", :event_id => player.event_id, :type_payment => "event"})
+
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id  => brackets.pluck(:category_id))
         .update(:payment_transaction_id =>  response.transactionResponse.transId)
@@ -264,7 +322,7 @@ class Payments::CheckOutController < ApplicationController
     #params.required(:tax)
     params.required(:card_id)
     params.required(:cvv)
-    params.permit(:event_id, :amount, :tax, :card_id, :cvv)
+    params.permit(:event_id, :amount, :tax, :card_id, :cvv, :code)
   end
 
   def subscribe_params
@@ -290,5 +348,14 @@ class Payments::CheckOutController < ApplicationController
 
   def response_no_enroll_error
     json_response_error([t("not_brackets_to_enrroll")], 422)
+  end
+
+
+  def response_invalid
+    json_response_error(["Invalid discount code."], 422)
+  end
+
+  def response_usage
+    json_response_error(["Your discount code has reached its usage limit."], 422)
   end
 end

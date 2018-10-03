@@ -37,6 +37,13 @@ class PartnersController < ApplicationController
         key :type, :string
       end
       parameter do
+        key :name, :event_bracket_id
+        key :in, :query
+        key :description, 'Bracket id'
+        key :required, true
+        key :type, :integer
+      end
+      parameter do
         key :name, :paginate
         key :in, :query
         key :description, 'paginate {any} = paginate, 0 = no paginate'
@@ -85,12 +92,14 @@ class PartnersController < ApplicationController
       end
     end
   end
+
   def index
     search = params[:search].strip unless params[:search].nil?
     column = params[:column].nil? ? 'first_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     event_id = params[:event_id]
-    event  = Event.where(id: event_id).first
+    event = Event.where(id: event_id).first
+    category_id = 0
     if event.nil?
       return json_response_error([t("not_event")], 422)
     end
@@ -99,22 +108,28 @@ class PartnersController < ApplicationController
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     not_in = [@resource.id]
     gender = nil
-    player = Player.where(user_id: @resource.id).where(event_id: event_id).first_or_create!
+    player = Player.where(user_id: @resource.id).where(event_id: event_id).first
     if type == "doubles"
-      not_in << player.partner_double_id
-      gender = player.user.gender
+      if player.present?
+        not_in << player.partner_double_id
+        gender = player.user.gender
+        category_id = player.user.gender == "Male" ?  Category.single_men_double_category :  Category.single_women_double_category
+      end
     elsif type == "mixed"
-      not_in << player.partner_mixed_id
-      gender = player.user.gender == "Male" ? "Female" : "Male"
+      if player.present?
+        not_in << player.partner_mixed_id
+        gender = player.user.gender == "Male" ? "Female" : "Male"
+      end
+      category_id = Category.single_mixed_category
     end
     users_in = nil
     if type_users == "registered"
-      users_in = event.players.pluck(:user_id)
+      users_in = event.players.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => params[:event_bracket_id]).where(:category_id =>  category_id)).pluck(:user_id)
     else
       in_event = event.players.pluck(:user_id)
       not_in = not_in + in_event
     end
-    users =  User.my_order(column, direction).search(search).where.not(id: not_in).where(:gender => gender)
+    users = User.my_order(column, direction).search(search).where.not(id: not_in).where(:gender => gender)
     if users_in.present?
       users = users.where(:id => users_in)
     end
@@ -128,6 +143,7 @@ class PartnersController < ApplicationController
 
 
   private
+
   def response_no_type_users
     json_response_error([t("not_type")], 422)
   end

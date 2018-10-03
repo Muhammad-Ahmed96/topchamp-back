@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_08_24_164710) do
+ActiveRecord::Schema.define(version: 2018_10_02_022213) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -121,6 +121,8 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.boolean "is_active", default: true
+    t.string "slug"
     t.index ["deleted_at"], name: "index_elimination_formats_on_deleted_at"
   end
 
@@ -185,6 +187,16 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.date "on_site_date_end"
   end
 
+  create_table "event_fees", force: :cascade do |t|
+    t.float "base_fee"
+    t.float "transaction_fee"
+    t.boolean "is_transaction_fee_percent", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_fees_on_deleted_at"
+  end
+
   create_table "event_payment_informations", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "bank_name"
@@ -204,6 +216,19 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.string "currency"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "event_personalized_discounts", force: :cascade do |t|
+    t.string "name"
+    t.string "email"
+    t.string "code"
+    t.float "discount"
+    t.integer "usage", default: 0
+    t.boolean "is_discount_percent", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_event_personalized_discounts_on_deleted_at"
   end
 
   create_table "event_registration_rules", force: :cascade do |t|
@@ -323,6 +348,8 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.string "awards_through"
     t.string "awards_plus"
     t.boolean "is_paid", default: false
+    t.integer "personalized_discount_code_id"
+    t.float "personalized_discount"
     t.index ["deleted_at"], name: "index_events_on_deleted_at"
   end
 
@@ -356,12 +383,13 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.string "token"
     t.string "email"
     t.datetime "send_at"
-    t.string "status", default: "pending_invitation"
+    t.string "status", default: "pending_confirmation"
     t.string "invitation_type", default: "event"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.string "url"
+    t.integer "for_registered"
     t.index ["deleted_at"], name: "index_invitations_on_deleted_at"
   end
 
@@ -395,6 +423,11 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.datetime "updated_at", null: false
     t.integer "seed_team_a"
     t.integer "seed_team_b"
+    t.string "match_number"
+    t.string "court"
+    t.date "date"
+    t.string "start_time"
+    t.string "end_time"
   end
 
   create_table "medical_informations", force: :cascade do |t|
@@ -430,6 +463,10 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.string "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "event_bracket_id"
+    t.bigint "category_id"
+    t.bigint "event_id"
+    t.string "type_payment"
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 
@@ -717,6 +754,17 @@ ActiveRecord::Schema.define(version: 2018_08_24_164710) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_venues_on_deleted_at"
+  end
+
+  create_table "wait_lists", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "event_bracket_id"
+    t.bigint "user_id"
+    t.bigint "category_id"
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_wait_lists_on_deleted_at"
   end
 
   add_foreign_key "association_informations", "users"

@@ -89,8 +89,8 @@ if SportRegulator.count == 0
 end
 
 if EliminationFormat.count == 0
-  EliminationFormat.create!([{name: 'Single Elimination', index: 0},{name: 'Double Elimination', index: 1}, {name: 'Double Elimination', index: 2}, {name: 'Round Robin Elimination', index: 3},
-                            {name: 'Pool Play Elimination', index: 4}])
+  EliminationFormat.create!([{name: 'Single Elimination', index: 0, slug: 'single'},{name: 'Double Elimination', index: 1, slug: 'double'}, {name: 'Round Robin Elimination', index: 2, slug: 'round_robin'},
+                             {name: 'Round Robin Consolation Elimination', index: 3, is_active: false, slug: 'round_robin_consolation'},{name: 'Pool Play Elimination', index: 4,  is_active: false, slug: 'pool_play'}])
 end
 
 

@@ -252,6 +252,13 @@ class TournamentsController < ApplicationController
         key :type, :int64
       end
       parameter do
+        key :name, :event
+        key :in, :query
+        key :description, 'Title of event filter'
+        key :required, false
+        key :type, :string
+      end
+      parameter do
         key :name, :category_id
         key :in, :query
         key :description, 'Category filter'
@@ -264,6 +271,13 @@ class TournamentsController < ApplicationController
         key :description, 'Bracket filter'
         key :required, false
         key :type, :int64
+      end
+      parameter do
+        key :name, :bracket
+        key :in, :query
+        key :description, 'Bracket age or lowest_skill or highest_skillm or young_age or old_age'
+        key :required, false
+        key :type, :string
       end
       parameter do
         key :name, :teams_count
@@ -319,9 +333,11 @@ class TournamentsController < ApplicationController
     column = params[:column].nil? ? 'title' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     event_id = params[:event_id]
+    event = params[:event]
     matches_status = params[:matches_status]
     category_id = params[:category_id]
     bracket_id = params[:bracket_id]
+    bracket = params[:bracket]
     teams_count = params[:teams_count]
 
     order_event = nil
@@ -344,8 +360,8 @@ class TournamentsController < ApplicationController
 
 
     tournaments = TournamentPolicy::Scope.new(current_user, Tournament).resolve.my_order(column, direction).matches_status_in(matches_status).event_in(event_id).category_in(category_id)
-    .bracket_in(bracket_id).event_order(order_event, direction).category_order(order_category, direction).bracket_order(order_bracket, direction)
-    .teams_count_in(teams_count)
+    .bracket_in(bracket_id).bracket_like(bracket).event_order(order_event, direction).category_order(order_category, direction).bracket_order(order_bracket, direction)
+    .teams_count_in(teams_count).event_like(event)
     if paginate.to_s == "0"
       json_response_serializer_collection(tournaments.all, TournamentSerializer)
     else
@@ -483,7 +499,7 @@ class TournamentsController < ApplicationController
   def rounds_params
     unless params[:rounds].nil? and !params[:rounds].kind_of?(Array)
       params[:rounds].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
       end
     end
   end

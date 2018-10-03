@@ -2,8 +2,9 @@ class PlayerBracket < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
   belongs_to :category, :optional => true
+  belongs_to :player
   belongs_to :bracket, :foreign_key => :event_bracket_id, :class_name => "EventBracket", :optional => true
-  scope :enroll, -> { where enroll_status: :enroll }
+  scope :enroll, -> { where(enroll_status: :enroll).order(created_at: :desc) }
   scope :wait_list, -> { where enroll_status: :waiting_list }
   scope :paid, -> { where.not payment_transaction_id: nil }
   swagger_schema :PlayerBracket do

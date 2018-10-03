@@ -1,6 +1,6 @@
 class UserSingleSerializer < ActiveModel::Serializer
   attributes :id, :uid, :first_name, :last_name, :email, :badge_name, :birth_date, :middle_initial, :role, :profile,
-             :status, :gender, :membership_id, :is_director
+             :status, :gender, :membership_id, :is_director, :age
   has_many :sports
   has_one :contact_information
   has_one :billing_address

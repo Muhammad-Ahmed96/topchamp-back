@@ -9,7 +9,7 @@ class Player < ApplicationRecord
   has_many :brackets_enroll, -> {enroll}, class_name: "PlayerBracket"
   has_many :brackets_wait_list, -> {wait_list}, class_name: "PlayerBracket"
   has_and_belongs_to_many :schedules, :class_name => "EventSchedule"
-  has_and_belongs_to_many :teams, dependent: :delete_all
+  has_and_belongs_to_many :teams #dependent: :delete_all
 
   has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 
@@ -41,16 +41,20 @@ class Player < ApplicationRecord
   scope :categories_order, lambda {|column, direction = "desc"| joins(brackets: [:category]).order("categories.#{column} #{direction}") if column.present?}
 
   def skill_level
-    if self.user.association_information.present?
+    if self.user.present? and self.user.association_information.present?
       self.user.association_information.raking
     end
   end
 
-  def sync_brackets!(data)
+  def sync_brackets!(data, old_enrolls = false)
     brackets_ids = []
     schedules_ids = self.schedule_ids
     any_one = false
     event = self.event
+    user = self.user
+    if old_enrolls
+      brackets_ids = brackets_ids + self.brackets_enroll.pluck(:id)
+    end
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
         #get bracket to enroll
@@ -59,7 +63,7 @@ class Player < ApplicationRecord
         category = self.event.internal_categories.where(:id => bracket[:category_id]).count
         if current_bracket.present? and category > 0
           status = current_bracket.get_status(bracket[:category_id])
-          save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id]}
+          save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status}
           saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
           if saved_bracket.enroll_status != "enroll"
             saved_bracket.enroll_status = status
@@ -72,6 +76,11 @@ class Player < ApplicationRecord
           if any_one == false and shedules.length > 0
             any_one = true
           end
+          #delete of wait list
+          if saved_bracket.enroll_status == "enroll"
+            WaitList.where(:event_bracket_id => bracket[:event_bracket_id]).where(:category_id => bracket[:category_id])
+                .where(:user_id => user.id).where(:event_id => event.id).destroy_all
+          end
         end
       end
       if any_one
@@ -80,18 +89,18 @@ class Player < ApplicationRecord
     end
     #delete other brackets
     self.brackets.where.not(:id => brackets_ids).destroy_all
-    if self.status == "Incative" and self.brackets.count > 0
+    if self.status == "Inactive" and self.brackets.count > 0
       self.activate
     end
   end
 
-
   def set_teams
-    User.create_teams(self.brackets_enroll, self.user_id, event.id)
+    User.create_teams(self.brackets_enroll, self.user_id, event.id, true)
   end
 
   def set_paid(data, reference)
-    User.create_teams(self.brackets_enroll, self.user_id, event.id)
+    self.set_teams
+    #User.create_teams(self.brackets_enroll, self.user_id, event.id)
   end
 
   swagger_schema :Player do
@@ -163,8 +172,9 @@ class Player < ApplicationRecord
   end
 
   #validate partner complete information
-  def validate_partner(partner_id, bracket_id, category_id)
+  def validate_partner(partner_id, user_root_id, bracket_id, category_id)
     total = 4
+    message = nil
     current = 0
     category_type = ""
     if [category_id.to_i].included_in? Category.doubles_categories
@@ -172,20 +182,20 @@ class Player < ApplicationRecord
     elsif [category_id.to_i].included_in? Category.mixed_categories
       category_type = "partner_mixed"
     end
-    invitation = Invitation.where(:user_id => partner_id, :sender_id => self.user_id, :status => :role).where(:invitation_type => category_type)
+    invitation = Invitation.where(:user_id => partner_id, :sender_id => user_root_id, :status => :accepted).where(:invitation_type => category_type)
                      .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket_id)).first
     partner_player = Player.where(user_id: partner_id).where(event_id: event_id).first
     if partner_player.present?
+      partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id, :category_id => category_id).first
       #Complete requiered fields in their profiles
       if partner_player.user.first_name.present? and partner_player.user.last_name.present?
         current = current + 1
       end
       #Event fee paid
-      if partner_player.event.is_paid
+      if partner_player.is_event_paid? or partner_bracket.payment_transaction_id == "000"
         current = current + 1
       end
       #Brackets fee paid
-      partner_bracket = partner_player.brackets.where(:event_bracket_id => bracket_id, :category_id => category_id).first
       if partner_bracket.present? and partner_bracket.payment_transaction_id.present?
         current = current + 1
       end
@@ -195,9 +205,9 @@ class Player < ApplicationRecord
       current = current + 1
     end
     if current == total
-      return invitation
+      return true
     else
-      nil
+      return "Partner not valid"
     end
   end
 
@@ -238,23 +248,29 @@ class Player < ApplicationRecord
 
     free_spaces = bracket.get_free_count(category_id)
     if free_spaces.present? and free_spaces == 1
-      url =  Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
-      url =  url.gsub "{event_bracket_id}", bracket.id.to_s
-      url =  url.gsub "{category_id}", category.id.to_s
+      url = Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
+      url = url.gsub "{event_bracket_id}", bracket.id.to_s
+      url = url.gsub "{category_id}", category.id.to_s
       url = Invitation.short_url url
-      players = self.event.players.joins(:brackets_wait_list).merge(PlayerBracket.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)).all
-      players.each do |player|
-        UnsubscribeMailer.spot_open(player, event, url).deliver
+      users = User.joins(:wait_lists).merge(WaitList.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
+                                                .where(:event_id => event.id)).all
+      users.each do |user|
+        UnsubscribeMailer.spot_open(user, event, url).deliver
       end
       EventBracketFree.where(:event_bracket_id => bracket.id).where(:category_id => category.id)
           .update_or_create!({:event_bracket_id => bracket.id, :category_id => category.id, :free_at => DateTime.now,
-                             :url => url})
+                              :url => url})
     end
 
+    tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => event_bracket_id)
+                     .where(:category_id => category_id).first
+    if tournament.present?
+      tournament.update_internal_data
+    end
   end
 
-  def incativete
-    self.status = "Incative"
+  def inactivate
+    self.status = "Inactive"
     self.save!(:validate => false)
   end
 
@@ -265,9 +281,38 @@ class Player < ApplicationRecord
 
   def tournaments
     self.event.tournaments.joins(rounds: [matches: [team_a: :players]]).merge(Player.where(:id => self.id))
-    .joins(rounds: [matches: [team_b: :players]]).merge(Player.where(:id => self.id))
+        .joins(rounds: [matches: [team_b: :players]]).merge(Player.where(:id => self.id))
   end
 
+
+  def is_event_paid?
+    result = false
+    if self.payment_transactions.where(:type_payment => "event").where(:status => 1).count > 0
+      result = true
+    end
+    return result
+  end
+
+  def have_partner?(category_id, event_bracket_id)
+    result = false
+    #self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+    self.teams.where(:category_id => category_id).each do |team|
+      if team.players.count > 1
+        result = true
+      end
+    end
+    return result
+  end
+
+  def is_partner?(category_id, event_bracket_id)
+    result = false
+    self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+      if team.players.count > 1
+        result = true
+      end
+    end
+    return result
+  end
   private
 
   def set_status

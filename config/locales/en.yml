@@ -192,8 +192,9 @@ en:
       Skill: "Skill"
       skill_age: "Skill/Age"
     invitation_tatus:
-      pending_invitation: "Pending Invitation"
-      role: "Role"
+      pending_confirmation: "Pending Confirmation"
+      accepted: "Accepted"
+      declined: "Declined"
   reset: "Reset Password"
   unable_activate: "Unable to activate"
   is_already_active: "Is already active"
@@ -214,6 +215,7 @@ en:
   events_required: "Event required"
   no_player: "No player found"
   not_event: "Event required"
+  not_param: "Param required"
   only_for_men_event: "This event is only for male members"
   only_for_women_event: "This event is only for female members"
   not_age_bracket: "This event does not have a bracket for your age"
@@ -221,14 +223,16 @@ en:
   not_skill_age_braket: "This event does not have a bracket for your skill/age"
   not_age_skill_braket: "This event does not have a bracket for your age/skill"
   attendee_types_required: "attendee types required"
-  refuse_success: "%{model} refuse success"
+  refuse_success: "%{model} decline success"
   not_brackets_to_enrroll: "No brackets to enroll"
   not_type: "Type required"
+  not_subscribe_to_category: "No subscribe to category"
   player:
     partner:
       validation:
         invalid_inforamtion: "Invalid information partner"
         valid: "Valid partner"
+        already_partner: "You already have a partner for this category"
   payments:
     declined: "Your card was declined. In order to resolve the issue, you will need to contact your bank"
   events:

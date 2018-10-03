@@ -3,6 +3,8 @@ class Round < ApplicationRecord
   belongs_to :tournament
   has_many :matches, -> {order_by_index}, :dependent => :destroy
 
+  attr_accessor :for_team_id
+
 
   scope :order_by_index,-> { order(index: :asc) }
 

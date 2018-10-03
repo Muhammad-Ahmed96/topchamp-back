@@ -39,6 +39,7 @@ class EventEnrollsController < ApplicationController
   end
 =end
 
+=begin
   def create
     brackets = @event.available_brackets(player_brackets_params)
     if brackets.length > 0
@@ -50,6 +51,7 @@ class EventEnrollsController < ApplicationController
     end
 
   end
+=end
 
   swagger_path '/events/:id/enrolls/user_cancel' do
     operation :post do
@@ -79,8 +81,9 @@ class EventEnrollsController < ApplicationController
   def user_cancel
     authorize(@event)
     @event.players.where(:user_id => @resource.id).each do |player|
-      player.incativete
+      player.inactivate
       player.unsubscribe_event
+      player.destroy
     end
     @event.participants.where(:user_id => @resource.id).destroy_all
     json_response_success(t("success"), true)
@@ -133,7 +136,7 @@ class EventEnrollsController < ApplicationController
   end
   def unsubscribe
     @event.players.where(:user_id => @resource.id).each do |player|
-      #player.incativete
+      #player.inactivate
       player.unsubscribe(unsubscribe_params[:category_id], unsubscribe_params[:event_bracket_id])
     end
     json_response_success(t("success"), true)

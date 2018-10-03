@@ -7,4 +7,6 @@ class EventSingleSerializer < ActiveModel::Serializer
 
   has_many :categories, serializer: EventCategorySerializer
   has_many :brackets, serializer: EventBracketSerializer
+  has_one :scoring_option_match_1
+  has_one :scoring_option_match_2
 end
