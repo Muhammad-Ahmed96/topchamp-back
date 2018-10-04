@@ -105,6 +105,8 @@ class Tournament < ApplicationRecord
             end
             next_match.save!(:validate => false)
           end
+        else
+          match.get_winner_team_id
         end
         match.set_complete_status
         match.round.verify_complete_status
@@ -114,7 +116,22 @@ class Tournament < ApplicationRecord
         match.set_complete_status
         match.round.verify_complete_status
       elsif elimination_format.slug == 'double'
-        match.get_winner_team_id
+        next_round = self.rounds.where("index > ?", match.round.index).order(index: :asc).first
+        if next_round.present?
+          next_match_info = self.get_index_match(match.index)
+          next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
+          if next_match.present?
+            winner_team_id = match.get_winner_team_id
+            if next_match_info[:type] == 'A'
+              next_match.team_a_id = winner_team_id
+            elsif next_match_info[:type] == 'B'
+              next_match.team_b_id = winner_team_id
+            end
+            next_match.save!(:validate => false)
+          end
+        else
+          match.get_winner_team_id
+        end
         match.set_complete_status
         match.round.verify_complete_status
       end
