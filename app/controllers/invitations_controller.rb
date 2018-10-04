@@ -507,6 +507,17 @@ class InvitationsController < ApplicationController
           else
             return json_response_error([t("player.partner.validation.invalid_inforamtion")])
           end
+
+          player_sender = Player.where(user_id: @invitation.sender_id).where(event_id: event.id).first
+          if player_sender.present?
+            @invitation.brackets.where(:category_id => category_id).each do |item|
+              if player_sender.have_partner?(category_id,  item.event_bracket_id)
+                return json_response_error([t("player.partner.validation.already_partner_sender")])
+              end
+            end
+          else
+            return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+          end
         end
         types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
         if types.nil? or (!types.kind_of?(Array) or types.length <= 0)

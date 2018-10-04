@@ -8,6 +8,15 @@ class Round < ApplicationRecord
 
   scope :order_by_index,-> { order(index: :asc) }
 
+  def verify_complete_status
+    if self.matches.count == self.matches.where(:status => :complete).count
+      self.status = :complete
+    else
+      self.status = :playing
+    end
+    self.save!(:validate => false)
+  end
+
   swagger_schema :Round do
     property :id do
       key :type, :integer

@@ -233,6 +233,7 @@ en:
         invalid_inforamtion: "Invalid information partner"
         valid: "Valid partner"
         already_partner: "You already have a partner for this category"
+        already_partner_sender: "Sender already have a partner for this category"
   payments:
     declined: "Your card was declined. In order to resolve the issue, you will need to contact your bank"
   events:
