@@ -149,4 +149,9 @@ class Match < ApplicationRecord
     self.save!(:validate => false)
     return winner_team_id
   end
+
+  def set_complete_status
+    self.status = :complete
+    self.save!(:validate => false)
+  end
 end

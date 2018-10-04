@@ -106,12 +106,19 @@ class Tournament < ApplicationRecord
             next_match.save!(:validate => false)
           end
         end
+        match.set_complete_status
+        match.round.verify_complete_status
         #Logic for round_robin elimination
       elsif elimination_format.slug == 'round_robin'
         match.get_winner_team_id
+        match.set_complete_status
+        match.round.verify_complete_status
       elsif elimination_format.slug == 'double'
         match.get_winner_team_id
+        match.set_complete_status
+        match.round.verify_complete_status
       end
+      self.verify_complete_status
     end
 
   end
@@ -123,6 +130,15 @@ class Tournament < ApplicationRecord
     next_index = rest.to_i
     type = rest.modulo(1) == 0 ? 'A' : 'B'
     return {:index => next_index, :type => type}
+  end
+
+  def verify_complete_status
+    if self.rounds.count == self.rounds.where(:status => :complete).count
+      self.status = :complete
+    else
+      self.status = :playing
+    end
+    self.save!(:validate => false)
   end
 
   swagger_schema :Tournament do
