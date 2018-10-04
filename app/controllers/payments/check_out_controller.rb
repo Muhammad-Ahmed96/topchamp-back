@@ -78,58 +78,63 @@ class Payments::CheckOutController < ApplicationController
       config = Payments::ItemsConfig.get_event
       amount = 0
       fees = EventFee.first
-      personalized_discount = EventPersonalizedDiscount.where(:code => subscribe_params[:code]).where(:email => director.email).first
-      if subscribe_params[:code].present? and personalized_discount.nil?
-        return response_invalid
-      elsif subscribe_params[:code].present? and personalized_discount.usage > 0
-        return response_usage
-      end
-      if fees.present?
-        amount = fees.base_fee
-      end
-      if personalized_discount.present?
-        if personalized_discount.is_discount_percent
-          amount =  amount - ((personalized_discount.discount * amount) / 100)
-        else
-          amount =  amount - personalized_discount.discount
+      if fees.present? and fees.base_fee > 0
+        personalized_discount = EventPersonalizedDiscount.where(:code => subscribe_params[:code]).where(:email => director.email).first
+        if subscribe_params[:code].present? and personalized_discount.nil?
+          return response_invalid
+        elsif subscribe_params[:code].present? and personalized_discount.usage > 0
+          return response_usage
         end
-        personalized_discount.usage = general_discount.usage + 1
-        personalized_discount.save!(:validate => false)
-      end
-
-      if fees.present?
-        if fees.is_transaction_fee_percent
-          amount =  amount + ((fees.transaction_fee * amount) / 100)
-        else
-          amount = amount + fees.transaction_fee
+        if fees.present?
+          amount = fees.base_fee
         end
-      end
+        if personalized_discount.present?
+          if personalized_discount.is_discount_percent
+            amount = amount - ((personalized_discount.discount * amount) / 100)
+          else
+            amount = amount - personalized_discount.discount
+          end
+          personalized_discount.usage = general_discount.usage + 1
+          personalized_discount.save!(:validate => false)
+        end
 
-      items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
-                taxable: config[:taxable]}]
-      tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
-      response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
-                                           config[:unit_price], items, tax)
-      if response.messages.resultCode == MessageTypeEnum::Ok
-        #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
-        if response.transactionResponse.responseCode != "1"
-          case response.transactionResponse.responseCode
-          when "2"
-            return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+        if fees.present?
+          if fees.is_transaction_fee_percent
+            amount = amount + ((fees.transaction_fee * amount) / 100)
+          else
+            amount = amount + fees.transaction_fee
           end
         end
-        if response.transactionResponse.cvvResultCode != "M"
-          return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
+
+        items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
+                  taxable: config[:taxable]}]
+        tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
+        response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
+                                             config[:unit_price], items, tax)
+        if response.messages.resultCode == MessageTypeEnum::Ok
+          #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
+          if response.transactionResponse.responseCode != "1"
+            case response.transactionResponse.responseCode
+            when "2"
+              return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+            end
+          end
+          if response.transactionResponse.cvvResultCode != "M"
+            return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
+          end
+        else
+          if response.transactionResponse != nil && response.transactionResponse.errors != nil
+            return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+          else
+            return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+          end
         end
       else
-        if response.transactionResponse != nil && response.transactionResponse.errors != nil
-          return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
-        else
-          return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
-        end
+        tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
+        response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
       end
 
-      event.create_payment_transaction!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => config[:unit_price], :tax => tax[:amount],
+      event.create_payment_transaction!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => tax[:amount],
                                          :description => "Event payment"})
       event.is_paid = true
       event.status = :Active
@@ -139,12 +144,13 @@ class Payments::CheckOutController < ApplicationController
       end
       event.save!(:validate => false)
       event.public_url
-      json_response_data([:transaction => response.transactionResponse.transId ], :ok)
+      json_response_data([:transaction => response.transactionResponse.transId], :ok)
     else
       json_response_error(["event is already paid"], 401)
     end
 
   end
+
   swagger_path '/payments/check_out/subscribe' do
     operation :post do
       key :summary, 'Check out brackets'
@@ -204,6 +210,7 @@ class Payments::CheckOutController < ApplicationController
       end
     end
   end
+
   def subscribe
     #only for test
     #@resource = User.find(params[:user_id])
@@ -229,8 +236,8 @@ class Payments::CheckOutController < ApplicationController
     #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
 
     if personalized_discount.present?
-      enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
-     # bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+      enroll_fee = enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
+      # bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
     elsif general_discount.present? and general_discount.limited > general_discount.applied
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
@@ -261,13 +268,13 @@ class Payments::CheckOutController < ApplicationController
         tax_for_bracket = ((event.tax.tax * bracket_fee) / 100)
       else
         tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to enroll"}
-        tax_for_registration = event.tax.tax/ (1 + (brackets.length))
-        tax_for_bracket = event.tax.tax/ (1 + (brackets.length))
+        tax_for_registration = event.tax.tax / (1 + (brackets.length))
+        tax_for_bracket = event.tax.tax / (1 + (brackets.length))
       end
 
     end
     if tax.present?
-     amount = amount + tax[:amount]
+      amount = amount + tax[:amount]
     end
     # no payment if items is empty
     if items.length > 0
@@ -300,15 +307,15 @@ class Payments::CheckOutController < ApplicationController
     brackets.each do |item|
       player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
                                            :description => "Bracket subscribe payment", :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
-                                          :event_id => player.event_id, :type_payment => "bracket"})
+                                           :event_id => player.event_id, :type_payment => "bracket"})
     end
 
     player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
                                          :description => "Event subscribe payment", :event_id => player.event_id, :type_payment => "event"})
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
-        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id  => brackets.pluck(:category_id))
-        .update(:payment_transaction_id =>  response.transactionResponse.transId)
+        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id => brackets.pluck(:category_id))
+        .update(:payment_transaction_id => response.transactionResponse.transId)
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
   end
