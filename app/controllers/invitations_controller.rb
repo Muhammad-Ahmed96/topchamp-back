@@ -501,22 +501,26 @@ class InvitationsController < ApplicationController
           if player.present?
             @invitation.brackets.where(:category_id => category_id).each do |item|
               if player.have_partner?(category_id,  item.event_bracket_id)
-                return json_response_error([t("player.partner.validation.already_partner")])
+                @invitation.status = "declined"
+                @invitation.save!(:validate => false)
+                return json_response_error([t("player.partner.validation.already_partner")], 422)
               end
             end
           else
-            return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+            return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
           end
 
           player_sender = Player.where(user_id: @invitation.sender_id).where(event_id: event.id).first
           if player_sender.present?
             @invitation.brackets.where(:category_id => category_id).each do |item|
               if player_sender.have_partner?(category_id,  item.event_bracket_id)
-                return json_response_error([t("player.partner.validation.already_partner_sender")])
+                @invitation.status = "declined"
+                @invitation.save!(:validate => false)
+                return json_response_error([t("player.partner.validation.already_partner_sender")], 422)
               end
             end
           else
-            return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+            return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
           end
         end
         types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
@@ -544,7 +548,7 @@ class InvitationsController < ApplicationController
             if result == false
               @invitation.status = :pending_confirmation
               @invitation.save!
-              return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+              return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
             end
           end
         end
