@@ -9,4 +9,5 @@ class EventSingleSerializer < ActiveModel::Serializer
   has_many :brackets, serializer: EventBracketSerializer
   has_one :scoring_option_match_1
   has_one :scoring_option_match_2
+  belongs_to :elimination_format, serializer: EliminationFormatSerializer
 end

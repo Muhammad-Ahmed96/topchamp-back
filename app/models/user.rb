@@ -425,7 +425,7 @@ class User < ApplicationRecord
                  .where(:category_id => category_id).count
     team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
                      .where(:category_id => category_id).first
-    team_name = 'Team'
+    team_name = 'Team 1'
     if team_exist.present?
       if team_exist.name.nil?
         team_name = "Team #{count + 1}"
