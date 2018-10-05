@@ -47,6 +47,13 @@ class Tournament < ApplicationRecord
       self.rounds.where.not(id: deleteIds).destroy_all
     end
     self.update_internal_data
+    if self.matches_status == 'complete'
+      self.set_playing
+      round = self.rounds.where(:index => 0).first
+      if round.present?
+        round.set_playing
+      end
+    end
   end
 
   def total_teams
@@ -155,6 +162,11 @@ class Tournament < ApplicationRecord
     else
       self.status = :playing
     end
+    self.save!(:validate => false)
+  end
+
+  def set_playing
+    self.status = :playing
     self.save!(:validate => false)
   end
 

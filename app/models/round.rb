@@ -22,6 +22,11 @@ class Round < ApplicationRecord
     self.save!(:validate => false)
   end
 
+  def set_playing
+    self.status = :playing
+    self.save!(:validate => false)
+  end
+
   swagger_schema :Round do
     property :id do
       key :type, :integer
