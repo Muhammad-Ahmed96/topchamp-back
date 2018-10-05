@@ -52,6 +52,9 @@ class Tournament < ApplicationRecord
       round = self.rounds.where(:index => 0).first
       if round.present?
         round.set_playing
+        round.matches.each do |match|
+          match.set_playing
+        end
       end
     end
   end

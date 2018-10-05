@@ -154,4 +154,9 @@ class Match < ApplicationRecord
     self.status = :complete
     self.save!(:validate => false)
   end
+
+  def set_playing
+    self.status = :playing
+    self.save!(:validate => false)
+  end
 end
