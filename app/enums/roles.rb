@@ -19,8 +19,8 @@ end
 class Roles::Member < Roles
 end
 
-class Roles::Customer < Roles
-end
+# class Roles::Customer < Roles
+# end
 
 =begin
 class Roles::Director < Roles

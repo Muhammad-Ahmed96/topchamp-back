@@ -11,6 +11,11 @@ class Round < ApplicationRecord
   def verify_complete_status
     if self.matches.count == self.matches.where(:status => :complete).count
       self.status = :complete
+      next_round =  self.tournament.rounds.where("index > ?", self.index).order(index: :asc).first
+      if next_round.present?
+        next_round.status = :playing
+        next_round.save!(:validate => false)
+      end
     else
       self.status = :playing
     end
