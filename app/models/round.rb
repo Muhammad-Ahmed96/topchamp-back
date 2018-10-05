@@ -13,8 +13,10 @@ class Round < ApplicationRecord
       self.status = :complete
       next_round =  self.tournament.rounds.where("index > ?", self.index).order(index: :asc).first
       if next_round.present?
-        next_round.status = :playing
-        next_round.save!(:validate => false)
+        next_round.set_playing
+        next_round.matches.each do |match|
+          match.set_playing
+        end
       end
     else
       self.status = :playing
