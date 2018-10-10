@@ -37,8 +37,7 @@ class ApplicationController < ActionController::API
     DeviseTokenAuth.redirect_whitelist && !DeviseTokenAuth::Url.whitelisted?(@redirect_url)
   end
 
-  def send_push(options)
-    registration_ids = @resource.devices.pluck(:token) # an array of one or more client registration tokens
+  def send_push(registration_ids, options)
     if registration_ids.length > 0
       fcm = FCM.new(Rails.configuration.fcm_api_key)
       response = fcm.send(registration_ids, options)

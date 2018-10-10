@@ -39,14 +39,18 @@ class CertifyScoreController < ApplicationController
     match = Match.find(create_params[:match_id])
     if match.present?
       match.team_winner.players.each do |player|
-        certified_score = CertifiedScore.where(:match_id => match.id).where(:user_id => player.user_id)
-                              .update_or_create!({:match_id => match.id, :round_id => match.round.id, :event_id => match.round.tournament.event.id,
-                                                  :tournament_id => match.round.tournament.id, :team_a_id => match.team_a_id, :team_b_id => match.team_b_id,
-                                                  :team_winner_id => match.team_winner_id, :user_id => player.user_id, :date_at => DateTime.now,
-                                                  :status => :pending})
-        options = {data: {message: t("events.certifi_score"), id: certified_score.id}, collapse_key: "updated_score", notification: {
-            body: t("events.certifi_score"), sound: 'default'}}
-        send_push(options)
+        user = User.where(:id => player.user_id).first
+        if user.present?
+          certified_score = CertifiedScore.where(:match_id => match.id).where(:user_id => player.user_id)
+                                .update_or_create!({:match_id => match.id, :round_id => match.round.id, :event_id => match.round.tournament.event.id,
+                                                    :tournament_id => match.round.tournament.id, :team_a_id => match.team_a_id, :team_b_id => match.team_b_id,
+                                                    :team_winner_id => match.team_winner_id, :user_id => player.user_id, :date_at => DateTime.now,
+                                                    :status => :pending})
+          registration_ids = user.devices.pluck(:token)
+          options = {data: {message: t("events.certifi_score"), id: certified_score.id}, collapse_key: "updated_score", notification: {
+              body: t("events.certifi_score"), sound: 'default'}}
+          send_push(registration_ids, options)
+        end
       end
       json_response_success(t("created_success", model: CertifiedScore.model_name.human), true)
     end
