@@ -101,4 +101,6 @@ Rails.application.configure do
   config.front_partner_url = config.front_url + "?type=need_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}"
   config.front_partner_choose_url = config.front_url + "?type=choose_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}"
   config.front_new_spot_url = config.front_url + "?type=new_spot&event_id={event_id}&event_bracket_id={event_bracket_id}&category_id={category_id}"
+
+  config.fcm_api_key = 'AAAAnBYb9iI:APA91bEsGI3blVOPYbi7iaIDyBXi3J9H7N-bHzVfPOaPJDWIOYs7sS42jQxj_KJy_5Rjh9HO7BTMN33Om7f4Y_Ndcouq_0QvaKuFB6APXZyE-M6_OTW5W4GShjWpDKP0OniVlLTEiHgbl8_37djkRUxwkJxfnUvf5A'
 end

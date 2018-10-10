@@ -187,6 +187,9 @@ Rails.application.routes.draw do
         delete :delete_discount
       end
     end
+
+    resources :certify_score, only: [:create, :show, :update]
+    resources :devices, only: [:create, :destroy]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

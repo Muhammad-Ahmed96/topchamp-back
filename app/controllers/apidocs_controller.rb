@@ -78,6 +78,8 @@ class ApidocsController < ApplicationController
       WaitListController,
       ScoresController,
       EventFeesController,
+      CertifyScoreController,
+      DevicesController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -129,6 +131,8 @@ class ApidocsController < ApplicationController
       WaitList,
       EventFee,
       EventPersonalizedDiscount,
+      CertifiedScore,
+      Device,
       self,
   ].freeze
 

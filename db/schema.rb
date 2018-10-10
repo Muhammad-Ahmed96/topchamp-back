@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_10_03_195937) do
+ActiveRecord::Schema.define(version: 2018_10_09_231756) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -96,6 +96,27 @@ ActiveRecord::Schema.define(version: 2018_10_03_195937) do
     t.index ["event_id"], name: "index_categories_events_on_event_id"
   end
 
+  create_table "certified_scores", force: :cascade do |t|
+    t.integer "match_id"
+    t.integer "event_id"
+    t.integer "tournament_id"
+    t.integer "round_id"
+    t.integer "team_a_id"
+    t.integer "team_b_id"
+    t.integer "team_winner_id"
+    t.integer "user_id"
+    t.datetime "date_at"
+    t.string "signature_file_name"
+    t.string "signature_content_type"
+    t.integer "signature_file_size"
+    t.datetime "signature_updated_at"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_certified_scores_on_deleted_at"
+  end
+
   create_table "contact_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "country_code_phone"
@@ -112,6 +133,14 @@ ActiveRecord::Schema.define(version: 2018_10_03_195937) do
     t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
     t.string "country"
+  end
+
+  create_table "devices", force: :cascade do |t|
+    t.integer "user_id"
+    t.text "token"
+    t.string "platform"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "elimination_formats", force: :cascade do |t|
