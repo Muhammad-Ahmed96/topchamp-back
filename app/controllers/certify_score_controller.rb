@@ -46,10 +46,11 @@ class CertifyScoreController < ApplicationController
                                                     :tournament_id => match.round.tournament.id, :team_a_id => match.team_a_id, :team_b_id => match.team_b_id,
                                                     :team_winner_id => match.team_winner_id, :user_id => player.user_id, :date_at => DateTime.now,
                                                     :status => :pending})
-          registration_ids = user.devices.pluck(:token)
+          topic = "user_chanel_#{player.user_id}"
+          #topic = 'user_chanel_54'
           options = {data: {message: t("events.certifi_score"), id: certified_score.id}, collapse_key: "updated_score", notification: {
               body: t("events.certifi_score"), sound: 'default'}}
-          send_push(registration_ids, options)
+          send_push_topic(topic, options)
         end
       end
       json_response_success(t("created_success", model: CertifiedScore.model_name.human), true)

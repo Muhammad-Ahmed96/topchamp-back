@@ -213,7 +213,7 @@ class Payments::CheckOutController < ApplicationController
 
   def subscribe
     #only for test
-    @resource = User.find(params[:user_id])
+    #@resource = User.find(params[:user_id])
     event = Event.find(subscribe_params[:event_id])
     brackets = event.available_brackets(player_brackets_params)
     if brackets.length <= 0
@@ -276,7 +276,6 @@ class Payments::CheckOutController < ApplicationController
       amount = amount + tax[:amount]
     end
     # no payment if items is empty
-=begin
     if items.length > 0
       customer = Payments::Customer.get(@resource)
       amount = number_with_precision(amount, precision: 2)
@@ -301,9 +300,8 @@ class Payments::CheckOutController < ApplicationController
         end
       end
     end
-=end
     #only for test
-    response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+   # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)

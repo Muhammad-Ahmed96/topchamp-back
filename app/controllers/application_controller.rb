@@ -44,6 +44,13 @@ class ApplicationController < ActionController::API
     end
   end
 
+  def send_push_topic(topic, options)
+      fcm = FCM.new(Rails.configuration.fcm_api_key)
+      response = fcm.send_to_topic(topic, options)
+  end
+
+
+
   private
 
   def user_not_authorized(exception)
