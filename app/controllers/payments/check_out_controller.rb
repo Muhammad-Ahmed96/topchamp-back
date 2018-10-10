@@ -71,6 +71,7 @@ class Payments::CheckOutController < ApplicationController
   end
 
   def event
+    is_test = true #change to false for checkout event on authorize.net
     event = Event.find(event_params[:event_id])
     if event.is_paid == false
       director = event.director
@@ -78,7 +79,7 @@ class Payments::CheckOutController < ApplicationController
       config = Payments::ItemsConfig.get_event
       amount = 0
       fees = EventFee.first
-      if fees.present? and fees.base_fee > 0
+      if fees.present? and fees.base_fee > 0 and is_test == false
         personalized_discount = EventPersonalizedDiscount.where(:code => subscribe_params[:code]).where(:email => director.email).first
         if subscribe_params[:code].present? and personalized_discount.nil?
           return response_invalid
