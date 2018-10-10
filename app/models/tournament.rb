@@ -106,8 +106,8 @@ class Tournament < ApplicationRecord
         if next_round.present?
           next_match_info = self.get_index_match(match.index)
           next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
+          winner_team_id = match.get_winner_team_id
           if next_match.present?
-            winner_team_id = match.get_winner_team_id
             if next_match_info[:type] == 'A'
               next_match.team_a_id = winner_team_id
             elsif next_match_info[:type] == 'B'
@@ -171,6 +171,11 @@ class Tournament < ApplicationRecord
   def set_playing
     self.status = :playing
     self.save!(:validate => false)
+  end
+
+  #todo get list of position
+  def get_position_list
+
   end
 
   swagger_schema :Tournament do
