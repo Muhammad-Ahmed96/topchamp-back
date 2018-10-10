@@ -241,3 +241,5 @@ en:
       invalid: "Invalid discount code"
       limit_reached: "Your discount code has reached its usage limit"
       valid: "Valid"
+    certifi_score: "You won! Please certify your score"
+

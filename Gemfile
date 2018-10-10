@@ -78,3 +78,5 @@ gem 'google-api-client', '~> 0.11'
 gem "authorizenet"  , '~> 1.9.5'
 
 gem 'time_difference'
+
+gem 'fcm'
