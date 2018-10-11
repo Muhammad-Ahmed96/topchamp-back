@@ -17,6 +17,7 @@ class User < ApplicationRecord
   has_many :participants, :dependent => :destroy
   has_many :wait_lists, :dependent => :destroy
   has_many :devices
+  has_many :event_reminders, :class_name => 'UserEventReminder'
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
