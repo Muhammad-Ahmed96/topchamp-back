@@ -68,6 +68,18 @@ class Tournament < ApplicationRecord
     return count
   end
 
+  def reset_general_score
+    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
+    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
+    teams_ids = matchs_a + matchs_b
+    Team.where(:id => teams_ids).where(:event_id => self.event_id).where(:category_id => self.category_id)
+        .where(:event_bracket_id => self.event_bracket_id).update({:general_score => 0, :match_won => 0})
+  end
+
+  def reset_match_winner
+    Match.joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.update(:team_winner_id => nil)
+  end
+
   def set_team_count
     self.update_attributes(:teams_count => self.total_teams)
   end
@@ -87,6 +99,8 @@ class Tournament < ApplicationRecord
   def update_internal_data
     self.set_team_count
     self.set_matches_status
+    self.reset_general_score
+    self.reset_match_winner
   end
 
   def teams
@@ -98,7 +112,9 @@ class Tournament < ApplicationRecord
   end
 
   def set_winner(match)
+    last_winner_team_id = match.team_winner_id
     elimination_format = self.event.elimination_format
+    winner_team_id = nil
     unless elimination_format.nil?
       #Logic for single elimination
       if elimination_format.slug == 'single'
@@ -116,13 +132,13 @@ class Tournament < ApplicationRecord
             next_match.save!(:validate => false)
           end
         else
-          match.get_winner_team_id
+          winner_team_id = match.get_winner_team_id
         end
         match.set_complete_status
         match.round.verify_complete_status
         #Logic for round_robin elimination
       elsif elimination_format.slug == 'round_robin'
-        match.get_winner_team_id
+        winner_team_id = match.get_winner_team_id
         match.set_complete_status
         match.round.verify_complete_status
       elsif elimination_format.slug == 'double'
@@ -130,8 +146,8 @@ class Tournament < ApplicationRecord
         if next_round.present?
           next_match_info = self.get_index_match(match.index)
           next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
+          winner_team_id = match.get_winner_team_id
           if next_match.present?
-            winner_team_id = match.get_winner_team_id
             if next_match_info[:type] == 'A'
               next_match.team_a_id = winner_team_id
             elsif next_match_info[:type] == 'B'
@@ -140,12 +156,35 @@ class Tournament < ApplicationRecord
             next_match.save!(:validate => false)
           end
         else
-          match.get_winner_team_id
+          winner_team_id = match.get_winner_team_id
         end
         match.set_complete_status
         match.round.verify_complete_status
       end
       self.verify_complete_status
+    end
+    #save general scores of teams
+    #rest last team match won
+    unless last_winner_team_id.nil?
+      last_team = Team.where(:id => last_winner_team_id).first
+      if last_team.present?
+        if last_team.match_won > 0
+          last_team.match_won = last_team.match_won - 1
+          last_team.save!(:validate => false)
+        end
+      end
+    end
+    teams_ids = [match.team_a_id, match.team_b_id]
+    teams_ids.each do |team_id|
+      team = Team.where(:id => team_id).first
+      if team.present?
+        score = Score.where(:team_id => team_id).sum(:score)
+        team.general_score = score
+        if winner_team_id == team_id
+          team.match_won = team.match_won + 1
+        end
+        team.save!(:validate => false)
+      end
     end
 
   end
@@ -162,6 +201,7 @@ class Tournament < ApplicationRecord
   def verify_complete_status
     if self.rounds.count == self.rounds.where(:status => :complete).count
       self.status = :complete
+      set_team_tournament_winner
     else
       self.status = :playing
     end
@@ -176,6 +216,17 @@ class Tournament < ApplicationRecord
   #todo get list of position
   def get_position_list
 
+  end
+
+  def set_team_tournament_winner
+    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
+    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
+    teams_ids = matchs_a + matchs_b
+    winner_team = Team.where(:id => teams_ids).order(match_won: :asc).order(general_score: :asc).first
+    if winner_team.present?
+      self.winner_team_id = winner_team.id
+      self.save!(:validate => false)
+    end
   end
 
   swagger_schema :Tournament do
