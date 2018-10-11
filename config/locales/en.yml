@@ -242,4 +242,5 @@ en:
       limit_reached: "Your discount code has reached its usage limit"
       valid: "Valid"
     certifi_score: "You won! Please certify your score"
+    reminder_notification: "%{event_title} starts in five days. Get ready!"
 

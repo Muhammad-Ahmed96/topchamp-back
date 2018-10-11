@@ -80,3 +80,5 @@ gem "authorizenet"  , '~> 1.9.5'
 gem 'time_difference'
 
 gem 'fcm'
+
+gem "whenever", require: false

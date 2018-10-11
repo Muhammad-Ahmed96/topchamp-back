@@ -32,6 +32,7 @@ class Event < ApplicationRecord
   belongs_to :elimination_format, optional: true
   has_many :tournaments
   has_many :teams
+  has_many :event_reminders, :class_name => 'UserEventReminder'
 
 
   has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
@@ -733,6 +734,16 @@ class Event < ApplicationRecord
       end
     end
     reminder
+  end
+
+  def send_notification
+    event_reminders = self.event_reminders.where(:reminder => true).all
+    event_reminders.each do |reminder|
+      fcm = FCM.new(Rails.configuration.fcm_api_key)
+      options = {data: {message: t("events.reminder_notification", event_title: self.title), id: self.id}, collapse_key: "updated_event", notification: {
+          body: t("events.reminder_notification", event_title: self.title), sound: 'default'}}
+      response = fcm.send_to_topic("user_chanel_#{reminder.user_id}", options)
+    end
   end
 
   private
