@@ -44,6 +44,7 @@ group :development do
   gem 'capistrano-passenger'
   gem 'capistrano-rbenv'
   gem 'capistrano-rake', require: false
+  gem 'capistrano-bundler', '~> 1.3'
 end
 #Documentation
 gem 'swagger-blocks'
