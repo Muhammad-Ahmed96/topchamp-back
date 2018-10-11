@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_10_10_232930) do
+ActiveRecord::Schema.define(version: 2018_10_11_205845) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -674,6 +674,14 @@ ActiveRecord::Schema.define(version: 2018_10_10_232930) do
     t.string "matches_status", default: "not_complete"
     t.integer "teams_count", default: 0
     t.integer "winner_team_id"
+  end
+
+  create_table "user_event_reminders", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "event_id"
+    t.boolean "reminder", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|

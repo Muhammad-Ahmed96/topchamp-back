@@ -190,6 +190,7 @@ Rails.application.routes.draw do
 
     resources :certify_score, only: [:create, :show, :update]
     resources :devices, only: [:create, :destroy]
+    resources :user_event_reminder, only: [:create],  :path => :event_reminder
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

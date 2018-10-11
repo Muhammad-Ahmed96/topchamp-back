@@ -9,6 +9,8 @@ class Event < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
 
+  attr_accessor :reminder
+
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions
   has_and_belongs_to_many :internal_categories, :join_table => "categories_events", class_name: "Category"
@@ -718,6 +720,19 @@ class Event < ApplicationRecord
       return self.payment_method.present? ? self.payment_method.enrollment_fee : 0
     end
     #return  enroll_fee - ((discount * enroll_fee) / 100)
+  end
+
+#get if current user reminder event
+  def reminder
+    reminder = false
+    user = Current.user
+    unless user.nil?
+      event_reminder = user.event_reminders.where(:event_id => self.id).first
+      unless event_reminder.nil?
+        reminder = event_reminder.reminder
+      end
+    end
+    reminder
   end
 
   private
