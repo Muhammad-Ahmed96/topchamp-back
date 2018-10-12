@@ -110,6 +110,11 @@ Rails.application.routes.draw do
         end
       end
       resources :wait_list, only: [:create, :index]
+      resources :event_brackets, only: [] do
+        collection do
+          get :available
+        end
+      end
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]

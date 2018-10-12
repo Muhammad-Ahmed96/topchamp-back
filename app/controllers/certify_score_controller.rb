@@ -48,7 +48,7 @@ class CertifyScoreController < ApplicationController
                                                     :status => :pending})
           topic = "user_chanel_#{player.user_id}"
           #topic = 'user_chanel_54'
-          options = {data: {message: t("events.certifi_score"), id: certified_score.id}, collapse_key: "updated_score", notification: {
+          options = {data: {type:"certify_score", id: certified_score.id}, collapse_key: "updated_score", notification: {
               body: t("events.certifi_score"), sound: 'default'}}
           send_push_topic(topic, options)
         end
