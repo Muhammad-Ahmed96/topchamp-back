@@ -23,7 +23,7 @@ env :PATH, ENV['PATH']
 #
 # This works
 #set :env_path,    '"$HOME/.rbenv/shims":"$HOME/.rbenv/bin"'
-set :output, {:error => '~/z.error.log', :standard => '~/z.standard.log'}
-every 5.minutes do
+#set :output, {:error => '~/z.error.log', :standard => '~/z.standard.log'}
+every  1.day, :at => '10:00' do
   rake "app:event_reminder"
 end
