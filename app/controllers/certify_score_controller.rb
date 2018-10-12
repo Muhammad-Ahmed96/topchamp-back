@@ -37,7 +37,7 @@ class CertifyScoreController < ApplicationController
 
   def create
     match = Match.find(create_params[:match_id])
-    if match.present?
+    if match.present? and  match.team_winner.present?
       match.team_winner.players.each do |player|
         user = User.where(:id => player.user_id).first
         if user.present?

@@ -87,5 +87,14 @@ namespace :app do
   end
 
 
+  desc 'Send notification reminder'
+  task event_reminder: :environment do
+   events = Event.where(:start_date => 5.days.from_now).all
+   events.each do |event|
+     event.send_notification
+   end
+  end
+
+
 
 end

@@ -44,6 +44,7 @@ group :development do
   gem 'capistrano-passenger'
   gem 'capistrano-rbenv'
   gem 'capistrano-rake', require: false
+  gem 'capistrano-bundler', '~> 1.3'
 end
 #Documentation
 gem 'swagger-blocks'
@@ -80,3 +81,5 @@ gem "authorizenet"  , '~> 1.9.5'
 gem 'time_difference'
 
 gem 'fcm'
+
+gem "whenever", require: false
