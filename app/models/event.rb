@@ -740,12 +740,11 @@ class Event < ApplicationRecord
     event_reminders = self.event_reminders.where(:reminder => true).all
     event_reminders.each do |reminder|
       fcm = FCM.new(Rails.configuration.fcm_api_key)
-      options = {data: {message: t("events.reminder_notification", event_title: self.title), id: self.id}, collapse_key: "updated_event", notification: {
+      options = {data: {type:"event_reminder", id: self.id}, collapse_key: "updated_event", notification: {
           body: t("events.reminder_notification", event_title: self.title), sound: 'default'}}
       response = fcm.send_to_topic("user_chanel_#{reminder.user_id}", options)
     end
   end
-
   private
 
   #validate a url

@@ -81,6 +81,7 @@ class ApidocsController < ApplicationController
       CertifyScoreController,
       UserEventReminderController,
       DevicesController,
+      EventBracketsController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
