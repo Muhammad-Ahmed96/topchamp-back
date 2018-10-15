@@ -23,6 +23,7 @@ class Tournament < ApplicationRecord
 
   def sync_matches!(data)
     Score.joins(set: [match: [round: [:tournament]]]).merge(Tournament.where :id => self.id).destroy_all
+    Set.joins(match: [round: [:tournament]]).merge(Tournament.where :id => self.id).destroy_all
     deleteIds = []
     if data.present?
       data.each do |item|
