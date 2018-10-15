@@ -3,6 +3,7 @@ class CertifiedScore < ApplicationRecord
   acts_as_paranoid
   belongs_to :user
   belongs_to :event
+  belongs_to :match
   belongs_to :tournament
   belongs_to :team_a, foreign_key: "team_a_id", :class_name => "Team", :optional => true
   belongs_to :team_b, foreign_key: "team_b_id", :class_name => "Team", :optional => true
