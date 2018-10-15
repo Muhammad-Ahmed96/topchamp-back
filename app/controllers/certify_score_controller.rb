@@ -47,7 +47,7 @@ class CertifyScoreController < ApplicationController
                                                     :team_winner_id => match.team_winner_id, :user_id => player.user_id, :date_at => DateTime.now,
                                                     :status => :pending})
           topic = "user_chanel_#{player.user_id}"
-          #topic = 'user_chanel_54'
+          #topic = 'user_chanel_3'
           options = {data: {type:"certify_score", id: certified_score.id}, collapse_key: "updated_score", notification: {
               body: t("events.certifi_score"), sound: 'default'}}
           send_push_topic(topic, options)
