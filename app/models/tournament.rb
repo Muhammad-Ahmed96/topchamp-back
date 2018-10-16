@@ -6,7 +6,7 @@ class Tournament < ApplicationRecord
 
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
 
-  belongs_to :winner_team, :class_name => "Team", :foreign_key => "winner_team_id"
+  belongs_to :winner_team, :class_name => "Team", :foreign_key => "winner_team_id", :optional => true
 
   scope :matches_status_in, lambda {|progress| where matches_status: progress if progress.present?}
   scope :teams_count_in, lambda {|count| where teams_count: count if count.present?}
