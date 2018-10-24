@@ -539,6 +539,7 @@ class InvitationsController < ApplicationController
           types = types + participant.attendee_type_ids.to_a
           participant.attendee_type_ids = types
         end
+        @bracket_description = ""
         @invitation.status = :accepted
         @invitation.save!
         if @invitation.invitation_type == "partner_mixed" or @invitation.invitation_type == "partner_double"
@@ -550,7 +551,46 @@ class InvitationsController < ApplicationController
               @invitation.save!
               return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
             end
+            case event.bracket_by
+            when "age"
+              if item.age.present?
+                @bracket_description = "Age: #{item.age}"
+              else
+                @bracket_description = "Young age: #{item.young_age}, Old age: #{item.old_age}"
+              end
+            when "skill"
+              @bracket_description = "Lowest skill: #{item.lowest_skill}, Highest skill: #{item.highest_skill}"
+            when "skill_age"
+              main_bracket =  item.brackets.where(:id => item.event_bracket_id).first
+              if main_bracket.nil?
+                main_bracket = item
+              end
+              if item.age.present?
+                age = "Age: #{item.age}"
+              else
+                age = "Young age: #{item.young_age}, Old age: #{item.old_age}"
+              end
+              @bracket_description = "Lowest skill: #{main_bracket.lowest_skill}, Highest skill: #{main_bracket.highest_skill} [#{age}]"
+            when "age_skill"
+              main_bracket =  item.brackets.where(:id => item.event_bracket_id).first
+              if main_bracket.nil?
+                main_bracket = item
+              end
+              skill = "Lowest skill: #{item.lowest_skill}, Highest skill: #{item.highest_skill}"
+              if item.age.present?
+                @bracket_description = "Age: #{main_bracket.age} [#{skill}]"
+              else
+                @bracket_description = "Young age: #{main_bracket.young_age}, Old age: #{main_bracket.old_age} [#{skill}]"
+              end
+            end
           end
+
+          topic = "user_chanel_#{@invitation.sender_id}"
+          user_to = @invitation.user
+          #topic = 'user_chanel_3'
+          options = {data: {type:"accept_invitation", id: @invitation.id}, collapse_key: "invitation", notification: {
+              body: "#{user_to.first_name}, #{user_to.last_name}, has accepted your invitation on Tournament #{event.title} and Bracket #{@bracket_description}", sound: 'default'}}
+          send_push_topic(topic, options)
         end
       end
     end
