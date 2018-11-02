@@ -106,15 +106,15 @@ class Payments::CheckOutController < ApplicationController
             amount = amount + fees.transaction_fee
           end
         end
-
+        #only for test
+        amount = 1
         items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
                   taxable: config[:taxable]}]
         tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
         #only for test
-        amount = 1
-        tax[:amount] = 1
+        tax[:amount] = 0
         response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
-                                             config[:unit_price], items, tax)
+                                             amount, items, tax)
         if response.messages.resultCode == MessageTypeEnum::Ok
           #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
           if response.transactionResponse.responseCode != "1"
@@ -248,6 +248,9 @@ class Payments::CheckOutController < ApplicationController
       general_discount.applied = general_discount.applied + 1
       general_discount.save!(:validate => false)
     end
+    #only for test
+    enroll_fee = 1
+    bracket_fee = 1
     #first item event fee
     item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: enroll_fee,
             taxable: true}
@@ -282,7 +285,7 @@ class Payments::CheckOutController < ApplicationController
     # no payment if items is empty
     # Comment on test
     # Only for test
-     amount = 1
+    amount = 1
     tax[:amount] = 1
     if items.length > 0
       customer = Payments::Customer.get(@resource)
