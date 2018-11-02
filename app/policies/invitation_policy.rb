@@ -49,7 +49,6 @@ class InvitationPolicy < ApplicationPolicy
       else
         scope.joins(:event).merge(Event.where :creator_user_id => user.id)
       end
-
     end
   end
 end

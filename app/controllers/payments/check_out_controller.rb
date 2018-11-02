@@ -110,6 +110,9 @@ class Payments::CheckOutController < ApplicationController
         items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
                   taxable: config[:taxable]}]
         tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
+        #only for test
+        amount = 1
+        tax[:amount] = 1
         response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
                                              config[:unit_price], items, tax)
         if response.messages.resultCode == MessageTypeEnum::Ok
@@ -277,6 +280,10 @@ class Payments::CheckOutController < ApplicationController
       amount = amount + tax[:amount]
     end
     # no payment if items is empty
+    # Comment on test
+    # Only for test
+     amount = 1
+    tax[:amount] = 1
     if items.length > 0
       customer = Payments::Customer.get(@resource)
       amount = number_with_precision(amount, precision: 2)
@@ -301,8 +308,9 @@ class Payments::CheckOutController < ApplicationController
         end
       end
     end
+    # end Comment on test
     #only for test
-   # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+    # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
