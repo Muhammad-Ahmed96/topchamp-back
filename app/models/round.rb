@@ -7,6 +7,8 @@ class Round < ApplicationRecord
 
 
   scope :order_by_index,-> { order(index: :asc) }
+  scope :only_winners,-> { where(:round_type => :winners).order(index: :asc)}
+  scope :only_losers,-> { where.not(:round_type => :winners).order(index: :asc)}
 
   def verify_complete_status
     if self.matches.count == self.matches.where(:status => :complete).count

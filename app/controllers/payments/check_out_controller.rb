@@ -71,7 +71,7 @@ class Payments::CheckOutController < ApplicationController
   end
 
   def event
-    is_test = true #change to false for checkout event on authorize.net
+    is_test = false #change to false for checkout event on authorize.net
     event = Event.find(event_params[:event_id])
     if event.is_paid == false
       director = event.director

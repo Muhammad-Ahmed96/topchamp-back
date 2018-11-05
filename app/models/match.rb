@@ -205,4 +205,12 @@ class Match < ApplicationRecord
     self.status = :playing
     self.save!(:validate => false)
   end
+
+  def is_loser_bracket?
+    !(self.round.round_type == :winner)
+  end
+
+  def is_winner_bracket?
+    self.round.round_type == :winner
+  end
 end
