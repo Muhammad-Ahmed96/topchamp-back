@@ -424,7 +424,7 @@ class TournamentsController < ApplicationController
   def rounds_list
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:category_id => players_list_params[:category_id]).first_or_create!
-    json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
+    json_response_serializer(tournament, TournamentRoundsSerializer)
   end
 
 
@@ -500,6 +500,14 @@ class TournamentsController < ApplicationController
     unless params[:rounds].nil? and !params[:rounds].kind_of?(Array)
       params[:rounds].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
+      end
+    end
+  end
+
+  def losers_params
+    unless params[:rounds_losers].nil? and !params[:rounds_losers].kind_of?(Array)
+      params[:rounds_losers].map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :loser_match_a, :loser_match_b, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
       end
     end
   end

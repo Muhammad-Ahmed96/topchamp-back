@@ -5,5 +5,6 @@ class TournamentWithTotalSerializer < ActiveModel::Serializer
   belongs_to :bracket, :serializer => EventBracketSerializer
   belongs_to :category, :serializer => CategorySerializer
   has_many :rounds, :serializer => RoundSingleSerializer
+  has_many :rounds_losers, :serializer => RoundSingleSerializer
   has_one :winner_team, :serializer => TeamSingleSerializer
 end
