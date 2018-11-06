@@ -207,10 +207,10 @@ class Match < ApplicationRecord
   end
 
   def is_loser_bracket?
-    !(self.round.round_type == :winner)
+    !(self.round.round_type == :winners)
   end
 
   def is_winner_bracket?
-    self.round.round_type == :winner
+    self.round.round_type == :winners
   end
 end
