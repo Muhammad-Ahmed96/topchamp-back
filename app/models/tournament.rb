@@ -7,7 +7,7 @@ class Tournament < ApplicationRecord
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
   has_many :rounds_losers, -> {only_losers}, :dependent => :destroy, class_name: 'Round'
 
-  belongs_to :winner_team, :class_name => "Team", :foreign_key => "winner_team_id", :optional => true
+  belongs_to :winners_team, :class_name => "Team", :foreign_key => "winner_team_id", :optional => true
 
   scope :matches_status_in, lambda {|progress| where matches_status: progress if progress.present?}
   scope :teams_count_in, lambda {|count| where teams_count: count if count.present?}
@@ -31,9 +31,9 @@ class Tournament < ApplicationRecord
       data.each do |item|
         match_ids = []
         if item[:id].present?
-          round = self.rounds.where(:id => item[:id]).where(round_type: :winner).update_or_create!({:index => item[:index]})
+          round = self.rounds.where(:id => item[:id]).where(round_type: :winners).update_or_create!({:index => item[:index]})
         else
-          round = self.rounds.where(:index => item[:index]).where(round_type: :winner).first_or_create!({:index => item[:index]})
+          round = self.rounds.where(:index => item[:index]).where(round_type: :winners).first_or_create!({:index => item[:index]})
         end
         if item[:matches].present?
           item[:matches].each do |item_match|
@@ -49,7 +49,7 @@ class Tournament < ApplicationRecord
         deleteIds << round.id
       end
     else
-      self.rounds.where.not(id: deleteIds).where(round_type: :winner).destroy_all
+      self.rounds.where.not(id: deleteIds).where(round_type: :winners).destroy_all
     end
     self.update_internal_data
     if self.matches_status == 'complete'
@@ -90,8 +90,8 @@ class Tournament < ApplicationRecord
   end
 
   def total_teams
-    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winner)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
-    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winner)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
+    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
+    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
     teams_ids = matchs_a + matchs_b
     count = Team.where(:id => teams_ids).where(:event_id => self.event_id).where(:category_id => self.category_id)
                 .where(:event_bracket_id => self.event_bracket_id).count
@@ -134,8 +134,8 @@ class Tournament < ApplicationRecord
   end
 
   def teams
-    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Round.where(round_type: :winner)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
-    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Round.where(round_type: :winner)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
+    matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Round.where(round_type: :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
+    matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Round.where(round_type: :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
     teams_ids = matchs_a + matchs_b
     Team.where(:id => teams_ids).where(:event_id => self.event_id).where(:category_id => self.category_id)
         .where(:event_bracket_id => self.event_bracket_id)
@@ -148,7 +148,7 @@ class Tournament < ApplicationRecord
     unless elimination_format.nil?
       #Logic for single elimination
       if elimination_format.slug == 'single'
-        next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winner).order(index: :asc).first
+        next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winners).order(index: :asc).first
         if next_round.present?
           next_match_info = self.get_index_match(match.index)
           next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
@@ -174,7 +174,7 @@ class Tournament < ApplicationRecord
       elsif elimination_format.slug == 'double'
         if match.is_winner_bracket
           #Winner bracket
-          next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winner).order(index: :asc).first
+          next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winners).order(index: :asc).first
           if next_round.present?
             next_match_info = self.get_index_match(match.index)
             next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
