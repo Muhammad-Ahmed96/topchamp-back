@@ -6,7 +6,7 @@ class Round < ApplicationRecord
   attr_accessor :for_team_id
 
 
-  scope :order_by_index,-> { order(index: :asc) }
+  scope :order_by_index,-> { where(:round_type => :winners).order(index: :asc) }
   scope :only_winners,-> { where(:round_type => :winners).order(index: :asc)}
   scope :only_losers,-> { where.not(:round_type => :winners).order(index: :asc)}
 
