@@ -217,7 +217,7 @@ class TournamentsController < ApplicationController
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:category_id => players_list_params[:category_id]).first_or_create!
     if rounds_params.present?
-      tournament.sync_matches!(rounds_params)
+      tournament.sync_matches!(rounds_params, losers_params)
     end
 
     json_response_serializer(tournament, TournamentSerializer)
