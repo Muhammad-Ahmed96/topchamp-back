@@ -172,7 +172,7 @@ class Tournament < ApplicationRecord
         match.set_complete_status
         match.round.verify_complete_status
       elsif elimination_format.slug == 'double'
-        if match.is_winner_bracket
+        if match.is_winner_bracket?
           #Winner bracket
           next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winners).order(index: :asc).first
           if next_round.present?
