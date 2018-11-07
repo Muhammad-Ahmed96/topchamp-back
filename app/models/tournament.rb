@@ -199,7 +199,7 @@ class Tournament < ApplicationRecord
           else
             loser_team_id = match.team_a_id
           end
-          loser_next_round = self.rounds.where("index <= ?", match.round.index).where(round_type: :loser).order(index: :asc).first
+          loser_next_round = self.rounds_losers.where("index <= ?", match.round.index).order(index: :asc).first
           if loser_next_round.present?
             loser_next_match = loser_next_round.matches.where(:loser_match_a => match.match_number).or(Match.where(:loser_match_a => match.match_number)).first
             unless loser_next_match.nil?
@@ -212,7 +212,7 @@ class Tournament < ApplicationRecord
           end
         else
           #move on loser bracket only
-          next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :loser).order(index: :asc).first
+          next_round = self.rounds_losers.where("index > ?", match.round.index).order(index: :asc).first
           if next_round.present?
             next_match_info = self.get_index_match(match.index)
             next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
