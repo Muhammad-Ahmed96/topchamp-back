@@ -67,9 +67,9 @@ class Tournament < ApplicationRecord
       losers_params.each do |item|
         match_ids = []
         if item[:id].present?
-          round = self.rounds.where(:id => item[:id]).where(round_type: :loser).update_or_create!({:index => item[:index], :round_type => :loser})
+          round = self.rounds_losers.where(:id => item[:id]).update_or_create!({:index => item[:index], :round_type => :loser})
         else
-          round = self.rounds.where(:index => item[:index]).where(round_type: :loser).first_or_create!({:index => item[:index], :round_type => :loser})
+          round = self.rounds_losers.where(:index => item[:index]).first_or_create!({:index => item[:index], :round_type => :loser})
         end
         if item[:matches].present?
           item[:matches].each do |item_match|
