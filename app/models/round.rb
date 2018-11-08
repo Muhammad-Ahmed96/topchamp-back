@@ -27,10 +27,12 @@ class Round < ApplicationRecord
   end
 
   def verify_complete_loser
-    if self.matches.count == self.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").count
+    if self.matches.count == self.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").count and self.status != 'complete'
       self.status = :playing
       self.matches.each do |match|
-        match.set_playing
+        if match.status != 'complete'
+          match.set_playing
+        end
       end
       self.save!(:validate => false)
     end
