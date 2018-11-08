@@ -221,9 +221,9 @@ class Tournament < ApplicationRecord
             loser_winner_team_id = match.get_winner_team_id
             if loser_next_match.present?
               if next_match_info[:type] == 'A'
-                loser_next_match.team_a_id = winner_team_id
+                loser_next_match.team_a_id = loser_winner_team_id
               elsif next_match_info[:type] == 'B'
-                loser_next_match.team_b_id = winner_team_id
+                loser_next_match.team_b_id = loser_winner_team_id
               end
               loser_next_match.save!(:validate => false)
             end
