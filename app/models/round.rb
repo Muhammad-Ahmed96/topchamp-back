@@ -6,14 +6,14 @@ class Round < ApplicationRecord
   attr_accessor :for_team_id
 
 
-  scope :order_by_index,-> { where(:round_type => :winners).order(index: :asc) }
-  scope :only_winners,-> { where(:round_type => :winners).order(index: :asc)}
-  scope :only_losers,-> { where.not(:round_type => :winners).order(index: :asc)}
+  scope :order_by_index, -> {where(:round_type => :winners).order(index: :asc)}
+  scope :only_winners, -> {where(:round_type => :winners).order(index: :asc)}
+  scope :only_losers, -> {where.not(:round_type => :winners).order(index: :asc)}
 
   def verify_complete_status
     if self.matches.count == self.matches.where(:status => :complete).count
       self.status = :complete
-      next_round =  self.tournament.rounds.where("index > ?", self.index).order(index: :asc).first
+      next_round = self.tournament.rounds.where("index > ?", self.index).order(index: :asc).first
       if next_round.present?
         next_round.set_playing
         next_round.matches.each do |match|
@@ -24,6 +24,16 @@ class Round < ApplicationRecord
       self.status = :playing
     end
     self.save!(:validate => false)
+  end
+
+  def verify_complete_loser
+    if self.matches.count == self.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").count
+      self.status = :playing
+      self.matches.each do |match|
+        match.set_playing
+      end
+      self.save!(:validate => false)
+    end
   end
 
   def set_playing
