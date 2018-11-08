@@ -34,7 +34,6 @@ class Round < ApplicationRecord
       end
       self.save!(:validate => false)
     end
-    self.save!(:validate => false)
   end
 
   def set_playing
