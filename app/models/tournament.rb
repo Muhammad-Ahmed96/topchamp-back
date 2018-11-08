@@ -177,15 +177,15 @@ class Tournament < ApplicationRecord
           next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winners).order(index: :asc).first
           if next_round.present?
             next_match_info = self.get_index_match(match.index)
-            next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
+            loser_next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
             winner_team_id = match.get_winner_team_id
-            if next_match.present?
+            if loser_next_match.present?
               if next_match_info[:type] == 'A'
-                next_match.team_a_id = winner_team_id
+                loser_next_match.team_a_id = winner_team_id
               elsif next_match_info[:type] == 'B'
-                next_match.team_b_id = winner_team_id
+                loser_next_match.team_b_id = winner_team_id
               end
-              next_match.save!(:validate => false)
+              loser_next_match.save!(:validate => false)
             end
           else
             winner_team_id = match.get_winner_team_id
@@ -210,21 +210,22 @@ class Tournament < ApplicationRecord
               end
               loser_next_match.save!(:validate => false)
             end
+            loser_next_match.round.verify_complete_loser
           end
         else
           #move on loser bracket only
           next_round = self.rounds_losers.where("index > ?", match.round.index).order(index: :asc).first
           if next_round.present?
             next_match_info = self.get_index_match(match.index)
-            next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
+            loser_next_match = next_round.matches.where(:index => next_match_info[:index]).order(index: :asc).first
             loser_winner_team_id = match.get_winner_team_id
-            if next_match.present?
+            if loser_next_match.present?
               if next_match_info[:type] == 'A'
-                next_match.team_a_id = winner_team_id
+                loser_next_match.team_a_id = winner_team_id
               elsif next_match_info[:type] == 'B'
-                next_match.team_b_id = winner_team_id
+                loser_next_match.team_b_id = winner_team_id
               end
-              next_match.save!(:validate => false)
+              loser_next_match.save!(:validate => false)
             end
           else
             loser_winner_team_id = match.get_winner_team_id
