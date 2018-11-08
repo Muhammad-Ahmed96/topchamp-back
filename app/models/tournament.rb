@@ -230,7 +230,7 @@ class Tournament < ApplicationRecord
             loser_winner_team_id = match.get_winner_team_id
           end
           match.set_complete_status
-          match.round.verify_complete_status
+          match.round.verify_complete_loser_status
         end
       end
       self.verify_complete_status

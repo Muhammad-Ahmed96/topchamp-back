@@ -26,6 +26,22 @@ class Round < ApplicationRecord
     self.save!(:validate => false)
   end
 
+  def verify_complete_loser_status
+    if self.matches.count == self.matches.where(:status => :complete).count
+      self.status = :complete
+      next_round = self.tournament.rounds_losers.where("index > ?", self.index).order(index: :asc).first
+      if next_round.present?
+        next_round.set_playing
+        next_round.matches.each do |match|
+          match.set_playing
+        end
+      end
+    else
+      self.status = :playing
+    end
+    self.save!(:validate => false)
+  end
+
   def verify_complete_loser
     if self.matches.count == self.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").count and self.status != 'complete'
       self.status = :playing
