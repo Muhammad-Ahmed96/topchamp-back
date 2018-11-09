@@ -27,12 +27,12 @@ class Round < ApplicationRecord
   end
 
   def verify_complete_loser_status
-    if self.matches.count == self.matches.where(:status => :complete).count
+    if self.matches.count == self.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").where(:status => :complete).count
       self.status = :complete
       next_round = self.tournament.rounds_losers.where("index > ?", self.index).order(index: :asc).first
       if next_round.present?
         next_round.set_playing
-        next_round.matches.each do |match|
+        next_round.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").each do |match|
           match.set_playing
         end
       end
