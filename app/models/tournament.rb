@@ -5,7 +5,9 @@ class Tournament < ApplicationRecord
   belongs_to :category
 
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
+  has_many :rounds_all, :dependent => :destroy, class_name: 'Round'
   has_many :rounds_losers, -> {only_losers}, :dependent => :destroy, class_name: 'Round'
+  has_many :rounds_final, -> {only_final}, :dependent => :destroy, class_name: 'Round'
 
   belongs_to :winner_team, :class_name => "Team", :foreign_key => "winner_team_id", :optional => true
 
@@ -172,6 +174,8 @@ class Tournament < ApplicationRecord
         match.set_complete_status
         match.round.verify_complete_status
       elsif elimination_format.slug == 'double'
+        last_match_loser = self.rounds_losers.maximum(:match_number).first
+        last_match = self.rounds.maximum(:match_number).where(round_type: :winners).first
         if match.is_winner_bracket?
           #Winner bracket
           next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winners).order(index: :asc).first
@@ -212,7 +216,11 @@ class Tournament < ApplicationRecord
             end
             loser_next_match.round.verify_complete_loser
           end
-        else
+          #Create final round
+          if last_match.match_number.to_s == match.match_number.to_s
+            self.create_last_match(last_match_loser.match_number, winner_team_id , nil)
+          end
+        elsif match.is_loser_bracket?
           #move on loser bracket only
           next_round = self.rounds_losers.where("index > ?", match.round.index).order(index: :asc).first
           if next_round.present?
@@ -231,6 +239,30 @@ class Tournament < ApplicationRecord
           end
           match.set_complete_status
           match.round.verify_complete_loser_status
+          #Create final round
+          if last_match_loser.match_number.to_s == match.match_number.to_s
+            self.create_last_match(last_match_loser.match_number, nil , loser_winner_team_id)
+          end
+        elsif match.is_final_bracket
+          winner_team_id = match.get_winner_team_id
+          round = match.round
+          if round.index == 0
+            if winner_team_id.to_s == match.team_a_id.to_s
+              #save winer ans finish tournament
+              self.winner_team_id = winner_team_id
+              self.save!(:validate => false)
+            elsif  winner_team_id.to_s == match.team_b_id.to_s
+              #Extra round loser win
+              round = self.rounds_final.where(:index => 1).update_or_create!({:index => 1, :round_type => :final})
+              match = round.matches.where(:index => 0).update_or_create!({:match_number => ++match.match_number, :team_a_id => match.team_a_id, :team_b_id =>  match.team_b_id})
+            end
+          else
+            #save winer and finish tournament
+            self.winner_team_id = winner_team_id
+            self.save!(:validate => false)
+          end
+          match.set_complete_status
+          match.round.verify_complete_final_status
         end
       end
       self.verify_complete_status
@@ -271,9 +303,15 @@ class Tournament < ApplicationRecord
   end
 
   def verify_complete_status
-    if self.rounds.count == self.rounds.where(:status => :complete).count
+    elimination_format = self.event.elimination_format
+    if self.rounds_all.count == self.rounds_all.where(:status => :complete).count
       self.status = :complete
-      set_team_tournament_winner
+      if elimination_format.slug != 'double'
+        set_team_tournament_winner
+      else
+        #todo winner doubles
+      end
+
     else
       self.status = :playing
     end
@@ -299,6 +337,11 @@ class Tournament < ApplicationRecord
       self.winner_team_id = winner_team.id
       self.save!(:validate => false)
     end
+  end
+
+  def create_last_match(last_match_number, team_a_id, team_b_id)
+    round = self.rounds_final.where(:index => 0).update_or_create!({:index => 0, :round_type => :final})
+    match = round.matches.where(:index => 0).update_or_create!({:match_number => ++last_match_number, :team_a_id => team_a_id, :team_b_id => team_b_id})
   end
 
   swagger_schema :Tournament do

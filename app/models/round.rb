@@ -8,7 +8,8 @@ class Round < ApplicationRecord
 
   scope :order_by_index, -> {where(:round_type => :winners).order(index: :asc)}
   scope :only_winners, -> {where(:round_type => :winners).order(index: :asc)}
-  scope :only_losers, -> {where.not(:round_type => :winners).order(index: :asc)}
+  scope :only_losers, -> {where(:round_type => :loser).order(index: :asc)}
+  scope :only_final, -> {where(:round_type => :final).order(index: :asc)}
 
   def verify_complete_status
     if self.matches.count == self.matches.where(:status => :complete).count
@@ -30,6 +31,22 @@ class Round < ApplicationRecord
     if self.matches.count == self.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").where(:status => :complete).count
       self.status = :complete
       next_round = self.tournament.rounds_losers.joins(:matches).merge(Match.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL")).where("rounds.index > ?", self.index).order(index: :asc).first
+      if next_round.present?
+        next_round.set_playing
+        next_round.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").each do |match|
+          match.set_playing
+        end
+      end
+    else
+      self.status = :playing
+    end
+    self.save!(:validate => false)
+  end
+
+  def verify_complete_final_status
+    if self.matches.count == self.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").where(:status => :complete).count
+      self.status = :complete
+      next_round = self.tournament.rounds_final.joins(:matches).merge(Match.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL")).where("rounds.index > ?", self.index).order(index: :asc).first
       if next_round.present?
         next_round.set_playing
         next_round.matches.where("team_a_id IS NOT NULL AND team_b_id IS NOT NULL").each do |match|
