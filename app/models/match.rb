@@ -207,7 +207,11 @@ class Match < ApplicationRecord
   end
 
   def is_loser_bracket?
-    !(self.round.try(:round_type) == 'winners')
+    self.round.try(:round_type) == 'loser'
+  end
+
+  def is_final_bracket?
+    self.round.try(:round_type) == 'final'
   end
 
   def is_winner_bracket?

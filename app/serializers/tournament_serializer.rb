@@ -6,5 +6,6 @@ class TournamentSerializer < ActiveModel::Serializer
   belongs_to :category, :serializer => CategorySerializer
   has_many :rounds, :serializer => RoundSingleSerializer
   has_many :rounds_losers, :serializer => RoundSingleSerializer
+  has_many :rounds_final, :serializer => RoundSingleSerializer
   has_one :winner_team, :serializer => TeamSingleSerializer
 end
