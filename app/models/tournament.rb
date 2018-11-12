@@ -347,8 +347,8 @@ class Tournament < ApplicationRecord
     unless team_a_id.nil?
       data[:team_a_id] = team_a_id
     end
-    unless update_or_create!.nil?
-      data[:update_or_create!] = update_or_create!
+    unless team_b_id.nil?
+      data[:team_b_id] = team_b_id
     end
     match = round.matches.where(:index => 0).update_or_create!(data)
   end
