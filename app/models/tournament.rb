@@ -257,6 +257,12 @@ class Tournament < ApplicationRecord
               #Extra round loser win
               round = self.rounds_final.where(:index => 1).update_or_create!({:index => 1, :round_type => :final})
               match = round.matches.where(:index => 0).update_or_create!({:match_number => ++match.match_number, :team_a_id => match.team_a_id, :team_b_id =>  match.team_b_id})
+              round.set_playing
+              round.matches.each do |match|
+                if match.status != 'complete'
+                  match.set_playing
+                end
+              end
             end
           else
             #save winer and finish tournament
@@ -351,6 +357,14 @@ class Tournament < ApplicationRecord
       data[:team_b_id] = team_b_id
     end
     match = round.matches.where(:index => 0).update_or_create!(data)
+    if match.team_a_id.present? and match.team_b_id.present?
+      round.set_playing
+      round.matches.each do |match|
+        if match.status != 'complete'
+          match.set_playing
+        end
+      end
+    end
   end
 
   swagger_schema :Tournament do
