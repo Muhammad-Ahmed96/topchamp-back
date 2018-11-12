@@ -255,10 +255,10 @@ class Tournament < ApplicationRecord
               self.save!(:validate => false)
             elsif  winner_team_id.to_s == match.team_b_id.to_s
               #Extra round loser win
-              round = self.rounds_final.where(:index => 1).update_or_create!({:index => 1, :round_type => :final})
-              match = round.matches.where(:index => 0).update_or_create!({:match_number => ++match.match_number, :team_a_id => match.team_a_id, :team_b_id =>  match.team_b_id})
-              round.set_playing
-              round.matches.each do |match|
+              round_extra = self.rounds_final.where(:index => 1).update_or_create!({:index => 1, :round_type => :final})
+              match_extra = round_extra.matches.where(:index => 0).update_or_create!({:match_number => ++match.match_number, :team_a_id => match.team_a_id, :team_b_id =>  match.team_b_id})
+              round_extra.set_playing
+              round_extra.matches.each do |match|
                 if match.status != 'complete'
                   match.set_playing
                 end
