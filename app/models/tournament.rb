@@ -343,7 +343,14 @@ class Tournament < ApplicationRecord
 
   def create_last_match(last_match_number, team_a_id, team_b_id)
     round = self.rounds_final.where(:index => 0).update_or_create!({:index => 0, :round_type => :final})
-    match = round.matches.where(:index => 0).update_or_create!({:match_number => ++last_match_number, :team_a_id => team_a_id, :team_b_id => team_b_id})
+    data = {:match_number => ++last_match_number}
+    unless team_a_id.nil?
+      data[:team_a_id] = team_a_id
+    end
+    unless update_or_create!.nil?
+      data[:update_or_create!] = update_or_create!
+    end
+    match = round.matches.where(:index => 0).update_or_create!(data)
   end
 
   swagger_schema :Tournament do
