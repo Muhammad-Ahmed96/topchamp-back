@@ -245,7 +245,7 @@ class Tournament < ApplicationRecord
           if last_match_loser.to_s == match.match_number.to_s
             self.create_last_match(last_match_loser, nil , loser_winner_team_id)
           end
-        elsif match.is_final_bracket
+        elsif match.is_final_bracket?
           winner_team_id = match.get_winner_team_id
           round = match.round
           if round.index == 0
