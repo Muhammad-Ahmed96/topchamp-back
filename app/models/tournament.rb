@@ -174,8 +174,8 @@ class Tournament < ApplicationRecord
         match.set_complete_status
         match.round.verify_complete_status
       elsif elimination_format.slug == 'double'
-        last_match_loser = self.rounds_losers.maximum(:match_number).first
-        last_match = self.rounds.maximum(:match_number).where(round_type: :winners).first
+        last_match_loser = Match.joins(:round).merge(Round.where(:id => self.rounds_losers.pluck(:id))).maximum(:match_number).first
+        last_match = Match.joins(:round).merge(Round.where(:id => self.rounds.pluck(:id))).maximum(:match_number).first
         if match.is_winner_bracket?
           #Winner bracket
           next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winners).order(index: :asc).first
@@ -217,7 +217,7 @@ class Tournament < ApplicationRecord
             loser_next_match.round.verify_complete_loser
           end
           #Create final round
-          if last_match.match_number.to_s == match.match_number.to_s
+          if last_match.to_s == match.match_number.to_s
             self.create_last_match(last_match_loser.match_number, winner_team_id , nil)
           end
         elsif match.is_loser_bracket?
@@ -240,7 +240,7 @@ class Tournament < ApplicationRecord
           match.set_complete_status
           match.round.verify_complete_loser_status
           #Create final round
-          if last_match_loser.match_number.to_s == match.match_number.to_s
+          if last_match_loser.to_s == match.match_number.to_s
             self.create_last_match(last_match_loser.match_number, nil , loser_winner_team_id)
           end
         elsif match.is_final_bracket
