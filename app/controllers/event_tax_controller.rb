@@ -32,11 +32,13 @@ class EventTaxController < ApplicationController
   end
   def index
     tax = 0
+    schedule = EventSchedule.find(index_params[:event_schedule_id])
+    amount = schedule.cost.present? ? schedule.cost : 0
     if @event.tax.present?
-      if event.tax.is_percent
+      if @event.tax.is_percent
         tax = (@event.tax.tax * amount) / 100
       else
-        tax = event.tax.tax
+        tax = @event.tax.tax
       end
     end
     json_response_data([:tax => tax])
@@ -47,5 +49,10 @@ class EventTaxController < ApplicationController
   def set_resource
     #apply policy scope
     @event = Event.find(params[:event_id])
+  end
+
+  def index_params
+    params.required(:event_schedule_id)
+    params.permit(:event_schedule_id)
   end
 end
