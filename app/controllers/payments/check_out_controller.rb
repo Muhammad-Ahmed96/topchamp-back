@@ -71,7 +71,7 @@ class Payments::CheckOutController < ApplicationController
   end
 
   def event
-    is_test = false #change to false for checkout event on authorize.net
+    is_test = true #change to false for checkout event on authorize.net
     event = Event.find(event_params[:event_id])
     if event.is_paid == false
       director = event.director
@@ -107,12 +107,12 @@ class Payments::CheckOutController < ApplicationController
           end
         end
         #only for test
-        amount = 1
+        #amount = 1
         items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
                   taxable: config[:taxable]}]
         tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
         #only for test
-        tax[:amount] = 0
+        #tax[:amount] = 0
         response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
                                              amount, items, tax)
         if response.messages.resultCode == MessageTypeEnum::Ok
@@ -249,8 +249,8 @@ class Payments::CheckOutController < ApplicationController
       general_discount.save!(:validate => false)
     end
     #only for test
-    enroll_fee = 1
-    bracket_fee = 1
+    #enroll_fee = 1
+    #bracket_fee = 1
     #first item event fee
     item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: enroll_fee,
             taxable: true}
@@ -285,8 +285,8 @@ class Payments::CheckOutController < ApplicationController
     # no payment if items is empty
     # Comment on test
     # Only for test
-    amount = 1
-    tax[:amount] = 1
+    #amount = 1
+    #tax[:amount] = 1
     if items.length > 0
       customer = Payments::Customer.get(@resource)
       amount = number_with_precision(amount, precision: 2)
@@ -320,11 +320,11 @@ class Payments::CheckOutController < ApplicationController
     brackets.each do |item|
       player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
                                            :description => "Bracket subscribe payment", :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
-                                           :event_id => player.event_id, :type_payment => "bracket"})
+                                           :event_id => player.event_id, :type_payment => "bracket", :attendee_type_id => AttendeeType.player_id})
     end
 
     player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
-                                         :description => "Event subscribe payment", :event_id => player.event_id, :type_payment => "event"})
+                                         :description => "Event subscribe payment", :event_id => player.event_id, :type_payment => "event", :attendee_type_id => AttendeeType.player_id})
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id => brackets.pluck(:category_id))
@@ -332,7 +332,103 @@ class Payments::CheckOutController < ApplicationController
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
   end
+  swagger_path '/payments/check_out/schedule' do
+    operation :post do
+      key :summary, 'Check out schedule'
+      key :description, 'Check out schedule'
+      key :operationId, 'paymentsSchedule'
+      key :produces, ['application/json',]
+      key :tags, ['schedule check out']
+      parameter do
+        key :name, :event_schedule_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+      end
+      parameter do
+        key :name, :card_id
+        key :description, 'customerPaymentProfileId of card'
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :cvv
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def schedule
+    schedule = EventSchedule.find(schedule_params[:event_schedule_id])
+    event = schedule.event
+    tax_for_registration = 0
+    tax = {:amount => tax_for_registration, :name => "tax", :description => "Tax event schedule"}
+    user = @resource
+    if event.tax.present?
+      if event.tax.is_percent
+        tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to shedule"}
+      else
+        tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to shedule"}
+      end
 
+    end
+    amount = schedule.cost
+    items = [{id: "Schedule-#{schedule.id}", name: "Enroll schedule", description: "Enroll schedule", quantity: 1, unit_price: amount,
+            taxable: true}]
+    customer = Payments::Customer.get(user)
+    response = Payments::Charge.customer(customer.profile.customerProfileId, schedule_params[:card_id], schedule_params[:cvv],
+                                         amount, items, tax)
+    if response.messages.resultCode == MessageTypeEnum::Ok
+      if response.transactionResponse.responseCode != "1"
+        case response.transactionResponse.responseCode
+        when "2"
+          return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+        end
+      end
+      if response.transactionResponse.cvvResultCode != "M"
+        return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
+      end
+    else
+      if response.transactionResponse != nil && response.transactionResponse.errors != nil
+        return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+      else
+        return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+      end
+    end
+
+
+    player = Player.where(user_id: user.id).where(event_id: schedule.event_id).first
+    if player.present?
+      player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
+                                                :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      schedules_ids = player.schedule_ids + [schedule.id]
+      player.schedule_ids = schedules_ids
+    else
+      participant = Participant.where(:user_id => user.id).where(:event_id => schedule.event_id).first_or_create!
+      participant.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
+                                                :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      schedules_ids = participant.schedule_ids + [schedule.id]
+      participant.schedule_ids = schedules_ids
+    end
+    json_response_data({:transaction => response.transactionResponse.transId})
+  end
 
   private
 
@@ -351,6 +447,13 @@ class Payments::CheckOutController < ApplicationController
     params.required(:cvv)
     params.required(:enrolls)
     params.permit(:event_id, :amount, :tax, :card_id, :cvv, :discount_code, enrolls: [:category_id, :event_bracket_id])
+  end
+
+  def schedule_params
+    params.required(:event_schedule_id)
+    params.required(:card_id)
+    params.required(:cvv)
+    params.permit(:event_schedule_id, :amount, :tax, :card_id, :cvv)
   end
 
   def player_brackets_params

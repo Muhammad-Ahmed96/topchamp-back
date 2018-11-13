@@ -3,7 +3,7 @@ class EventsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :venue, :details, :categories]
+                                      :service_fee, :venue, :details, :categories, :taken_brackets]
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate]
 
@@ -1784,6 +1784,46 @@ class EventsController < ApplicationController
     json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount, :total => amount})
   end
 
+  swagger_path '/events/:id/taken_brackets' do
+    operation :get do
+      key :summary, 'Events taken brackets'
+      key :description, 'Get taken brackets'
+      key :operationId, 'eventsTakenBrackets'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+      end
+      response 200 do
+        key :name, :brackets
+        key :description, 'brackets'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :EventBracket
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def taken_brackets
+    ids = @event.tournaments.where(:category_id => taken_brackets_params[:category_id]).pluck(:event_bracket_id)
+    event_brackets = EventBracket.where(:id => ids)
+    json_response_serializer_collection(event_brackets, EventBracketSerializer)
+  end
+
   private
 
   def resource_params
@@ -1928,5 +1968,10 @@ class EventsController < ApplicationController
 
   def subscribe_params
     params.permit(:discount_code, :brackets_count)
+  end
+
+  def taken_brackets_params
+    params.require('category_id')
+    params.permit('event_id', 'category_id')
   end
 end

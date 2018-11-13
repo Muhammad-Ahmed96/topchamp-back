@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_02_192224) do
+ActiveRecord::Schema.define(version: 2018_11_13_013158) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -310,7 +310,7 @@ ActiveRecord::Schema.define(version: 2018_11_02_192224) do
     t.date "end_date"
     t.time "start_time"
     t.time "end_time"
-    t.float "cost"
+    t.float "cost", default: 0.0
     t.integer "capacity"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -319,8 +319,9 @@ ActiveRecord::Schema.define(version: 2018_11_02_192224) do
   end
 
   create_table "event_schedules_players", id: false, force: :cascade do |t|
-    t.bigint "player_id", null: false
+    t.bigint "player_id"
     t.bigint "event_schedule_id", null: false
+    t.bigint "participant_id"
     t.index ["event_schedule_id"], name: "index_event_schedules_players_on_event_schedule_id"
     t.index ["player_id"], name: "index_event_schedules_players_on_player_id"
   end
@@ -499,6 +500,8 @@ ActiveRecord::Schema.define(version: 2018_11_02_192224) do
     t.bigint "category_id"
     t.bigint "event_id"
     t.string "type_payment"
+    t.bigint "event_schedule_id"
+    t.bigint "attendee_type_id"
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 

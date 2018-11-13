@@ -5,6 +5,8 @@ class Participant < ApplicationRecord
   belongs_to :user
   belongs_to :event
   has_and_belongs_to_many :attendee_types
+  has_and_belongs_to_many :schedules, :class_name => "EventSchedule", :join_table => 'event_schedules_players'
+  has_many :payment_transactions, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :last_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}

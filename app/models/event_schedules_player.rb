@@ -1,0 +1,2 @@
+class EventSchedulesPlayer < ApplicationRecord
+end
