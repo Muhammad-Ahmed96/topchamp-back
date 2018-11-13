@@ -412,12 +412,21 @@ class Payments::CheckOutController < ApplicationController
         return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
       end
     end
-    participant = Participant.where(:user_id => user.id).where(:event_id => schedule.event_id).first_or_create!
-    participant.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
-                                             :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
-    schedules_ids = participant.schedule_ids + [schedule.id]
-    participant.schedule_ids = schedules_ids
-    #participant.schedules.where(:event_schedule_id => schedule.id).where(:participant_id => participant.id).update_or_create!({:event_schedule_id => schedule.id, :participant_id => participant.id})
+
+
+    player = Player.where(user_id: user.id).where(event_id: schedule.event_id).first
+    if player.present?
+      player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
+                                                :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      schedules_ids = player.schedule_ids + [schedule.id]
+      player.schedule_ids = schedules_ids
+    else
+      participant = Participant.where(:user_id => user.id).where(:event_id => schedule.event_id).first_or_create!
+      participant.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
+                                                :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      schedules_ids = participant.schedule_ids + [schedule.id]
+      participant.schedule_ids = schedules_ids
+    end
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 
