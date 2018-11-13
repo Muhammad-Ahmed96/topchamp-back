@@ -379,6 +379,7 @@ class Payments::CheckOutController < ApplicationController
     schedule = EventSchedule.find(schedule_params[:event_schedule_id])
     event = schedule.event
     tax_for_registration = 0
+    amount = schedule.cost.present? ? schedule.cost: 0
     tax = {:amount => tax_for_registration, :name => "tax", :description => "Tax event schedule"}
     user = @resource
     if event.tax.present?
@@ -389,7 +390,7 @@ class Payments::CheckOutController < ApplicationController
       end
 
     end
-    amount = schedule.cost
+
     items = [{id: "Schedule-#{schedule.id}", name: "Enroll schedule", description: "Enroll schedule", quantity: 1, unit_price: amount,
             taxable: true}]
     customer = Payments::Customer.get(user)
