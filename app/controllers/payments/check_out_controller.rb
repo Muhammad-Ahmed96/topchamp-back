@@ -135,7 +135,7 @@ class Payments::CheckOutController < ApplicationController
         end
       else
         tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
-        response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+        response = JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
       end
 
       event.create_payment_transaction!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => amount, :tax => tax[:amount],
@@ -332,6 +332,7 @@ class Payments::CheckOutController < ApplicationController
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
   end
+
   swagger_path '/payments/check_out/schedule' do
     operation :post do
       key :summary, 'Check out schedule'
@@ -375,60 +376,75 @@ class Payments::CheckOutController < ApplicationController
       end
     end
   end
+
   def schedule
     schedule = EventSchedule.find(schedule_params[:event_schedule_id])
     event = schedule.event
-    tax_for_registration = 0
-    amount = schedule.cost.present? ? schedule.cost: 0
-    tax = {:amount => tax_for_registration, :name => "tax", :description => "Tax event schedule"}
     user = @resource
-    if event.tax.present?
-      if event.tax.is_percent
-        tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to shedule"}
-      else
-        tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to shedule"}
-      end
+    tax_for_registration = 0
+    save_transaction = false
+    amount = schedule.cost.present? ? schedule.cost: 0
+    if amount > 0
+      save_transaction = true
+      tax = {:amount => tax_for_registration, :name => "tax", :description => "Tax event schedule"}
 
-    end
-
-    items = [{id: "Schedule-#{schedule.id}", name: "Enroll schedule", description: "Enroll schedule", quantity: 1, unit_price: amount,
-            taxable: true}]
-    customer = Payments::Customer.get(user)
-    response = Payments::Charge.customer(customer.profile.customerProfileId, schedule_params[:card_id], schedule_params[:cvv],
-                                         amount, items, tax)
-    if response.messages.resultCode == MessageTypeEnum::Ok
-      if response.transactionResponse.responseCode != "1"
-        case response.transactionResponse.responseCode
-        when "2"
-          return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+      if event.tax.present?
+        if event.tax.is_percent
+          tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to shedule"}
+        else
+          tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to shedule"}
         end
+
       end
-      if response.transactionResponse.cvvResultCode != "M"
-        return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
-      end
-    else
-      if response.transactionResponse != nil && response.transactionResponse.errors != nil
-        return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+
+      items = [{id: "Schedule-#{schedule.id}", name: "Enroll schedule", description: "Enroll schedule", quantity: 1, unit_price: amount,
+                taxable: true}]
+      customer = Payments::Customer.get(user)
+      response = Payments::Charge.customer(customer.profile.customerProfileId, schedule_params[:card_id], schedule_params[:cvv],
+                                           amount, items, tax)
+      if response.messages.resultCode == MessageTypeEnum::Ok
+        if response.transactionResponse.responseCode != "1"
+          case response.transactionResponse.responseCode
+          when "2"
+            return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+          end
+        end
+        if response.transactionResponse.cvvResultCode != "M"
+          return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
+        end
       else
-        return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+        if response.transactionResponse != nil && response.transactionResponse.errors != nil
+          return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+        else
+          return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+        end
       end
     end
 
 
     player = Player.where(user_id: user.id).where(event_id: schedule.event_id).first
     if player.present?
-      player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
-                                                :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      if save_transaction
+        player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
+                                             :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      end
       schedules_ids = player.schedule_ids + [schedule.id]
       player.schedule_ids = schedules_ids
     else
       participant = Participant.where(:user_id => user.id).where(:event_id => schedule.event_id).first_or_create!
-      participant.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
-                                                :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      if save_transaction
+        participant.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id, :amount => amount, :tax => tax[:amount],
+                                                  :description => "Shedule payment", :event_schedule_id => schedule.id, :type_payment => "shedule", :event_id => schedule.event_id})
+      end
       schedules_ids = participant.schedule_ids + [schedule.id]
       participant.schedule_ids = schedules_ids
     end
-    json_response_data({:transaction => response.transactionResponse.transId})
+    if save_transaction
+      json_response_data({:transaction => response.transactionResponse.transId})
+    else
+      json_response_success("You are now enrolled!", true)
+    end
+
   end
 
   private
