@@ -54,7 +54,7 @@ module Payments
       request.transactionRequest = TransactionRequestType.new()
       request.transactionRequest.amount = amount
       request.transactionRequest.payment = PaymentType.new
-      request.transactionRequest.payment.bankAccount = BankAccountType.new('checking', routingNumber, accountNumber, nameOnAccount, 'PPD', bankName)
+      request.transactionRequest.payment.bankAccount = BankAccountType.new('businessChecking', routingNumber, accountNumber, nameOnAccount, 'CCD', bankName)
       #request.transactionRequest.refTransId = 2233511297
       request.transactionRequest.transactionType = TransactionTypeEnum::RefundTransaction
 

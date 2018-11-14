@@ -4,7 +4,56 @@ class Payments::RefundsController < ApplicationController
   include Swagger::Blocks
   include AuthorizeNet::API
   before_action :authenticate_user!
-  # todo refund logic
+  swagger_path '/payments/refunds/credit_card' do
+    operation :post do
+      key :summary, 'Refund credit card'
+      key :description, 'Refund'
+      key :operationId, 'refundCreditCard'
+      key :produces, ['application/json',]
+      key :tags, ['refunds']
+      parameter do
+        key :name, :amount
+        key :in, :body
+        key :required, true
+        key :type, :number
+      end
+      parameter do
+        key :name, :user_id
+        key :in, :body
+        key :required, true
+        key :type, :number
+      end
+      parameter do
+        key :name, :card_number
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :string
+      end
+      parameter do
+        key :name, :expiration_date
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def credit_card
     unless  credit_card_prams['amount'].numeric?
       return response_no_numeric
@@ -13,7 +62,7 @@ class Payments::RefundsController < ApplicationController
     unless credit_card_prams['amount'].to_f > 0
       return response_more_than
     end
-
+    user = @resource
     amount = number_with_precision(credit_card_prams[:amount], precision: 2)
     response = Payments::Refund.credit_card(amount,credit_card_prams[:card_number], credit_card_prams[:expiration_date])
     if response.messages.resultCode == MessageTypeEnum::Ok
@@ -28,10 +77,76 @@ class Payments::RefundsController < ApplicationController
         return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
       end
     end
+    Payments::RefundTransaction.create!({:payment_transaction_id =>response.transactionResponse.transId, :amount => amount, :type_refund => 'credit_card',
+                                        :card_number => credit_card_prams[:card_number], :expiration_date => credit_card_prams[:expiration_date],
+                                        :from_user_id => user.id, :to_user_id => credit_card_prams[:user_id], :status => 'aproved'})
     json_response_data({:transaction => response.transactionResponse.transId})
 
   end
-
+  swagger_path '/payments/refunds/bank_account' do
+    operation :post do
+      key :summary, 'Refund bank account'
+      key :description, 'Refund'
+      key :operationId, 'refundBankAccount'
+      key :produces, ['application/json',]
+      key :tags, ['refunds']
+      parameter do
+        key :name, :amount
+        key :in, :body
+        key :required, true
+        key :type, :number
+      end
+      parameter do
+        key :name, :user_id
+        key :in, :body
+        key :required, true
+        key :type, :number
+      end
+      parameter do
+        key :name, :routing_number
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :string
+      end
+      parameter do
+        key :name, :account_number
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :string
+      end
+      parameter do
+        key :name, :name_on_account
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :string
+      end
+      parameter do
+        key :name, :bank_name
+        key :in, :body
+        key :required, true
+        key :type, :number
+        key :format, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
   def bank_account
     unless  bank_account_prams['amount'].numeric?
       return response_no_numeric
@@ -40,13 +155,12 @@ class Payments::RefundsController < ApplicationController
     unless bank_account_prams['amount'].to_f > 0
       return response_more_than
     end
-
+    user = @resource
     amount = number_with_precision(bank_account_prams[:amount], precision: 2)
     response = Payments::Refund.bank_account(amount,bank_account_prams[:routing_number], bank_account_prams[:account_number],  bank_account_prams[:name_on_account],
                                              bank_account_prams[:bank_name])
     if response.messages.resultCode == MessageTypeEnum::Ok
-      #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
-      if response.transactionResponse.responseCode != "1"
+      if response.transactionResponse.responseCode != "1" and response.transactionResponse.responseCode != "4"
         return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
       end
     else
@@ -56,15 +170,21 @@ class Payments::RefundsController < ApplicationController
         return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
       end
     end
+    Payments::RefundTransaction.create!({:payment_transaction_id =>response.transactionResponse.transId, :amount => amount, :type_refund => 'bank_account',
+                                         :routing_number => bank_account_prams[:routing_number], :account_number => bank_account_prams[:account_number],
+                                         :name_on_account => bank_account_prams[:name_on_account],:bank_name => bank_account_prams[:bank_name],
+                                         :account_type => 'businessChecking',:e_check_type => 'CCD',
+                                         :from_user_id => user.id, :to_user_id => bank_account_prams[:user_id]})
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 
   private
   def credit_card_prams
     params.require('amount')
+    params.require('user_id')
     params.require('card_number')
     params.require('expiration_date')
-    params.permit('amount', 'card_number', 'expiration_date')
+    params.permit('user_id','amount', 'card_number', 'expiration_date')
   end
 
   def bank_account_prams
@@ -73,7 +193,8 @@ class Payments::RefundsController < ApplicationController
     params.require('account_number')
     params.require('name_on_account')
     params.require('bank_name')
-    params.permit('check_number', 'amount', 'account_type', 'routing_number', 'account_number', 'name_on_account', 'bank_name')
+    params.require('user_id')
+    params.permit('user_id','check_number', 'amount', 'account_type', 'routing_number', 'account_number', 'name_on_account', 'bank_name')
   end
 
   def response_no_numeric
