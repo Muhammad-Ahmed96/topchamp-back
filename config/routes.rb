@@ -185,6 +185,12 @@ Rails.application.routes.draw do
           post :schedule
         end
       end
+      resources :refunds, only: [] do
+        collection do
+          post :credit_card
+          post :bank_account
+        end
+      end
     end
 
     resources :tournaments, only: [:index]

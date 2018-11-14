@@ -6,24 +6,57 @@ class Payments::RefundsController < ApplicationController
   before_action :authenticate_user!
   # todo refund logic
   def credit_card
-    unless  credit_card_prams['amount'].is_a? Numeric
+    unless  credit_card_prams['amount'].numeric?
       return response_no_numeric
     end
 
     unless credit_card_prams['amount'].to_f > 0
       return response_more_than
     end
+
+    amount = number_with_precision(credit_card_prams[:amount], precision: 2)
+    response = Payments::Refund.credit_card(amount,credit_card_prams[:card_number], credit_card_prams[:expiration_date])
+    if response.messages.resultCode == MessageTypeEnum::Ok
+      #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
+      if response.transactionResponse.responseCode != "1"
+        return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+      end
+    else
+      if response.transactionResponse != nil && response.transactionResponse.errors != nil
+        return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+      else
+        return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+      end
+    end
+    json_response_data({:transaction => response.transactionResponse.transId})
 
   end
 
   def bank_account
-    unless  credit_card_prams['amount'].is_a? Numeric
+    unless  bank_account_prams['amount'].numeric?
       return response_no_numeric
     end
 
-    unless credit_card_prams['amount'].to_f > 0
+    unless bank_account_prams['amount'].to_f > 0
       return response_more_than
     end
+
+    amount = number_with_precision(bank_account_prams[:amount], precision: 2)
+    response = Payments::Refund.bank_account(amount,bank_account_prams[:routing_number], bank_account_prams[:account_number],  bank_account_prams[:name_on_account],
+                                             bank_account_prams[:bank_name])
+    if response.messages.resultCode == MessageTypeEnum::Ok
+      #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
+      if response.transactionResponse.responseCode != "1"
+        return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+      end
+    else
+      if response.transactionResponse != nil && response.transactionResponse.errors != nil
+        return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+      else
+        return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+      end
+    end
+    json_response_data({:transaction => response.transactionResponse.transId})
   end
 
   private
@@ -36,7 +69,6 @@ class Payments::RefundsController < ApplicationController
 
   def bank_account_prams
     params.require('amount')
-    params.require('account_type')
     params.require('routing_number')
     params.require('account_number')
     params.require('name_on_account')
