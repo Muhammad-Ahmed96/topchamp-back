@@ -256,7 +256,7 @@ class Tournament < ApplicationRecord
             elsif  winner_team_id.to_s == match.team_b_id.to_s
               #Extra round loser win
               round_extra = self.rounds_final.where(:index => 1).update_or_create!({:index => 1, :round_type => :final})
-              next_match_number = match.match_number + 1
+              next_match_number = match.match_number.to_i + 1
               match_extra = round_extra.matches.where(:index => 0).update_or_create!({:match_number => next_match_number, :team_a_id => match.team_a_id, :team_b_id =>  match.team_b_id})
               round_extra.set_playing
               round_extra.matches.each do |match_item|
@@ -350,7 +350,7 @@ class Tournament < ApplicationRecord
 
   def create_last_match(last_match_number, team_a_id, team_b_id)
     round = self.rounds_final.where(:index => 0).update_or_create!({:index => 0, :round_type => :final})
-    next_match_number = last_match_number + 1
+    next_match_number = last_match_number.to_i + 1
     data = {:match_number => next_match_number}
     unless team_a_id.nil?
       data[:team_a_id] = team_a_id
