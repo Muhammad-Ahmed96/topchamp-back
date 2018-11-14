@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_13_013158) do
+ActiveRecord::Schema.define(version: 2018_11_14_181553) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -540,6 +540,28 @@ ActiveRecord::Schema.define(version: 2018_11_13_013158) do
     t.bigint "player_id", null: false
     t.index ["player_id"], name: "index_players_teams_on_player_id"
     t.index ["team_id"], name: "index_players_teams_on_team_id"
+  end
+
+  create_table "refund_transactions", force: :cascade do |t|
+    t.string "payment_transaction_id"
+    t.float "amount"
+    t.string "type_refund"
+    t.string "card_number"
+    t.string "expiration_date"
+    t.string "routing_number"
+    t.string "account_number"
+    t.string "name_on_account"
+    t.string "bank_name"
+    t.string "account_type"
+    t.string "e_check_type"
+    t.string "check_number"
+    t.bigint "from_user_id"
+    t.bigint "to_user_id"
+    t.string "status", default: "pending"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_refund_transactions_on_deleted_at"
   end
 
   create_table "regions", force: :cascade do |t|
