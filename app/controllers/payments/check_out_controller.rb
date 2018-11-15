@@ -398,7 +398,7 @@ class Payments::CheckOutController < ApplicationController
       end
       #for test
       amount = 1
-      tax[:tax] = 0
+      tax[:amount] = 0
       items = [{id: "Schedule-#{schedule.id}", name: "Enroll schedule", description: "Enroll schedule", quantity: 1, unit_price: amount,
                 taxable: true}]
       customer = Payments::Customer.get(user)
