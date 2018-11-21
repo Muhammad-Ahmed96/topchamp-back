@@ -641,7 +641,7 @@ class Event < ApplicationRecord
 
   #Attach creator
   def save_creator!
-    if Current.user
+    if Current.user and !self.creator_user_id.present?
       self.creator_user_id = Current.user.id
     end
   end

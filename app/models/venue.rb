@@ -20,7 +20,7 @@ class Venue < ApplicationRecord
 
 
   validate do
-    venue = Venue.where(:address_line_1 => self.address_line_1).first
+    venue = Venue.where(:address_line_1 => self.address_line_1).where.not(:id => self.id).first
     errors.add(:address_line_1 ,"That location is already in use for venue #{venue.name}. Try another location or change your Venue name") if venue.present?
   end
   #validates :address_line_1, presence: true
