@@ -40,7 +40,7 @@ class Reports::EventsController < ApplicationController
     items = EventSchedule.my_order(column, direction).where(:event_id => event_id).joins(:agenda_type, 'INNER JOIN event_schedules_players ON event_schedules_players.event_schedule_id = event_schedules.id')
                 .select("event_schedules.id AS event_schedule_id, event_schedules.title AS event_schedule_title, agenda_types.name AS agenda_type_name,"+
                                                                                   "COALESCE(event_schedules.capacity, 0) AS event_schedule_capacity, COUNT(event_schedules_players.event_schedule_id) AS number_registrant," +
-                        "(COUNT(event_schedules_players.event_schedule_id) / CASE WHEN event_schedules.capacity=0 THEN 1 ELSE COALESCE(event_schedules.capacity, 1) END)  * 100  AS capacity_registrations")
+                        "CASE WHEN event_schedules.capacity <= 0 THEN 100 WHEN event_schedules.capacity ISNULL THEN 100 ELSE COUNT(event_schedules_players.event_schedule_id) / event_schedules.capacity *  100 END  AS capacity_registrations")
     .group('event_schedules.id', 'agenda_types.name')
     unless search_title.nil?
       items = items.where("LOWER(event_schedules.title) LIKE LOWER(?)", "%#{search_title}%")
