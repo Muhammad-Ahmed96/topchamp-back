@@ -340,9 +340,18 @@ class Payments::CheckOutController < ApplicationController
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
 
+    fees = EventFee.first
+    app_fee = 0
+    if fees.present?
+      if fees.is_transaction_fee_percent
+        app_fee =  ((fees.transaction_fee * amount) / 100)
+      else
+        app_fee = fees.transaction_fee
+      end
+    end
     authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
     account = amount - authorize_fee
-    app_fee = 0
+
     director_receipt = amount - (authorize_fee + app_fee)
 
     paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
@@ -455,9 +464,17 @@ class Payments::CheckOutController < ApplicationController
       end
     end
 
+    fees = EventFee.first
+    app_fee = 0
+    if fees.present?
+      if fees.is_transaction_fee_percent
+        app_fee =  ((fees.transaction_fee * amount) / 100)
+      else
+        app_fee = fees.transaction_fee
+      end
+    end
     authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
     account = amount - authorize_fee
-    app_fee = 0
     director_receipt = amount - (authorize_fee + app_fee)
     player = Player.where(user_id: user.id).where(event_id: schedule.event_id).first
     if player.present?
