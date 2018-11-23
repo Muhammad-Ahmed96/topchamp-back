@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_14_181553) do
+ActiveRecord::Schema.define(version: 2018_11_22_214239) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -485,6 +485,21 @@ ActiveRecord::Schema.define(version: 2018_11_14_181553) do
     t.index ["deleted_at"], name: "index_participants_on_deleted_at"
   end
 
+  create_table "payment_transaction_details", force: :cascade do |t|
+    t.bigint "payment_transaction_id"
+    t.bigint "event_schedule_id"
+    t.bigint "attendee_type_id"
+    t.bigint "event_bracket_id"
+    t.bigint "category_id"
+    t.bigint "event_id"
+    t.string "type_payment"
+    t.float "amount", default: 0.0
+    t.float "tax", default: 0.0
+    t.float "discount", default: 0.0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "payment_transactions", force: :cascade do |t|
     t.string "payment_transaction_id"
     t.string "transactionable_type"
@@ -496,12 +511,12 @@ ActiveRecord::Schema.define(version: 2018_11_14_181553) do
     t.string "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "event_bracket_id"
-    t.bigint "category_id"
     t.bigint "event_id"
-    t.string "type_payment"
-    t.bigint "event_schedule_id"
-    t.bigint "attendee_type_id"
+    t.float "authorize_fee", default: 0.0
+    t.float "app_fee", default: 0.0
+    t.float "director_receipt", default: 0.0
+    t.float "account", default: 0.0
+    t.float "discount", default: 0.0
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 

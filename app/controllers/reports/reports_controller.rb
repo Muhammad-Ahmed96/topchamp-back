@@ -15,6 +15,16 @@ class Reports::ReportsController < ApplicationController
     json_response_serializer_collection items, AccountReportSerializer
   end
 
+  def transaction
+    user_ids = Player.all.pluck(:user_id)
+    items = User.where(:id => user_ids).joins('INNER JOIN payment_transactions AS pym ON pym.user_id = users.id')
+                .select('users.id AS user_id,concat(users.first_name, users.last_name) AS player_name,' +
+                                               'SUM(pym.authorize_fee) AS authorize_fee, SUM(pym.account)  AS top_champ_account, SUM(pym.app_fee)  AS top_champ_fee,SUM(pym.director_receipt)  AS director_receipt')
+                .group("users.id")
+    json_response_serializer_collection items, TransactionsReportSerializer
+
+  end
+
   private
 
   def user_id

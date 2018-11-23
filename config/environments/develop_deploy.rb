@@ -108,5 +108,7 @@ Rails.application.configure do
       api_login_id: '5KP3u95bQpv',
       api_transaction_key: '346HZ32z3fP4hTG2',
       gateway: :sandbox,
+      transaction_fee: 2.9,
+      extra_charges: 0.3,
   }
 end
