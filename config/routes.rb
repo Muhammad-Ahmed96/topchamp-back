@@ -103,6 +103,7 @@ Rails.application.routes.draw do
           get :teams_list, :path => :teams
           get :rounds_list, :path => :rounds
           get :details
+          put :update_matches
         end
       end
       resources :scores, only: [:create, :index] do

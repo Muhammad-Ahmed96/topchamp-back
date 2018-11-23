@@ -102,10 +102,20 @@ Rails.application.configure do
 
   config.fcm_api_key = 'AAAAnBYb9iI:APA91bEsGI3blVOPYbi7iaIDyBXi3J9H7N-bHzVfPOaPJDWIOYs7sS42jQxj_KJy_5Rjh9HO7BTMN33Om7f4Y_Ndcouq_0QvaKuFB6APXZyE-M6_OTW5W4GShjWpDKP0OniVlLTEiHgbl8_37djkRUxwkJxfnUvf5A'
 
+=begin
   config.authorize = {
       api_login_id: '8QUj6v2WcC44',
       api_transaction_key: '2Ayn25Dz7UCF65X2',
       gateway: :production,
+      transaction_fee: 2.9,
+      extra_charges: 0.3,
+  }
+=end
+
+  config.authorize = {
+      api_login_id: '5KP3u95bQpv',
+      api_transaction_key: '346HZ32z3fP4hTG2',
+      gateway: :sandbox,
       transaction_fee: 2.9,
       extra_charges: 0.3,
   }
