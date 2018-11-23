@@ -341,7 +341,8 @@ class Payments::CheckOutController < ApplicationController
     player.sync_brackets!(brackets, true)
 
     fees = EventFee.first
-    app_fee = 0
+    app_fee = 0.0
+    amount = amount.to_f
     if fees.present?
       if fees.is_transaction_fee_percent
         app_fee =  ((fees.transaction_fee * amount) / 100)
@@ -465,7 +466,8 @@ class Payments::CheckOutController < ApplicationController
     end
 
     fees = EventFee.first
-    app_fee = 0
+    amount = amount.to_f
+    app_fee = 0.0
     if fees.present?
       if fees.is_transaction_fee_percent
         app_fee =  ((fees.transaction_fee * amount) / 100)
