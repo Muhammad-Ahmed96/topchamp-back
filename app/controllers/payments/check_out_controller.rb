@@ -131,7 +131,7 @@ class Payments::CheckOutController < ApplicationController
               return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
             end
           end
-          if response.transactionResponse.cvvResultCode != "M"
+          if response.transactionResponse.cvvResultCode != '' and response.transactionResponse.cvvResultCode != "M"
             return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
           end
         else
@@ -322,7 +322,7 @@ class Payments::CheckOutController < ApplicationController
             return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
           end
         end
-        if response.transactionResponse.cvvResultCode != "M"
+        if response.transactionResponse.cvvResultCode != '' and response.transactionResponse.cvvResultCode != "M"
           return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
         end
       else
@@ -453,7 +453,7 @@ class Payments::CheckOutController < ApplicationController
             return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
           end
         end
-        if response.transactionResponse.cvvResultCode != "M"
+        if response.transactionResponse.cvvResultCode != '' and response.transactionResponse.cvvResultCode != "M"
           return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
         end
       else
