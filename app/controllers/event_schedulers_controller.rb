@@ -49,9 +49,19 @@ class EventSchedulersController < ApplicationController
       end
     end
   end
+
   def index
     title = params[:title]
-    json_response_serializer_collection( @event.schedules.title_like(title), EventScheduleSerializer)
+    exclude = params[:exclude]
+    schedules = @event.schedules.title_like(title)
+    if exclude.present? and exclude.to_s == '1'
+      player = Player.where(:event_id => @event.id).where(:user_id => @resource.id).first
+      if player.present?
+        ids = player.schedules.pluck(:id)
+        schedules = schedules.where.not(:id => ids)
+      end
+    end
+    json_response_serializer_collection(schedules, EventScheduleSerializer)
   end
 
   swagger_path '/events/:event_id/schedules' do
@@ -91,6 +101,7 @@ class EventSchedulersController < ApplicationController
       end
     end
   end
+
   def create
     authorize Event
     @event.sync_schedules! schedules_params
@@ -123,11 +134,13 @@ class EventSchedulersController < ApplicationController
       end
     end
   end
+
   def show
-    json_response_serializer( @event.schedules.where(:id => params[:id]).first!, EventScheduleSerializer)
+    json_response_serializer(@event.schedules.where(:id => params[:id]).first!, EventScheduleSerializer)
   end
 
   private
+
   def schedules_params
     #validate presence and type
     unless params[:schedules].nil? and !params[:schedules].kind_of?(Array)
@@ -137,6 +150,7 @@ class EventSchedulersController < ApplicationController
       end
     end
   end
+
   # search current resource of id
   def set_resource
     #apply policy scope
