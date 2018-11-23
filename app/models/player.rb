@@ -287,7 +287,7 @@ class Player < ApplicationRecord
 
   def is_event_paid?
     result = false
-    if self.payment_transactions.where(:type_payment => "event").where(:status => 1).count > 0
+    if self.payment_transactions.joins(:details).merge(Payments::PaymentTransactionDetail.where(:type_payment => "event_enroll")).where(:status => 1).count > 0
       result = true
     end
     return result

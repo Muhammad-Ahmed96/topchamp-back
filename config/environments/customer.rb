@@ -106,5 +106,7 @@ Rails.application.configure do
       api_login_id: '8QUj6v2WcC44',
       api_transaction_key: '2Ayn25Dz7UCF65X2',
       gateway: :production,
+      transaction_fee: 2.9,
+      extra_charges: 0.3,
   }
 end
