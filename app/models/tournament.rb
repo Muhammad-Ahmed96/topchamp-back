@@ -91,6 +91,53 @@ class Tournament < ApplicationRecord
     end
   end
 
+
+  def update_match!(data, losers_params = nil)
+    if data.present?
+      data.each do |item|
+        if item[:id].present?
+          round = self.rounds.where(:id => item[:id]).where(round_type: :winners).first
+        else
+          round = self.rounds.where(:index => item[:index]).where(round_type: :winners).first
+        end
+        if item[:matches].present? and round.present?
+          item[:matches].each do |item_match|
+            if item_match[:id].present?
+              match = round.matches.where(:id => item_match[:id]).first
+            else
+              match = round.matches.where(:index => item_match[:index]).first
+            end
+            if match.present?
+              match.update!(item_match)
+            end
+          end
+        end
+      end
+    end
+    #Save loser bracket
+    if losers_params.present?
+      losers_params.each do |item|
+        if item[:id].present?
+          round = self.rounds_losers.where(:id => item[:id]).first
+        else
+          round = self.rounds_losers.where(:index => item[:index]).first
+        end
+        if item[:matches].present? and round.present?
+          item[:matches].each do |item_match|
+            if item_match[:id].present?
+              match = round.matches.where(:id => item_match[:id]).first
+            else
+              match = round.matches.where(:index => item_match[:index]).first
+            end
+            if match.present?
+              match.update!(item_match)
+            end
+          end
+        end
+      end
+    end
+  end
+
   def total_teams
     matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
     matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
@@ -176,8 +223,8 @@ class Tournament < ApplicationRecord
       elsif elimination_format.slug == 'double'
         last_match_loser = Match.joins(:round).merge(Round.where(:id => self.rounds_losers.pluck(:id))).select("MAX(CAST(COALESCE(NULLIF(regexp_replace(matches.match_number, '[^-0-9.]+', '', 'g'),''),'0') AS numeric)) AS match_number").all
         last_match = Match.joins(:round).merge(Round.where(:id => self.rounds.pluck(:id))).select("MAX(CAST(COALESCE(NULLIF(regexp_replace(matches.match_number, '[^-0-9.]+', '', 'g'),''),'0') AS numeric)) AS match_number").all
-        last_match = last_match.length > 0 ? last_match[0][:match_number]: 0
-        last_match_loser = last_match_loser.length > 0 ? last_match_loser[0][:match_number]: 0
+        last_match = last_match.length > 0 ? last_match[0][:match_number] : 0
+        last_match_loser = last_match_loser.length > 0 ? last_match_loser[0][:match_number] : 0
         if match.is_winner_bracket?
           #Winner bracket
           next_round = self.rounds.where("index > ?", match.round.index).where(round_type: :winners).order(index: :asc).first
@@ -207,7 +254,7 @@ class Tournament < ApplicationRecord
           end
           loser_next_round = self.rounds_losers.joins(:matches).merge(Match.where(:loser_match_a => match.match_number).or(Match.where(loser_match_b: match.match_number))).first
           if loser_next_round.present?
-            loser_next_match = loser_next_round.matches.where("loser_match_a = ? OR loser_match_b = ?",match.match_number, match.match_number ).first
+            loser_next_match = loser_next_round.matches.where("loser_match_a = ? OR loser_match_b = ?", match.match_number, match.match_number).first
             unless loser_next_match.nil?
               if loser_next_match.loser_match_a.to_s == match.match_number.to_s
                 loser_next_match.team_a_id = loser_team_id
@@ -220,13 +267,13 @@ class Tournament < ApplicationRecord
           end
           #Create final round
           if last_match.to_s == match.match_number.to_s
-            self.create_last_match(last_match_loser, winner_team_id , nil)
+            self.create_last_match(last_match_loser, winner_team_id, nil)
           end
         elsif match.is_loser_bracket?
           #move on loser bracket only
           next_round = self.rounds_losers.where("index > ?", match.round.index).order(index: :asc).first
           if next_round.present?
-            loser_next_match = next_round.matches.where("loser_match_a = ? OR loser_match_b = ?",match.match_number, match.match_number).first
+            loser_next_match = next_round.matches.where("loser_match_a = ? OR loser_match_b = ?", match.match_number, match.match_number).first
             loser_winner_team_id = match.get_winner_team_id
             if loser_next_match.present?
               if loser_next_match.loser_match_a.to_s == match.match_number.to_s
@@ -243,7 +290,7 @@ class Tournament < ApplicationRecord
           match.round.verify_complete_loser_status
           #Create final round
           if last_match_loser.to_s == match.match_number.to_s
-            self.create_last_match(last_match_loser, nil , loser_winner_team_id)
+            self.create_last_match(last_match_loser, nil, loser_winner_team_id)
           end
         elsif match.is_final_bracket?
           winner_team_id = match.get_winner_team_id
@@ -253,11 +300,11 @@ class Tournament < ApplicationRecord
               #save winer ans finish tournament
               self.winner_team_id = winner_team_id
               self.save!(:validate => false)
-            elsif  winner_team_id.to_s == match.team_b_id.to_s
+            elsif winner_team_id.to_s == match.team_b_id.to_s
               #Extra round loser win
               round_extra = self.rounds_final.where(:index => 1).update_or_create!({:index => 1, :round_type => :final})
               next_match_number = match.match_number.to_i + 1
-              match_extra = round_extra.matches.where(:index => 0).update_or_create!({:match_number => next_match_number, :team_a_id => match.team_a_id, :team_b_id =>  match.team_b_id})
+              match_extra = round_extra.matches.where(:index => 0).update_or_create!({:match_number => next_match_number, :team_a_id => match.team_a_id, :team_b_id => match.team_b_id})
               round_extra.set_playing
               round_extra.matches.each do |match_item|
                 if match_item.status != 'complete'
