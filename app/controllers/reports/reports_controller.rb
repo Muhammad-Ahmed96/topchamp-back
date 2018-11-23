@@ -17,10 +17,35 @@ class Reports::ReportsController < ApplicationController
 
   def transaction
     user_ids = Player.all.pluck(:user_id)
-    items = User.where(:id => user_ids).joins('INNER JOIN payment_transactions AS pym ON pym.user_id = users.id')
-                .select('users.id AS user_id,concat(users.first_name, users.last_name) AS player_name,' +
-                                               'SUM(pym.authorize_fee) AS authorize_fee, SUM(pym.account)  AS top_champ_account, SUM(pym.app_fee)  AS top_champ_fee,SUM(pym.director_receipt)  AS director_receipt')
+    column = params[:column].nil? ? 'player_name' : params[:column]
+    direction = params[:direction].nil? ? 'asc' : params[:direction]
+    player_name = params[:player_name].strip unless params[:player_name].nil?
+    authorize_fee = params[:authorize_fee].strip unless params[:authorize_fee].nil?
+    top_champ_account = params[:top_champ_account].strip unless params[:top_champ_account].nil?
+    top_champ_fee = params[:top_champ_fee].strip unless params[:top_champ_fee].nil?
+    director_receipt = params[:director_receipt].strip unless params[:director_receipt].nil?
+    items = User.my_order(column, direction).where(:id => user_ids).joins('INNER JOIN payment_transactions AS pym ON pym.user_id = users.id')
+                .select('users.id AS user_id,concat(users.first_name,\' \', users.last_name) AS player_name,' +
+                                               'ROUND(SUM(pym.authorize_fee::NUMERIC), 2) AS authorize_fee,'+
+                            ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee,ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt')
                 .group("users.id")
+
+    unless player_name.nil?
+      items = items.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{player_name}%")
+    end
+
+    unless authorize_fee.nil?
+      items = items.having("ROUND(SUM(pym.authorize_fee::NUMERIC), 2) = ?", authorize_fee)
+    end
+    unless top_champ_account.nil?
+      items = items.having(' ROUND(SUM(pym.account::NUMERIC), 2) = ?', top_champ_account)
+    end
+    unless top_champ_fee.nil?
+      items = items.having(' ROUND(SUM(pym.app_fee::NUMERIC), 2) = ?', top_champ_fee)
+    end
+    unless director_receipt.nil?
+      items = items.having(' ROUND(SUM(pym.director_receipt::NUMERIC), 2) = ?', director_receipt)
+    end
     json_response_serializer_collection items, TransactionsReportSerializer
 
   end
