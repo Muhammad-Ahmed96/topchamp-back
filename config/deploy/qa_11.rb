@@ -8,7 +8,7 @@ server "34.215.184.35", user: "ubuntu", roles: %w{app db web}
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
 #
-set :rails_env, "qa"
+set :rails_env, "qacontest"
 set :branch, 'qa-1.1'
 set :ssh_options, {
     forward_agent: true,
