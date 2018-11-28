@@ -1,7 +1,7 @@
 class TournamentsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :details]
+  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :details, :update_matches]
 
   swagger_path '/events/:event_id/tournaments/players' do
     operation :get do
@@ -222,7 +222,7 @@ class TournamentsController < ApplicationController
 
     json_response_serializer(tournament, TournamentSerializer)
   end
-  swagger_path '/events/:event_id/update_matches' do
+  swagger_path '/events/:event_id/tournaments/update_matches' do
     operation :put do
       key :summary, 'Edit matches'
       key :description, 'Event Catalog'
