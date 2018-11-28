@@ -1604,10 +1604,16 @@ class EventsController < ApplicationController
 
   def available_categories
     @event =  Event.find(params[:id])
-    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first
+    if  available_categories_params[:player_id].present?
+      player = Player.find(available_categories_params[:player_id])
+      user = player.user
+    else
+      user = @resource
+      player = Player.where(user_id: user.id).where(event_id: @event.id).first
+    end
     in_categories_id = player.present? ? player.brackets.pluck(:category_id): []
     response_data = []
-    gender = @resource.gender
+    gender = user.gender
     event_categories = @event.categories.where.not(:category_id => in_categories_id)
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
@@ -1621,11 +1627,11 @@ class EventsController < ApplicationController
       event_categories = event_categories.only_women
     end
     #validate bracket
-    age = @resource.age
-    skill = @resource.skill_level
+    age = user.age
+    skill = user.skill_level
     event_categories.each do |item|
       item.player = player
-      item.user = @resource
+      item.user = user
     end
     event_categories.to_a.each do |item|
       if @event.bracket_by == "age" or @event.bracket_by == "skill"
@@ -1973,5 +1979,9 @@ class EventsController < ApplicationController
   def taken_brackets_params
     params.require('category_id')
     params.permit('event_id', 'category_id')
+  end
+
+  def available_categories_params
+    params.permit('player_id', 'user_id')
   end
 end
