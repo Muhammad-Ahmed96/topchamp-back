@@ -1,7 +1,7 @@
 class TournamentsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :details]
+  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :details, :update_matches]
 
   swagger_path '/events/:event_id/tournaments/players' do
     operation :get do
