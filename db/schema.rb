@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_22_214239) do
+ActiveRecord::Schema.define(version: 2018_11_29_215451) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -177,6 +177,42 @@ ActiveRecord::Schema.define(version: 2018_11_22_214239) do
     t.float "young_age"
     t.float "old_age"
     t.index ["deleted_at"], name: "index_event_brackets_on_deleted_at"
+  end
+
+  create_table "event_contest_categories", force: :cascade do |t|
+    t.bigint "event_contest_id"
+    t.bigint "category_id"
+    t.jsonb "bracket_types"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_contest_category_brackets", force: :cascade do |t|
+    t.bigint "event_contest_category_id"
+    t.bigint "event_contest_category_bracket_id"
+    t.string "bracket_type"
+    t.float "age", default: 0.0
+    t.float "lowest_skill", default: 0.0
+    t.float "highest_skill", default: 0.0
+    t.integer "quantity", default: 0
+    t.float "young_age", default: 0.0
+    t.float "old_age", default: 0.0
+    t.string "awards_for"
+    t.string "awards_through"
+    t.string "awards_plus"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+  end
+
+  create_table "event_contests", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "elimination_format_id"
+    t.bigint "scoring_option_match_1_id"
+    t.bigint "scoring_option_match_2_id"
+    t.bigint "sport_regulator_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "event_discount_generals", force: :cascade do |t|

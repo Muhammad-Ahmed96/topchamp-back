@@ -418,7 +418,7 @@ class EventsController < ApplicationController
       column = nil
     end
     director_id = nil
-    if only_director.to_s == "1" and  !(@resource.sysadmin? || @resource.agent?)
+    if only_director.to_s == "1" and !(@resource.sysadmin? || @resource.agent?)
       director_id = @resource.id
     end
     events = Event.upcoming.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
@@ -1531,12 +1531,35 @@ class EventsController < ApplicationController
 
   def details
     authorize Event
-    unless categories_params[:categories].nil?
-      @event.internal_category_ids = categories_params[:categories]
+    contest_params.each do |item|
+      data_contest = {:id => item[:id], :elimination_format_id => item[:elimination_format_id], :scoring_option_match_1_id => item[:scoring_option_match_1_id],
+                      :scoring_option_match_2_id => item[:scoring_option_match_2_id], :sport_regulator_id => item[:sport_regulator_id]}
+      contest = @event.contests.where(:id => item[:id]).update_or_create!(data_contest)
+      unless item[:categories].nil?
+        categories_ids = []
+        item[:categories].each do |item_category|
+          data_categories = {:category_id => item_category[:category_id], :bracket_types => item_category[:bracket_types]}
+          category = contest.categories.where(:category_id => data_categories[:category_id]).update_or_create!(data_categories)
+          categories_ids << category.id
+          unless item_category[:brackets].nil?
+            brackets_ids = []
+            item_category[:brackets].each do |item_bracket|
+              data_bracket = {:id => item_bracket[:id], :bracket_type => item_bracket[:bracket_type], :quantity => item_bracket[:quantity],
+                              :age => item_bracket[:age], :lowest_skill => item_bracket[:lowest_skill],
+                              :highest_skill => item_bracket[:highest_skill], :young_age => item_bracket[:young_age],
+                              :old_age => item_bracket[:old_age], :awards_for => item_bracket[:awards_for],
+                              :awards_through => item_bracket[:awards_through], :awards_plus => item_bracket[:awards_plus]}
+              bracket = category.brackets.where(:id => data_bracket[:id]).update_or_create!(data_bracket)
+              brackets_ids << bracket.id
+            end
+            category.brackets.where.not(:id => brackets_ids).destroy_all
+          end
+        end
+        contest.categories.where.not(:id => categories_ids).destroy_all
+      end
+
     end
-    @event.update! details_params
-    @event.sync_brackes! bracket_params
-    json_response_serializer(@event, EventSerializer)
+    json_response(contest_params)
   end
 
   swagger_path '/events/:id/categories' do
@@ -1603,15 +1626,15 @@ class EventsController < ApplicationController
   end
 
   def available_categories
-    @event =  Event.find(params[:id])
-    if  available_categories_params[:player_id].present?
+    @event = Event.find(params[:id])
+    if available_categories_params[:player_id].present?
       player = Player.find(available_categories_params[:player_id])
       user = player.user
     else
       user = @resource
       player = Player.where(user_id: user.id).where(event_id: @event.id).first
     end
-    in_categories_id = player.present? ? player.brackets.pluck(:category_id): []
+    in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
     response_data = []
     gender = user.gender
     event_categories = @event.categories.where.not(:category_id => in_categories_id)
@@ -1640,7 +1663,7 @@ class EventsController < ApplicationController
         end
       elsif @event.bracket_by == "skill_age" or @event.bracket_by == "age_skill"
         if item.brackets.length > 0
-          not_in = player.present? ? player.brackets.where(:category_id => item[:id]).pluck(:event_bracket_id): []
+          not_in = player.present? ? player.brackets.where(:category_id => item[:id]).pluck(:event_bracket_id) : []
           item.brackets.each do |bra|
             if bra.brackets.age_filter(age, @event.sport_regulator.allow_age_range).skill_filter(skill).not_in(not_in).length > 0
               response_data << item
@@ -1653,11 +1676,11 @@ class EventsController < ApplicationController
     if response_data.length == 0
       if @event.bracket_by == "age"
         return response_message_error(t("not_age_bracket"), 3)
-      elsif@event.bracket_by == "skill"
+      elsif @event.bracket_by == "skill"
         return response_message_error(t("not_skill_braket"), 4)
-      elsif@event.bracket_by == "skill_age"
+      elsif @event.bracket_by == "skill_age"
         return response_message_error(t("not_skill_braket"), 5)
-      elsif@event.bracket_by == "age_skill"
+      elsif @event.bracket_by == "age_skill"
         return response_message_error(t("not_age_bracket"), 6)
       end
     end
@@ -1752,6 +1775,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def get_registration_fee
     @event = Event.find(params[:id])
     #set tax of event
@@ -1764,18 +1788,18 @@ class EventsController < ApplicationController
     #apply discounts
     #event_discount = @event.get_discount
     personalized_discount = subscribe_params[:discount_code].present? ? @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first : nil
-    general_discount = subscribe_params[:discount_code].present? ?  @event.discount_generals.where(:code => subscribe_params[:discount_code]).first : nil
+    general_discount = subscribe_params[:discount_code].present? ? @event.discount_generals.where(:code => subscribe_params[:discount_code]).first : nil
     bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
-    bracket_fee = bracket_fee *  brackets_count
+    bracket_fee = bracket_fee * brackets_count
     #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
     #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
     if personalized_discount.present?
-      enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
+      enroll_fee = enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
       #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
     elsif general_discount.present? and (general_discount.limited > general_discount.applied)
 
       enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
-     # bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+      # bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
     end
     amount = enroll_fee + bracket_fee
     if tax.present?
@@ -1824,6 +1848,7 @@ class EventsController < ApplicationController
       end
     end
   end
+
   def taken_brackets
     ids = @event.tournaments.where(:category_id => taken_brackets_params[:category_id]).pluck(:event_bracket_id)
     event_brackets = EventBracket.where(:id => ids)
@@ -1946,9 +1971,14 @@ class EventsController < ApplicationController
     params.permit(sports: [])
   end
 
-  def details_params
-    params.permit(:elimination_format_id, :bracket_by, :scoring_option_match_1_id,
-                  :scoring_option_match_2_id, :sport_regulator_id, :awards_for, :awards_through, :awards_plus)
+  def contest_params
+    unless params[:contests].nil? or params[:contests].empty?
+      params.require(:contests).map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :elimination_format_id, :scoring_option_match_1_id,
+                                                               :scoring_option_match_2_id, :sport_regulator_id, categories: [:category_id, :bracket_types, brackets:[:bracket_type, :id, :age, :lowest_skill,
+            :highest_skill, :young_age, :old_age, :awards_for, :awards_through, :awards_plus, :quantity]])
+      end
+    end
   end
 
 # params to brackets
