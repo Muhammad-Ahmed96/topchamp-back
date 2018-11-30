@@ -1559,7 +1559,7 @@ class EventsController < ApplicationController
       end
 
     end
-    json_response(@event, EventSerializer)
+    json_response_serializer(@event, EventSerializer)
   end
 
   swagger_path '/events/:id/categories' do
