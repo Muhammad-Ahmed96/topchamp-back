@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_29_215451) do
+ActiveRecord::Schema.define(version: 2018_11_30_005150) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -187,16 +187,25 @@ ActiveRecord::Schema.define(version: 2018_11_29_215451) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "event_contest_category_brackets", force: :cascade do |t|
-    t.bigint "event_contest_category_id"
+  create_table "event_contest_category_bracket_details", force: :cascade do |t|
     t.bigint "event_contest_category_bracket_id"
-    t.string "bracket_type"
+    t.bigint "event_contest_category_bracket_detail_id"
+    t.bigint "category_id"
+    t.bigint "event_id"
     t.float "age", default: 0.0
     t.float "lowest_skill", default: 0.0
     t.float "highest_skill", default: 0.0
     t.integer "quantity", default: 0
     t.float "young_age", default: 0.0
     t.float "old_age", default: 0.0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_contest_category_brackets", force: :cascade do |t|
+    t.bigint "event_contest_category_id"
+    t.bigint "event_contest_category_bracket_id"
+    t.string "bracket_type"
     t.string "awards_for"
     t.string "awards_through"
     t.string "awards_plus"
