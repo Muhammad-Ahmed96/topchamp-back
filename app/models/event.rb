@@ -33,6 +33,7 @@ class Event < ApplicationRecord
   has_many :tournaments
   has_many :teams
   has_many :event_reminders, :class_name => 'UserEventReminder'
+  has_many :contests, :class_name => 'EventContest'
 
 
   has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
