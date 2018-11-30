@@ -16,6 +16,6 @@ class CreateEventContestCategoryBrackets < ActiveRecord::Migration[5.2]
       t.timestamps
       t.datetime :deleted_at, :null => true
     end
-    add_index :event_brackets, :deleted_at
+    add_index :event_contest_category_brackets, :deleted_at
   end
 end
