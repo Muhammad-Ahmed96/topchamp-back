@@ -1,4 +1,4 @@
 class EventContestCategoryBracketSerializer < ActiveModel::Serializer
-  attributes :id, :age,:young_age, :old_age, :lowest_skill, :highest_skill, :quantity, :bracket_type
-  has_many :brackets
+  attributes :id,:awards_for, :awards_through, :awards_plus, :bracket_type
+  has_many :details, serializer: EventContestCategoryBracketDetailSerializer
 end

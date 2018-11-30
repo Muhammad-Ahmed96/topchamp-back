@@ -1541,15 +1541,37 @@ class EventsController < ApplicationController
           data_categories = {:category_id => item_category[:category_id], :bracket_types => item_category[:bracket_types]}
           category = contest.categories.where(:category_id => data_categories[:category_id]).update_or_create!(data_categories)
           categories_ids << category.id
+          #save category
           unless item_category[:brackets].nil?
             brackets_ids = []
             item_category[:brackets].each do |item_bracket|
-              data_bracket = {:id => item_bracket[:id], :bracket_type => item_bracket[:bracket_type], :quantity => item_bracket[:quantity],
-                              :age => item_bracket[:age], :lowest_skill => item_bracket[:lowest_skill],
-                              :highest_skill => item_bracket[:highest_skill], :young_age => item_bracket[:young_age],
-                              :old_age => item_bracket[:old_age], :awards_for => item_bracket[:awards_for],
+              data_bracket = {:id => item_bracket[:id], :bracket_type => item_bracket[:bracket_type],:awards_for => item_bracket[:awards_for],
                               :awards_through => item_bracket[:awards_through], :awards_plus => item_bracket[:awards_plus]}
               bracket = category.brackets.where(:id => data_bracket[:id]).update_or_create!(data_bracket)
+              #save details brackets
+              unless  item_bracket[:details].nil?
+                details_ids = []
+                item_bracket[:details].each do |item_details|
+                  detail_data = {:id => item_details[:id],  :quantity => item_details[:quantity], :age => item_details[:age], :lowest_skill => item_details[:lowest_skill],
+                                  :highest_skill => item_details[:highest_skill], :young_age => item_details[:young_age],
+                                  :old_age => item_details[:old_age], :category_id => category.category_id, :event_id => @event.id}
+                  detail = bracket.details.where(:id => detail_data[:id]).update_or_create!(detail_data)
+                  details_ids << detail.id
+                  #save childs brackets
+                  unless item_details[:brackets].nil?
+                    child_ids = []
+                    item_details[:brackets].each do |item_child|
+                      child_data = {:id => item_child[:id],  :quantity => item_child[:quantity], :age => item_child[:age], :lowest_skill => item_child[:lowest_skill],
+                                     :highest_skill => item_child[:highest_skill], :young_age => item_child[:young_age],
+                                     :old_age => item_child[:old_age], :category_id => category.category_id, :event_id => @event.id}
+                      child = detail.brackets.where(:id => child_data[:id]).update_or_create!(child_data)
+                      child_ids << child.id
+                    end
+                    detail.brackets.where.not(:id => child_ids).destroy_all
+                  end
+                end
+                bracket.details.where.not(:id => details_ids).destroy_all
+              end
               brackets_ids << bracket.id
             end
             category.brackets.where.not(:id => brackets_ids).destroy_all
@@ -1975,8 +1997,9 @@ class EventsController < ApplicationController
     unless params[:contests].nil? or params[:contests].empty?
       params.require(:contests).map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :elimination_format_id, :scoring_option_match_1_id,
-                                                               :scoring_option_match_2_id, :sport_regulator_id, categories: [:category_id, :bracket_types, brackets:[:bracket_type, :id, :age, :lowest_skill,
-            :highest_skill, :young_age, :old_age, :awards_for, :awards_through, :awards_plus, :quantity]])
+                                                               :scoring_option_match_2_id, :sport_regulator_id, categories: [:category_id, :bracket_types, brackets:[ :id, :awards_for, :awards_through, :awards_plus, :bracket_type,
+                                                                                                                                                                      details: [:id, :age, :lowest_skill,
+            :highest_skill, :young_age, :old_age, :quantity, brackets:[:id, :age, :lowest_skill, :highest_skill, :young_age, :old_age, :quantity]]]])
       end
     end
   end
