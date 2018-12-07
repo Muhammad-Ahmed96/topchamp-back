@@ -368,7 +368,7 @@ class Payments::CheckOutController < ApplicationController
                                 :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id})
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
-        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id => brackets.pluck(:category_id))
+        .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
         .update(:payment_transaction_id => response.transactionResponse.transId)
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
@@ -543,7 +543,7 @@ class Payments::CheckOutController < ApplicationController
   def player_brackets_params
     unless params[:enrolls].nil? and !params[:enrolls].kind_of?(Array)
       params[:enrolls].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_id)
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :contest_id, :event_bracket_id)
       end
     end
   end

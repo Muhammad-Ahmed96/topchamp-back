@@ -119,6 +119,9 @@ Rails.application.routes.draw do
       end
 
       resources :event_tax, only: [:index], :path => :taxes
+      #Event contest
+      resources :event_contest, only: [:destroy], :path => :contest
+
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
