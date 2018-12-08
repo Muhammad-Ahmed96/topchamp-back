@@ -1,7 +1,8 @@
 class EventContestCategoryBracketDetail < ApplicationRecord
-  belongs_to :category, :class_name => 'EventContestCategory', :optional => true
+  belongs_to :category,:optional => true
   belongs_to :event,  :optional => true
-  belongs_to :contest_bracket, class_name: 'EventContestCategoryBracket',  :optional => true
+  belongs_to :contest_bracket, class_name: 'EventContestCategoryBracket', :foreign_key => 'event_contest_category_bracket_id',
+             :optional => true
   has_many :brackets, class_name: "EventContestCategoryBracketDetail", :dependent => :destroy
   attr_accessor :status
   attr_accessor :user_age
@@ -39,9 +40,13 @@ class EventContestCategoryBracketDetail < ApplicationRecord
   end
 
   def players
+    Player.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => brackets_ids))
+  end
+
+  def brackets_ids
     ids = [self.id]
-    ids << self.event_contest_category_bracket_id if self.event_contest_category_bracket_id.present?
-    Player.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => ids))
+    ids = ids + EventContestCategoryBracketDetail.where(:event_contest_category_bracket_detail_id => ids).pluck(:id)
+    return ids
   end
 
   def status

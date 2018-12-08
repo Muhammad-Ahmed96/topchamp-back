@@ -1554,7 +1554,8 @@ class EventsController < ApplicationController
                 item_bracket[:details].each do |item_details|
                   detail_data = {:id => item_details[:id], :quantity => item_details[:quantity], :age => item_details[:age], :lowest_skill => item_details[:lowest_skill],
                                  :highest_skill => item_details[:highest_skill], :young_age => item_details[:young_age],
-                                 :old_age => item_details[:old_age], :category_id => category.category_id, :event_id => @event.id}
+                                 :old_age => item_details[:old_age], :category_id => category.category_id, :event_id => @event.id,
+                                 :contest_id => contest.id}
                   detail = bracket.details.where(:id => detail_data[:id]).update_or_create!(detail_data)
                   details_ids << detail.id
                   #save childs brackets
@@ -1563,7 +1564,8 @@ class EventsController < ApplicationController
                     item_details[:brackets].each do |item_child|
                       child_data = {:id => item_child[:id], :quantity => item_child[:quantity], :age => item_child[:age], :lowest_skill => item_child[:lowest_skill],
                                     :highest_skill => item_child[:highest_skill], :young_age => item_child[:young_age],
-                                    :old_age => item_child[:old_age], :category_id => category.category_id, :event_id => @event.id}
+                                    :old_age => item_child[:old_age], :category_id => category.category_id, :event_id => @event.id,
+                                    :contest_id => contest.id}
                       child = detail.brackets.where(:id => child_data[:id]).update_or_create!(child_data)
                       child_ids << child.id
                     end
@@ -1697,23 +1699,23 @@ class EventsController < ApplicationController
         when 'age'
           details = bracket.details.age_filter(age, allow_age_range).not_in(not_in)
           if details.length > 0
-            valid_to_add  = true
+            valid_to_add = true
           end
         when 'skill'
           details = bracket.details.skill_filter(skill).not_in(not_in)
           if details.length > 0
-            valid_to_add  = true
+            valid_to_add = true
           end
         when 'skill_age'
           bracket.details.skill_filter(skill).not_in(not_in).each do |detail|
             if detail.brackets.age_filter(age, allow_age_range).not_in(not_in).length > 0
-              valid_to_add  = true
+              valid_to_add = true
             end
           end
         when 'age_skill'
           bracket.details.age_filter(age, allow_age_range).not_in(not_in).each do |detail|
             if detail.brackets.skill_filter(skill).not_in(not_in).length > 0
-              valid_to_add  = true
+              valid_to_add = true
             end
           end
         end

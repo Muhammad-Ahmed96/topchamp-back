@@ -24,9 +24,14 @@ class EventContestCategory < ApplicationRecord
   end
 
   def players
-    ids = EventContestCategoryBracketDetail.joins(:category)
+    Player.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => brackets_ids))
+  end
+
+  def brackets_ids
+    ids = EventContestCategoryBracketDetail.joins(contest_bracket: [:category])
               .merge(EventContestCategory.where(:id => self.id)).pluck(:id)
-    Player.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => ids))
+    ids = ids + EventContestCategoryBracketDetail.where(:event_contest_category_bracket_detail_id => ids).pluck(:id)
+    return ids
   end
 
 end

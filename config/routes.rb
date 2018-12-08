@@ -120,7 +120,15 @@ Rails.application.routes.draw do
 
       resources :event_tax, only: [:index], :path => :taxes
       #Event contest
-      resources :event_contest, only: [:destroy], :path => :contest
+      resources :event_contest, only: [:destroy], :path => :contest do
+        resources :event_contest_categories, only: [:destroy], :path => :category do
+          resources :event_contest_category_brackets, only: [:destroy], :path => :brackets do
+            collection do
+              delete 'details/:id',  action: :destroy_detail
+            end
+          end
+        end
+      end
 
     end
     get 'events_validate_url', to: 'events#validate_url'

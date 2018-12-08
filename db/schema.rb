@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_05_222317) do
+ActiveRecord::Schema.define(version: 2018_12_08_033232) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -178,6 +178,7 @@ ActiveRecord::Schema.define(version: 2018_12_05_222317) do
     t.float "old_age", default: 0.0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "contest_id"
   end
 
   create_table "event_contest_category_brackets", force: :cascade do |t|
@@ -521,6 +522,7 @@ ActiveRecord::Schema.define(version: 2018_12_05_222317) do
     t.float "discount", default: 0.0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "contest_id"
   end
 
   create_table "payment_transactions", force: :cascade do |t|
@@ -543,6 +545,7 @@ ActiveRecord::Schema.define(version: 2018_12_05_222317) do
     t.boolean "for_refund", default: false
     t.boolean "is_refund", default: false
     t.float "refund_total", default: 0.0
+    t.bigint "contest_id"
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 
