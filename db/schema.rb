@@ -89,13 +89,6 @@ ActiveRecord::Schema.define(version: 2018_12_10_194958) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "categories_events", id: false, force: :cascade do |t|
-    t.bigint "event_id", null: false
-    t.bigint "category_id", null: false
-    t.index ["category_id"], name: "index_categories_events_on_category_id"
-    t.index ["event_id"], name: "index_categories_events_on_event_id"
-  end
-
   create_table "certified_scores", force: :cascade do |t|
     t.integer "match_id"
     t.integer "event_id"
@@ -164,19 +157,50 @@ ActiveRecord::Schema.define(version: 2018_12_10_194958) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "event_brackets", force: :cascade do |t|
+  create_table "event_contest_categories", force: :cascade do |t|
+    t.bigint "event_contest_id"
+    t.bigint "category_id"
+    t.jsonb "bracket_types"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "event_contest_category_bracket_details", force: :cascade do |t|
+    t.bigint "event_contest_category_bracket_id"
+    t.bigint "event_contest_category_bracket_detail_id"
+    t.bigint "category_id"
     t.bigint "event_id"
-    t.bigint "event_bracket_id"
-    t.float "age"
-    t.float "lowest_skill"
-    t.float "highest_skill"
+    t.float "age", default: 0.0
+    t.float "lowest_skill", default: 0.0
+    t.float "highest_skill", default: 0.0
     t.integer "quantity", default: 0
+    t.float "young_age", default: 0.0
+    t.float "old_age", default: 0.0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "contest_id"
+  end
+
+  create_table "event_contest_category_brackets", force: :cascade do |t|
+    t.bigint "event_contest_category_id"
+    t.bigint "event_contest_category_bracket_id"
+    t.string "bracket_type"
+    t.string "awards_for"
+    t.string "awards_through"
+    t.string "awards_plus"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
-    t.float "young_age"
-    t.float "old_age"
-    t.index ["deleted_at"], name: "index_event_brackets_on_deleted_at"
+  end
+
+  create_table "event_contests", force: :cascade do |t|
+    t.bigint "event_id"
+    t.bigint "elimination_format_id"
+    t.bigint "scoring_option_match_1_id"
+    t.bigint "scoring_option_match_2_id"
+    t.bigint "sport_regulator_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "event_discount_generals", force: :cascade do |t|
@@ -498,6 +522,7 @@ ActiveRecord::Schema.define(version: 2018_12_10_194958) do
     t.float "discount", default: 0.0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "contest_id"
   end
 
   create_table "payment_transactions", force: :cascade do |t|
@@ -520,6 +545,7 @@ ActiveRecord::Schema.define(version: 2018_12_10_194958) do
     t.boolean "for_refund", default: false
     t.boolean "is_refund", default: false
     t.float "refund_total", default: 0.0
+    t.bigint "contest_id"
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 
