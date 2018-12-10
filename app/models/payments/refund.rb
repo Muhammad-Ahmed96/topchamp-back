@@ -3,7 +3,7 @@ require 'action_view'
 include ActionView::Helpers::NumberHelper
 module Payments
   class Refund
-    def self.credit_card(amount, card_number, expiration_date)
+    def self.credit_card(amount, card_number, expiration_date, ref_trans_id = nil)
       transaction = Conexion.get
       request = CreateTransactionRequest.new
 
@@ -11,7 +11,7 @@ module Payments
       request.transactionRequest.amount = amount
       request.transactionRequest.payment = PaymentType.new
       request.transactionRequest.payment.creditCard = CreditCardType.new(card_number, expiration_date)
-      #request.transactionRequest.refTransId = 2233511297
+      request.transactionRequest.refTransId = ref_trans_id
       request.transactionRequest.transactionType = TransactionTypeEnum::RefundTransaction
 
       response = transaction.create_transaction(request)
