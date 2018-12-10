@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_22_214239) do
+ActiveRecord::Schema.define(version: 2018_12_10_194958) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -517,6 +517,9 @@ ActiveRecord::Schema.define(version: 2018_11_22_214239) do
     t.float "director_receipt", default: 0.0
     t.float "account", default: 0.0
     t.float "discount", default: 0.0
+    t.boolean "for_refund", default: false
+    t.boolean "is_refund", default: false
+    t.float "refund_total", default: 0.0
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 
@@ -576,6 +579,7 @@ ActiveRecord::Schema.define(version: 2018_11_22_214239) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
+    t.bigint "reference_id"
     t.index ["deleted_at"], name: "index_refund_transactions_on_deleted_at"
   end
 
