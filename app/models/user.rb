@@ -477,9 +477,11 @@ class User < ApplicationRecord
   end
 
   def skill_level
+    level = 0
     if self.association_information.present?
-      self.association_information.raking
+      level = self.association_information.raking
     end
+    level
   end
 
   def sync_wait_list(data, event_id)

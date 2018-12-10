@@ -222,6 +222,8 @@ en:
   not_skill_braket: "This event does not have a bracket for your skill"
   not_skill_age_braket: "This event does not have a bracket for your skill/age"
   not_age_skill_braket: "This event does not have a bracket for your age/skill"
+  not_brackets_for_player: "This event does not have a bracket for you"
+  not_possible_delete: "It is not possible to eliminate"
   attendee_types_required: "attendee types required"
   refuse_success: "%{model} decline success"
   not_brackets_to_enrroll: "No brackets to enroll"

@@ -58,12 +58,11 @@ class Player < ApplicationRecord
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
         #get bracket to enroll
-        current_bracket = EventBracket.where(:event_id => event.id).where(:id => bracket[:event_bracket_id]).first
+        current_bracket = EventContestCategoryBracketDetail.where(:event_id => event.id).where(:id => bracket[:event_bracket_id]).first
         # check if category exist in event
-        category = self.event.internal_categories.where(:id => bracket[:category_id]).count
-        if current_bracket.present? and category > 0
-          status = current_bracket.get_status(bracket[:category_id])
-          save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status}
+        if current_bracket.present?
+          status = current_bracket.get_status
+          save_data = {:category_id => current_bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status}
           saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
           if saved_bracket.enroll_status != "enroll"
             saved_bracket.enroll_status = status
