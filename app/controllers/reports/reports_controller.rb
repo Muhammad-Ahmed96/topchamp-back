@@ -25,10 +25,11 @@ class Reports::ReportsController < ApplicationController
     top_champ_fee = params[:top_champ_fee].strip unless params[:top_champ_fee].nil?
     director_receipt = params[:director_receipt].strip unless params[:director_receipt].nil?
     items = User.my_order(column, direction).where(:id => user_ids).joins('INNER JOIN payment_transactions AS pym ON pym.user_id = users.id')
-                .select('users.id AS user_id,concat(users.first_name,\' \', users.last_name) AS player_name,' +
+    .where('pym.for_refund = true AND pym.is_refund = false')
+                .select('users.id AS user_id,concat(users.first_name,\' \', users.last_name) AS player_name,pym.payment_transaction_id ,' +
                                                'ROUND(SUM(pym.authorize_fee::NUMERIC), 2) AS authorize_fee,'+
                             ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee,ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt')
-                .group("users.id")
+                .group("users.id", 'pym.payment_transaction_id')
 
     unless player_name.nil?
       items = items.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{player_name}%")
