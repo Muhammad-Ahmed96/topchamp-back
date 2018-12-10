@@ -266,6 +266,9 @@ class Player < ApplicationRecord
     if tournament.present?
       tournament.update_internal_data
     end
+
+    #sent to refund charges
+    self.payment_transactions.update!({:for_refund => true})
   end
 
   def inactivate
