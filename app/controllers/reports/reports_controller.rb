@@ -4,16 +4,16 @@ class Reports::ReportsController < ApplicationController
 
   def account
     user = account_params[:user_id].present? ? User.find(account_params[:user_id]) : @resource
-    my_events_ids = Event.only_creator(user.id).pluck(:id)
     search = params[:event_name].strip unless params[:event_name].nil?
     column = params[:column].nil? ? 'event_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
-    items = Event.my_order(column, direction).where(:id => my_events_ids)
+    items = Event.my_order(column, direction).only_creator(user.id)
                 .title_like(search).select("events.id AS event_id, events.title AS event_name,"+
-                                           "(SELECT SUM(pym1.amount) FROM payment_transactions AS pym1 WHERE pym1.event_id = events.id) AS gross_income,"+
-                                           "(SELECT SUM(pym2.director_receipt) FROM payment_transactions AS pym2 WHERE pym2.event_id = events.id) AS net_income,"+
-                                           "(SELECT SUM(rfd1.total) FROM refund_transactions AS rfd1 WHERE rfd1.event_id = events.id) AS refund,"+
-                                           "(SELECT SUM(pym3.director_receipt) FROM payment_transactions AS pym3 WHERE pym3.event_id = events.id) - (SELECT SUM(rfd2.total) FROM refund_transactions AS rfd2 WHERE rfd2.event_id = events.id) AS balance")
+                                           "COALESCE((SELECT SUM(pym1.amount) FROM payment_transactions AS pym1 WHERE pym1.event_id = events.id),0) AS gross_income,"+
+                                           "COALESCE((SELECT SUM(pym2.director_receipt) FROM payment_transactions AS pym2 WHERE pym2.event_id = events.id),0)AS net_income,"+
+                                           "COALESCE((SELECT SUM(rfd1.total) FROM refund_transactions AS rfd1 WHERE rfd1.event_id = events.id),0) AS refund,"+
+                                               "COALESCE((SELECT SUM(pym3.director_receipt) FROM payment_transactions AS pym3 WHERE pym3.event_id = events.id),0) -"+
+                                               " COALESCE((SELECT SUM(rfd2.total) FROM refund_transactions AS rfd2 WHERE rfd2.event_id = events.id),0) AS balance")
                 .group("events.id")
     #items.each do |item|
      # gross_income = number_with_precision(Payments::PaymentTransaction.where(:event_id => item.event_id).sum(:amount),precision: 2).to_f
