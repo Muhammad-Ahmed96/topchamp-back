@@ -10,10 +10,10 @@ class Event < ApplicationRecord
   acts_as_paranoid
 
   attr_accessor :reminder
-  attr_accessor :gross_income
-  attr_accessor :net_income
-  attr_accessor :refund
-  attr_accessor :balance
+ # attr_accessor :gross_income
+ # attr_accessor :net_income
+  #attr_accessor :refund
+  #attr_accessor :balance
 
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions

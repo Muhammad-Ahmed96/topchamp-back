@@ -9,17 +9,21 @@ class Reports::ReportsController < ApplicationController
     column = params[:column].nil? ? 'event_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     items = Event.my_order(column, direction).where(:id => my_events_ids)
-                .title_like(search).select("events.id AS event_id, events.title AS event_name")
+                .title_like(search).select("events.id AS event_id, events.title AS event_name,"+
+                                           "(SELECT SUM(pym1.amount) FROM payment_transactions AS pym1 WHERE pym1.event_id = events.id) AS gross_income,"+
+                                           "(SELECT SUM(pym2.director_receipt) FROM payment_transactions AS pym2 WHERE pym2.event_id = events.id) AS net_income,"+
+                                           "(SELECT SUM(rfd1.total) FROM refund_transactions AS rfd1 WHERE rfd1.event_id = events.id) AS refund,"+
+                                           "(SELECT SUM(pym3.director_receipt) FROM payment_transactions AS pym3 WHERE pym3.event_id = events.id) - (SELECT SUM(rfd2.total) FROM refund_transactions AS rfd2 WHERE rfd2.event_id = events.id) AS balance")
                 .group("events.id")
-    items.each do |item|
-      gross_income = number_with_precision(Payments::PaymentTransaction.where(:event_id => item.event_id).sum(:amount),precision: 2).to_f
-      net_income =  number_with_precision(Payments::PaymentTransaction.where(:event_id => item.event_id).sum(:director_receipt),precision: 2).to_f
-      refunds = number_with_precision(Payments::RefundTransaction.where(:event_id => item.event_id).sum(:total),precision: 2).to_f
-      item.gross_income = gross_income
-      item.net_income = net_income
-      item.refund = refunds
-      item.balance = net_income - refunds
-    end
+    #items.each do |item|
+     # gross_income = number_with_precision(Payments::PaymentTransaction.where(:event_id => item.event_id).sum(:amount),precision: 2).to_f
+      #net_income =  number_with_precision(Payments::PaymentTransaction.where(:event_id => item.event_id).sum(:director_receipt),precision: 2).to_f
+      #refunds = number_with_precision(Payments::RefundTransaction.where(:event_id => item.event_id).sum(:total),precision: 2).to_f
+      #item.gross_income = gross_income
+      #item.net_income = net_income
+     # item.refund = refunds
+      #item.balance = 0 - 0
+    #end
     json_response_serializer_collection items, AccountReportSerializer
   end
 
