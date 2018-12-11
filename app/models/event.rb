@@ -70,6 +70,7 @@ class Event < ApplicationRecord
 
   scope :in_status, lambda {|status| where status: status if status.present?}
   scope :only_directors, lambda {|id| joins(participants: [:attendee_types]).merge(Participant.where :user_id => id).merge(AttendeeType.where :id => AttendeeType.director_id) if id.present?}
+  scope :only_creator, lambda {|id| where(:creator_user_id => id) if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
   scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
