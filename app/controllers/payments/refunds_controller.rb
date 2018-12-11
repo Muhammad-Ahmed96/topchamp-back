@@ -70,6 +70,7 @@ class Payments::RefundsController < ApplicationController
     unless credit_card_prams['amount'].to_f > 0
       return response_more_than
     end
+    app_fee = 0.0
     user = @resource
     amount = number_with_precision(credit_card_prams[:amount], precision: 2).to_f
     response = Payments::Refund.credit_card(amount, card_number, expiration_date, credit_card_prams[:payment_transaction_id])
@@ -95,9 +96,14 @@ class Payments::RefundsController < ApplicationController
       payment.update!({:is_refund => true, :refund_total => total})
       reference_id = payment.id
     end
+
+    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * (amount - app_fee)) / 100) + Rails.configuration.authorize[:extra_charges]
+
+    total_dir = amount + authorize_fee
     Payments::RefundTransaction.create!({:payment_transaction_id => response.transactionResponse.transId, :amount => amount, :type_refund => 'credit_card',
                                          :card_number => card_number, :expiration_date => expiration_date,:reference_id => reference_id,
-                                         :from_user_id => user.id, :to_user_id => credit_card_prams[:user_id], :status => 'aproved'})
+                                         :from_user_id => user.id, :to_user_id => credit_card_prams[:user_id], :status => 'aproved',
+                                         :app_fee => app_fee,:authorize_fee => authorize_fee,:total => total_dir,})
 
 
 
@@ -179,7 +185,8 @@ class Payments::RefundsController < ApplicationController
       return response_more_than
     end
     user = @resource
-    amount = number_with_precision(bank_account_prams[:amount], precision: 2)
+    amount = number_with_precision(bank_account_prams[:amount], precision: 2).to_f
+    app_fee = 0.0
     response = Payments::Refund.bank_account(amount, bank_account_prams[:routing_number], bank_account_prams[:account_number], bank_account_prams[:name_on_account],
                                              bank_account_prams[:bank_name])
     if response.messages.resultCode == MessageTypeEnum::Ok
@@ -193,10 +200,13 @@ class Payments::RefundsController < ApplicationController
         return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
       end
     end
+    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * (amount - app_fee)) / 100) + Rails.configuration.authorize[:extra_charges]
+
+    total_dir = amount + authorize_fee
     Payments::RefundTransaction.create!({:payment_transaction_id => response.transactionResponse.transId, :amount => amount, :type_refund => 'bank_account',
                                          :routing_number => bank_account_prams[:routing_number], :account_number => bank_account_prams[:account_number],
                                          :name_on_account => bank_account_prams[:name_on_account], :bank_name => bank_account_prams[:bank_name],
-                                         :account_type => 'businessChecking', :e_check_type => 'CCD',
+                                         :account_type => 'businessChecking', :e_check_type => 'CCD',:app_fee => app_fee,:authorize_fee => authorize_fee,:total => total_dir,
                                          :from_user_id => user.id, :to_user_id => bank_account_prams[:user_id]})
     json_response_data({:transaction => response.transactionResponse.transId})
   end

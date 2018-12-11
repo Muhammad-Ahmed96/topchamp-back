@@ -217,6 +217,7 @@ Rails.application.routes.draw do
       get 'admin/:user_id/report', action: :report, controller: :admin
       get 'reports/:user_id/account', action: :account, controller: :reports
       get 'reports/transaction', action: :transaction, controller: :reports
+      get 'director/balance', action: :balance, controller: :director
     end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
