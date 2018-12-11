@@ -3,15 +3,23 @@ class Reports::ReportsController < ApplicationController
   before_action :authenticate_user!
 
   def account
+    user = account_params[:user_id].present? ? User.find(account_params[:user_id]) : @resource
+    my_events_ids = Event.only_creator(user.id).pluck(:id)
     search = params[:event_name].strip unless params[:event_name].nil?
     column = params[:column].nil? ? 'event_name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
-    items = Event.my_order(column, direction).where(:creator_user_id => user_id).joins(participants: [:attendee_types]).merge(Participant.where :user_id => user_id).merge(AttendeeType.where :id => AttendeeType.director_id)
-                .title_like(search).select("events.id AS event_id, events.title AS event_name, 0 AS gross_income, "+
-                                               "0 AS net_income,"+
-                                               "0 AS withdrawals,"+
-                                               " 0 AS balance")
+    items = Event.my_order(column, direction).where(:id => my_events_ids)
+                .title_like(search).select("events.id AS event_id, events.title AS event_name")
                 .group("events.id")
+    items.each do |item|
+      gross_income = number_with_precision(Payments::PaymentTransaction.where(:event_id => item.event_id).sum(:amount),precision: 2).to_f
+      net_income =  number_with_precision(Payments::PaymentTransaction.where(:event_id => item.event_id).sum(:director_receipt),precision: 2).to_f
+      refunds = number_with_precision(Payments::RefundTransaction.where(:event_id => item.event_id).sum(:total),precision: 2).to_f
+      item.gross_income = gross_income
+      item.net_income = net_income
+      item.refund = refunds
+      item.balance = net_income - refunds
+    end
     json_response_serializer_collection items, AccountReportSerializer
   end
 
@@ -58,5 +66,9 @@ class Reports::ReportsController < ApplicationController
     params.require('user_id')
     params.permit('user_id')
     params['user_id']
+  end
+
+  def account_params
+    params.permit('user_id')
   end
 end
