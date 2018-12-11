@@ -103,7 +103,7 @@ class Payments::RefundsController < ApplicationController
     Payments::RefundTransaction.create!({:payment_transaction_id => response.transactionResponse.transId, :amount => amount, :type_refund => 'credit_card',
                                          :card_number => card_number, :expiration_date => expiration_date,:reference_id => reference_id,
                                          :from_user_id => user.id, :to_user_id => credit_card_prams[:user_id], :status => 'aproved',
-                                         :app_fee => app_fee,:authorize_fee => authorize_fee,:total => total_dir,})
+                                         :app_fee => app_fee,:authorize_fee => authorize_fee,:total => total_dir, :event_id => credit_card_prams[:event_id]})
 
 
 
@@ -207,7 +207,7 @@ class Payments::RefundsController < ApplicationController
                                          :routing_number => bank_account_prams[:routing_number], :account_number => bank_account_prams[:account_number],
                                          :name_on_account => bank_account_prams[:name_on_account], :bank_name => bank_account_prams[:bank_name],
                                          :account_type => 'businessChecking', :e_check_type => 'CCD',:app_fee => app_fee,:authorize_fee => authorize_fee,:total => total_dir,
-                                         :from_user_id => user.id, :to_user_id => bank_account_prams[:user_id]})
+                                         :from_user_id => user.id, :to_user_id => bank_account_prams[:user_id],  :event_id => bank_account_prams[:event_id]})
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 
@@ -216,10 +216,11 @@ class Payments::RefundsController < ApplicationController
   def credit_card_prams
     params.require('amount')
     params.require('user_id')
+    params.require('event_id')
     # params.require('card_number')
     #params.require('expiration_date')
     params.require('payment_transaction_id')
-    params.permit('user_id', 'amount', 'card_number', 'expiration_date', 'payment_transaction_id')
+    params.permit('user_id', 'amount', 'card_number', 'expiration_date', 'payment_transaction_id', 'event_id')
   end
 
   def bank_account_prams
@@ -229,7 +230,8 @@ class Payments::RefundsController < ApplicationController
     params.require('name_on_account')
     params.require('bank_name')
     params.require('user_id')
-    params.permit('user_id', 'check_number', 'amount', 'account_type', 'routing_number', 'account_number', 'name_on_account', 'bank_name')
+    params.require('event_id')
+    params.permit('user_id', 'check_number', 'amount', 'account_type', 'routing_number', 'account_number', 'name_on_account', 'bank_name', 'event_id')
   end
 
   def response_no_numeric
