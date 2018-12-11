@@ -24,7 +24,7 @@ class Reports::ReportsController < ApplicationController
     top_champ_account = params[:top_champ_account].strip unless params[:top_champ_account].nil?
     top_champ_fee = params[:top_champ_fee].strip unless params[:top_champ_fee].nil?
     director_receipt = params[:director_receipt].strip unless params[:director_receipt].nil?
-    my_events_ids = Event.only_directors(@resource.id).pluck(:id)
+    my_events_ids = params[:event_id].nil? ? Event.only_creator(@resource.id).pluck(:id) : params[:event_id]
     items = User.my_order(column, direction).where(:id => user_ids).joins('INNER JOIN payment_transactions AS pym ON pym.user_id = users.id')
     .where("pym.event_id IN (?) AND pym.for_refund = true AND pym.amount > pym.refund_total", my_events_ids)
                 .select('users.id AS user_id,concat(users.first_name,\' \', users.last_name) AS player_name,pym.payment_transaction_id ,' +

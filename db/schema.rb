@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_10_194958) do
+ActiveRecord::Schema.define(version: 2018_12_10_222528) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -580,6 +580,9 @@ ActiveRecord::Schema.define(version: 2018_12_10_194958) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.bigint "reference_id"
+    t.bigint "app_fee"
+    t.bigint "authorize_fee"
+    t.bigint "total"
     t.index ["deleted_at"], name: "index_refund_transactions_on_deleted_at"
   end
 
