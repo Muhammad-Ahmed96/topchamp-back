@@ -279,7 +279,7 @@ class TournamentsController < ApplicationController
   end
   def update_matches
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:category_id => players_list_params[:category_id]).first
+                     .where(:category_id => players_list_params[:category_id]).where(:conntest_id => players_list_params[:contest_id]).first
     if rounds_params.present? and tournament.present?
       tournament.update_match!(rounds_params, losers_params)
     end
@@ -557,7 +557,8 @@ class TournamentsController < ApplicationController
   def players_list_params
     params.required(:category_id)
     params.required(:bracket_id)
-    params.permit(:category_id, :bracket_id)
+    params.required(:contest_id)
+    params.permit(:category_id, :bracket_id, :contest_id)
   end
 
   def rounds_params
