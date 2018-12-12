@@ -215,7 +215,7 @@ class TournamentsController < ApplicationController
   end
   def create
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:category_id => players_list_params[:category_id]).first_or_create!
+                     .where(:category_id => players_list_params[:category_id]).where(:contest_id => players_list_params[:contest_id]).first_or_create!
     if rounds_params.present?
       tournament.sync_matches!(rounds_params, losers_params)
     end
@@ -279,7 +279,7 @@ class TournamentsController < ApplicationController
   end
   def update_matches
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:category_id => players_list_params[:category_id]).where(:conntest_id => players_list_params[:contest_id]).first
+                     .where(:category_id => players_list_params[:category_id]).where(:contest_id => players_list_params[:contest_id]).first
     if rounds_params.present? and tournament.present?
       tournament.update_match!(rounds_params, losers_params)
     end
