@@ -6,6 +6,11 @@ class EventContestSerializer < ActiveModel::Serializer
   belongs_to :scoring_option_match_2, serializer: ScoringOptionSerializer
   belongs_to :elimination_format, serializer: EliminationFormatSerializer
   belongs_to :sport_regulator, serializer: SportRegulatorSerializer
+  belongs_to :venue, serializer: VenueSerializer
 
   has_many :categories, serializer: EventContestCategorySerializer
+
+  def venue
+    object.event.venue
+  end
 end

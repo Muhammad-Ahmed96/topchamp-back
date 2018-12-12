@@ -1,11 +1,9 @@
-class EventContestCategorySerializer < ActiveModel::Serializer
+class EventContestCategorySingleSerializer < ActiveModel::Serializer
   attributes :id, :category_id, :name,:bracket_types
-  belongs_to :brackets, serializer: EventContestCategoryBracketSerializer
 
   def category_id
     object.category.id
   end
-
   def name
     object.category.name
   end

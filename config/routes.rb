@@ -121,9 +121,10 @@ Rails.application.routes.draw do
       resources :event_tax, only: [:index], :path => :taxes
       #Event contest
       resources :event_contest, only: [:destroy, :index], :path => :contest do
-        resources :event_contest_categories, only: [:destroy], :path => :category do
+        resources :event_contest_categories, only: [:destroy, :index], :path => :category do
           resources :event_contest_category_brackets, only: [:destroy], :path => :brackets do
             collection do
+              get 'available',  action: :available
               delete 'details/:id',  action: :destroy_detail
             end
           end

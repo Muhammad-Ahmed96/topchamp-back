@@ -7,6 +7,7 @@ class EventContest < ApplicationRecord
   belongs_to :scoring_option_match_2, foreign_key: "scoring_option_match_2_id", class_name: "ScoringOption", optional: true
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
+  #belongs_to :venue, serializer: VenueSerializer
 
 
   def validate_to_delete
