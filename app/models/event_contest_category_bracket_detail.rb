@@ -98,4 +98,27 @@ class EventContestCategoryBracketDetail < ApplicationRecord
     end
     status
   end
+
+
+  def send_free_mail
+    event = self.event
+    if self.event.registration_rule.present? and self.event.registration_rule.allow_wait_list
+      free_spaces = self.get_free_count
+      if free_spaces.present? and free_spaces > 0
+
+        url = Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
+        url = url.gsub "{event_bracket_id}", bracket.id.to_s
+        url = url.gsub "{category_id}", category.id.to_s
+        url = Invitation.short_url url
+        users = User.joins(:wait_lists).merge(WaitList.where(:category_id => self.category_id).where(:event_bracket_id => self.id)
+                                                  .where(:event_id => event.id)).all
+        users.each do |user|
+          UnsubscribeMailer.spot_open(user, event, url).deliver
+        end
+        EventBracketFree.where(:event_bracket_id => self.id).where(:category_id => self.category_id)
+            .update_or_create!({:event_bracket_id => self.id, :category_id => self.category_id, :free_at => DateTime.now,
+                                :url => url})
+      end
+    end
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_10_194958) do
+ActiveRecord::Schema.define(version: 2018_12_12_183239) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -179,6 +179,9 @@ ActiveRecord::Schema.define(version: 2018_12_10_194958) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "contest_id"
+    t.date "start_date"
+    t.time "time_start"
+    t.time "time_end"
   end
 
   create_table "event_contest_category_brackets", force: :cascade do |t|
