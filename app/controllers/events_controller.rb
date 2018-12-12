@@ -1555,8 +1555,14 @@ class EventsController < ApplicationController
                   detail_data = {:id => item_details[:id], :quantity => item_details[:quantity], :age => item_details[:age], :lowest_skill => item_details[:lowest_skill],
                                  :highest_skill => item_details[:highest_skill], :young_age => item_details[:young_age],
                                  :old_age => item_details[:old_age], :category_id => category.category_id, :event_id => @event.id,
-                                 :contest_id => contest.id}
+                                 :contest_id => contest.id, :start_date => item_details[:start_date], :time_start => item_details[:time_start],
+                                 :time_end => item_details[:time_end]}
+                  exist_bracket = bracket.details.where(:id => detail_data[:id]).first
                   detail = bracket.details.where(:id => detail_data[:id]).update_or_create!(detail_data)
+                  #send mail New spot open!
+                  unless exist_bracket.nil?
+                    detail.send_free_mail
+                  end
                   details_ids << detail.id
                   #save childs brackets
                   unless item_details[:brackets].nil?
@@ -1565,7 +1571,8 @@ class EventsController < ApplicationController
                       child_data = {:id => item_child[:id], :quantity => item_child[:quantity], :age => item_child[:age], :lowest_skill => item_child[:lowest_skill],
                                     :highest_skill => item_child[:highest_skill], :young_age => item_child[:young_age],
                                     :old_age => item_child[:old_age], :category_id => category.category_id, :event_id => @event.id,
-                                    :contest_id => contest.id}
+                                    :contest_id => contest.id,  :start_date => item_details[:start_date], :time_start => item_details[:time_start],
+                                    :time_end => item_details[:time_end]}
                       child = detail.brackets.where(:id => child_data[:id]).update_or_create!(child_data)
                       child_ids << child.id
                     end

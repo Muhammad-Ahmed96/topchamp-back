@@ -239,27 +239,13 @@ class Player < ApplicationRecord
     if teams_to_destroy.length > 0
       Team.where(:id => teams_to_destroy).destroy_all
     end
-    bracket = EventBracket.where(:id => event_bracket_id).first
+    bracket = EventContestCategoryBracketDetail.where(:id => event_bracket_id).first
     category = Category.find(category_id)
     director = User.find(event.creator_user_id)
     registrant = self.user
     UnsubscribeMailer.unsubscribe(bracket, category, director, registrant, event).deliver
 
-    free_spaces = bracket.get_free_count(category_id)
-    if free_spaces.present? and free_spaces == 1
-      url = Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
-      url = url.gsub "{event_bracket_id}", bracket.id.to_s
-      url = url.gsub "{category_id}", category.id.to_s
-      url = Invitation.short_url url
-      users = User.joins(:wait_lists).merge(WaitList.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
-                                                .where(:event_id => event.id)).all
-      users.each do |user|
-        UnsubscribeMailer.spot_open(user, event, url).deliver
-      end
-      EventBracketFree.where(:event_bracket_id => bracket.id).where(:category_id => category.id)
-          .update_or_create!({:event_bracket_id => bracket.id, :category_id => category.id, :free_at => DateTime.now,
-                              :url => url})
-    end
+    bracket.send_free_mail
 
     tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => event_bracket_id)
                      .where(:category_id => category_id).first

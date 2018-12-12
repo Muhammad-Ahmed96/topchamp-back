@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_12_11_174445) do
+ActiveRecord::Schema.define(version: 2018_12_12_183239) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -179,6 +179,9 @@ ActiveRecord::Schema.define(version: 2018_12_11_174445) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "contest_id"
+    t.date "start_date"
+    t.time "time_start"
+    t.time "time_end"
   end
 
   create_table "event_contest_category_brackets", force: :cascade do |t|
@@ -606,10 +609,6 @@ ActiveRecord::Schema.define(version: 2018_12_11_174445) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.bigint "reference_id"
-    t.float "app_fee", default: 0.0
-    t.float "authorize_fee", default: 0.0
-    t.float "total", default: 0.0
-    t.bigint "event_id"
     t.index ["deleted_at"], name: "index_refund_transactions_on_deleted_at"
   end
 
