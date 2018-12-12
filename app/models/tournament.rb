@@ -1,7 +1,7 @@
 class Tournament < ApplicationRecord
   include Swagger::Blocks
   belongs_to :event
-  belongs_to :bracket, :class_name => "EventBracket", :foreign_key => "event_bracket_id"
+  belongs_to :bracket, :class_name => "EventContestCategoryBracketDetail", :foreign_key => "event_bracket_id"
   belongs_to :category
 
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
@@ -16,8 +16,8 @@ class Tournament < ApplicationRecord
   scope :event_in, lambda {|search| joins(:event).merge(Event.where id: search) if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where("LOWER(title) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :category_in, lambda {|search| joins(:category).merge(Category.where id: search) if search.present?}
-  scope :bracket_in, lambda {|search| joins(:bracket).merge(EventBracket.where id: search) if search.present?}
-  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventBracket.where("to_char(age,'999') LIKE ? OR to_char(lowest_skill,'9999') like ? OR to_char(highest_skill,'9999') LIKE ? OR to_char(young_age,'9999') LIKE ? OR to_char(old_age,'9999') LIKE ?", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%")) if search.present?}
+  scope :bracket_in, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where id: search) if search.present?}
+  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where("to_char(age,'999') LIKE ? OR to_char(lowest_skill,'9999') like ? OR to_char(highest_skill,'9999') LIKE ? OR to_char(young_age,'9999') LIKE ? OR to_char(old_age,'9999') LIKE ?", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%")) if search.present?}
 
   scope :event_order, lambda {|column, direction = "desc"| includes(:event).order("events.#{column} #{direction}") if column.present?}
   scope :category_order, lambda {|column, direction = "desc"| includes(:category).order("categories.#{column} #{direction}") if column.present?}
