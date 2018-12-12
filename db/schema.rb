@@ -609,6 +609,10 @@ ActiveRecord::Schema.define(version: 2018_12_12_183239) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.bigint "reference_id"
+    t.float "app_fee", default: 0.0
+    t.float "authorize_fee", default: 0.0
+    t.float "total", default: 0.0
+    t.bigint "event_id"
     t.index ["deleted_at"], name: "index_refund_transactions_on_deleted_at"
   end
 
