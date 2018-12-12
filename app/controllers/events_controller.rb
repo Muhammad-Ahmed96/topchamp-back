@@ -1903,7 +1903,8 @@ class EventsController < ApplicationController
   end
 
   def taken_brackets
-    ids = @event.tournaments.where(:category_id => taken_brackets_params[:category_id]).pluck(:event_bracket_id)
+    ids = @event.tournaments.where(:category_id => taken_brackets_params[:category_id])
+              .where(:contest_id => taken_brackets_params[:contest_id]).pluck(:event_bracket_id)
     event_brackets = EventContestCategoryBracketDetail.where(:id => ids)
     json_response_serializer_collection(event_brackets, EventBracketSerializer)
   end
@@ -2062,7 +2063,8 @@ class EventsController < ApplicationController
 
   def taken_brackets_params
     params.require('category_id')
-    params.permit('event_id', 'category_id')
+    params.require('contest_id')
+    params.permit('event_id', 'category_id', 'contest_id')
   end
 
   def available_categories_params
