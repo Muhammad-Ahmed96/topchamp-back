@@ -2,6 +2,7 @@ class EventContestCategoryBracketsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
   before_action :set_resource, only: [:destroy]
+  before_action :set_category_resource, only: [:available]
   around_action :transactions_filter, only: [:destroy]
 
   def destroy
@@ -33,6 +34,14 @@ class EventContestCategoryBracketsController < ApplicationController
     json_response_success(t("deleted_success", model: EventContestCategory.model_name.human), true)
   end
 
+
+  def available
+    used_ids = Tournament.where(:event_id => @event.id).where(:category_id => @category.category_id).pluck(:event_bracket_id)
+    brackets = EventContestCategoryBracketDetail.where(:event_contest_category_bracket_id => @category.id)
+                   .where.not(:id => used_ids)
+    json_response_serializer_collection(brackets, EventContestCategoryBracketDetailSerializer)
+  end
+
   private
 
   def set_resource
@@ -40,6 +49,12 @@ class EventContestCategoryBracketsController < ApplicationController
     @contest = @event.contests.where(:id => params[:event_contest_id]).first!
     @category = @contest.categories.where(:category_id => params[:event_contest_category_id] ).first!
     @bracket = @category.brackets.where(:bracket_type => params[:id] ).first!
+  end
+
+  def set_category_resource
+    @event = Event.find(params[:event_id])
+    @contest = @event.contests.where(:id => params[:event_contest_id]).first!
+    @category = @contest.categories.where(:category_id => params[:event_contest_category_id] ).first!
   end
 
   def response_impossible_eliminate(message)

@@ -2,6 +2,7 @@ class EventContestCategoriesController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
   before_action :set_resource, only: [:destroy]
+  before_action :set_contest_resource, only: [:index]
   around_action :transactions_filter, only: [:destroy]
 
   def destroy
@@ -18,12 +19,21 @@ class EventContestCategoriesController < ApplicationController
     json_response_success(t("deleted_success", model: EventContestCategory.model_name.human), true)
   end
 
+  def index
+    json_response_serializer_collection(@contest.categories, EventContestCategorySingleSerializer)
+  end
+
   private
 
   def set_resource
     @event = Event.find(params[:event_id])
     @contest = @event.contests.where(:id => params[:event_contest_id]).first!
     @category = @contest.categories.where(:category_id => params[:id] ).first!
+  end
+
+  def set_contest_resource
+    @event = Event.find(params[:event_id])
+    @contest = @event.contests.where(:id => params[:event_contest_id]).first!
   end
 
   def response_impossible_eliminate(message)
