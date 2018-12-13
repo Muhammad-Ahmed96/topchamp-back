@@ -1,7 +1,7 @@
 class EventSchedulersController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_resource, only: [:create, :index, :show]
+  before_action :set_resource, only: [:create, :index, :show, :calendar]
   around_action :transactions_filter, only: [:create]
 
   swagger_path '/events/:event_id/schedules' do
@@ -139,6 +139,11 @@ class EventSchedulersController < ApplicationController
     json_response_serializer(@event.schedules.where(:id => params[:id]).first!, EventScheduleSerializer)
   end
 
+  def calendar
+    schedules = @event.schedules
+    json_response_success 'calendar', true
+  end
+
   private
 
   def schedules_params
@@ -155,5 +160,11 @@ class EventSchedulersController < ApplicationController
   def set_resource
     #apply policy scope
     @event = Event.find(params[:event_id])
+  end
+
+  def calendar_params
+    params.require(:start_date)
+    params.require(:end_date)
+    params.permit(:start_date, :end_date, :contest_id)
   end
 end
