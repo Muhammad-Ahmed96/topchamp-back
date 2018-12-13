@@ -3,7 +3,7 @@ class EventSerializer < ActiveModel::Serializer
              :requires_access_code, :event_url, :is_event_sanctioned, :sanctions, :organization_name, :organization_url,
              :is_determine_later_venue, :access_code, :status, :creator_user_id, :valid_to_activate, :sport_regulator_id,
              :elimination_format_id, :bracket_by, :bracket, :scoring_option_match_1_id, :scoring_option_match_2_id, :sport_regulator_id,
-             :awards_for, :awards_through, :awards_plus
+             :awards_for, :awards_through, :awards_plus, :reminder
   has_many :sports, serializer: SportSerializer
   has_many :regions, serializer: RegionSerializer
   has_many :schedules, serializer: EventScheduleSerializer

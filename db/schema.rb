@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_10_02_022213) do
+ActiveRecord::Schema.define(version: 2018_12_13_183903) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -96,6 +96,27 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.index ["event_id"], name: "index_categories_events_on_event_id"
   end
 
+  create_table "certified_scores", force: :cascade do |t|
+    t.integer "match_id"
+    t.integer "event_id"
+    t.integer "tournament_id"
+    t.integer "round_id"
+    t.integer "team_a_id"
+    t.integer "team_b_id"
+    t.integer "team_winner_id"
+    t.integer "user_id"
+    t.datetime "date_at"
+    t.string "signature_file_name"
+    t.string "signature_content_type"
+    t.integer "signature_file_size"
+    t.datetime "signature_updated_at"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_certified_scores_on_deleted_at"
+  end
+
   create_table "contact_informations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "country_code_phone"
@@ -112,6 +133,14 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
     t.string "country"
+  end
+
+  create_table "devices", force: :cascade do |t|
+    t.integer "user_id"
+    t.text "token"
+    t.string "platform"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "elimination_formats", force: :cascade do |t|
@@ -281,17 +310,19 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.date "end_date"
     t.time "start_time"
     t.time "end_time"
-    t.float "cost"
+    t.float "cost", default: 0.0
     t.integer "capacity"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "category_id"
     t.string "venue"
+    t.string "currency"
   end
 
   create_table "event_schedules_players", id: false, force: :cascade do |t|
-    t.bigint "player_id", null: false
+    t.bigint "player_id"
     t.bigint "event_schedule_id", null: false
+    t.bigint "participant_id"
     t.index ["event_schedule_id"], name: "index_event_schedules_players_on_event_schedule_id"
     t.index ["player_id"], name: "index_event_schedules_players_on_player_id"
   end
@@ -373,6 +404,7 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.boolean "accepted", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "category_id"
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -428,6 +460,8 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.date "date"
     t.string "start_time"
     t.string "end_time"
+    t.integer "loser_match_a"
+    t.integer "loser_match_b"
   end
 
   create_table "medical_informations", force: :cascade do |t|
@@ -452,6 +486,21 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.index ["deleted_at"], name: "index_participants_on_deleted_at"
   end
 
+  create_table "payment_transaction_details", force: :cascade do |t|
+    t.bigint "payment_transaction_id"
+    t.bigint "event_schedule_id"
+    t.bigint "attendee_type_id"
+    t.bigint "event_bracket_id"
+    t.bigint "category_id"
+    t.bigint "event_id"
+    t.string "type_payment"
+    t.float "amount", default: 0.0
+    t.float "tax", default: 0.0
+    t.float "discount", default: 0.0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "payment_transactions", force: :cascade do |t|
     t.string "payment_transaction_id"
     t.string "transactionable_type"
@@ -463,10 +512,15 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.string "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "event_bracket_id"
-    t.bigint "category_id"
     t.bigint "event_id"
-    t.string "type_payment"
+    t.float "authorize_fee", default: 0.0
+    t.float "app_fee", default: 0.0
+    t.float "director_receipt", default: 0.0
+    t.float "account", default: 0.0
+    t.float "discount", default: 0.0
+    t.boolean "for_refund", default: false
+    t.boolean "is_refund", default: false
+    t.float "refund_total", default: 0.0
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 
@@ -507,6 +561,33 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.index ["team_id"], name: "index_players_teams_on_team_id"
   end
 
+  create_table "refund_transactions", force: :cascade do |t|
+    t.string "payment_transaction_id"
+    t.float "amount"
+    t.string "type_refund"
+    t.string "card_number"
+    t.string "expiration_date"
+    t.string "routing_number"
+    t.string "account_number"
+    t.string "name_on_account"
+    t.string "bank_name"
+    t.string "account_type"
+    t.string "e_check_type"
+    t.string "check_number"
+    t.bigint "from_user_id"
+    t.bigint "to_user_id"
+    t.string "status", default: "pending"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "reference_id"
+    t.float "app_fee", default: 0.0
+    t.float "authorize_fee", default: 0.0
+    t.float "total", default: 0.0
+    t.bigint "event_id"
+    t.index ["deleted_at"], name: "index_refund_transactions_on_deleted_at"
+  end
+
   create_table "regions", force: :cascade do |t|
     t.string "name"
     t.string "base"
@@ -523,6 +604,7 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.string "status", default: "stand_by"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "round_type", default: "winners"
   end
 
   create_table "scores", force: :cascade do |t|
@@ -629,6 +711,8 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.datetime "updated_at", null: false
     t.bigint "category_id"
     t.datetime "deleted_at"
+    t.integer "general_score", default: 0
+    t.integer "match_won", default: 0
     t.index ["deleted_at"], name: "index_teams_on_deleted_at"
   end
 
@@ -641,6 +725,15 @@ ActiveRecord::Schema.define(version: 2018_10_02_022213) do
     t.datetime "updated_at", null: false
     t.string "matches_status", default: "not_complete"
     t.integer "teams_count", default: 0
+    t.integer "winner_team_id"
+  end
+
+  create_table "user_event_reminders", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "event_id"
+    t.boolean "reminder", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|

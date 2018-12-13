@@ -1,7 +1,7 @@
 class TournamentsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :details]
+  before_action :set_event, only: [:players_list, :create, :teams_list, :rounds_list, :matches, :details, :update_matches]
 
   swagger_path '/events/:event_id/tournaments/players' do
     operation :get do
@@ -217,10 +217,74 @@ class TournamentsController < ApplicationController
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:category_id => players_list_params[:category_id]).first_or_create!
     if rounds_params.present?
-      tournament.sync_matches!(rounds_params)
+      tournament.sync_matches!(rounds_params, losers_params)
     end
 
     json_response_serializer(tournament, TournamentSerializer)
+  end
+  swagger_path '/events/:event_id/tournaments/update_matches' do
+    operation :put do
+      key :summary, 'Edit matches'
+      key :description, 'Event Catalog'
+      key :operationId, 'tournamentsMatchEdit'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :event_id
+        key :in, :path
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :category_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+      parameter do
+        key :name, :bracket_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+        key :format, :int64
+      end
+
+      parameter do
+        key :name, :rounds
+        key :in, :body
+        key :required, true
+        key :type, :array
+        items do
+          key :'$ref', :RoundInput
+        end
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def update_matches
+    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
+                     .where(:category_id => players_list_params[:category_id]).first
+    if rounds_params.present? and tournament.present?
+      tournament.update_match!(rounds_params, losers_params)
+    end
+
+    json_response_success('Matches edited', true)
   end
 
   swagger_path '/tournaments' do
@@ -424,7 +488,7 @@ class TournamentsController < ApplicationController
   def rounds_list
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:category_id => players_list_params[:category_id]).first_or_create!
-    json_response_serializer_collection(tournament.rounds, RoundSingleSerializer)
+    json_response_serializer(tournament, TournamentRoundsSerializer)
   end
 
 
@@ -500,6 +564,14 @@ class TournamentsController < ApplicationController
     unless params[:rounds].nil? and !params[:rounds].kind_of?(Array)
       params[:rounds].map do |p|
         ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
+      end
+    end
+  end
+
+  def losers_params
+    unless params[:rounds_losers].nil? and !params[:rounds_losers].kind_of?(Array)
+      params[:rounds_losers].map do |p|
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :loser_match_a, :loser_match_b, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
       end
     end
   end

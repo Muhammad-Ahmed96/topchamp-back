@@ -233,6 +233,7 @@ en:
         invalid_inforamtion: "Invalid information partner"
         valid: "Valid partner"
         already_partner: "You already have a partner for this category"
+        already_partner_sender: "That player already has a partner"
   payments:
     declined: "Your card was declined. In order to resolve the issue, you will need to contact your bank"
   events:
@@ -240,3 +241,6 @@ en:
       invalid: "Invalid discount code"
       limit_reached: "Your discount code has reached its usage limit"
       valid: "Valid"
+    certifi_score: "You won! Please certify your score"
+    reminder_notification: "%{event_title} starts in five days. Get ready!"
+

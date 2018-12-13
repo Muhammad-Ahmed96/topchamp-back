@@ -499,13 +499,28 @@ class InvitationsController < ApplicationController
         if for_validate_partner
           player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
           if player.present?
-            @invitation.brackets.each do |item|
+            @invitation.brackets.where(:category_id => category_id).each do |item|
               if player.have_partner?(category_id,  item.event_bracket_id)
-                return json_response_error([t("player.partner.validation.already_partner")])
+                @invitation.status = "declined"
+                @invitation.save!(:validate => false)
+                return json_response_error([t("player.partner.validation.already_partner")], 422)
               end
             end
           else
-            return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+            return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
+          end
+
+          player_sender = Player.where(user_id: @invitation.sender_id).where(event_id: event.id).first
+          if player_sender.present?
+            @invitation.brackets.where(:category_id => category_id).each do |item|
+              if player_sender.have_partner?(category_id,  item.event_bracket_id)
+                @invitation.status = "declined"
+                @invitation.save!(:validate => false)
+                return json_response_error([t("player.partner.validation.already_partner_sender")], 422)
+              end
+            end
+          else
+            return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
           end
         end
         types = enroll_params[:attendee_types] #@invitation.attendee_type_ids
@@ -524,18 +539,58 @@ class InvitationsController < ApplicationController
           types = types + participant.attendee_type_ids.to_a
           participant.attendee_type_ids = types
         end
+        @bracket_description = ""
         @invitation.status = :accepted
         @invitation.save!
         if @invitation.invitation_type == "partner_mixed" or @invitation.invitation_type == "partner_double"
           #ckeck partner brackets
-          @invitation.brackets.each do |item|
+          @invitation.brackets.where(:category_id => category_id).each do |item|
             result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
             if result == false
               @invitation.status = :pending_confirmation
               @invitation.save!
-              return json_response_error([t("player.partner.validation.invalid_inforamtion")])
+              return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
+            end
+            case event.bracket_by
+            when "age"
+              if item.age.present?
+                @bracket_description = "Age: #{item.age}"
+              else
+                @bracket_description = "Young age: #{item.young_age}, Old age: #{item.old_age}"
+              end
+            when "skill"
+              @bracket_description = "Lowest skill: #{item.lowest_skill}, Highest skill: #{item.highest_skill}"
+            when "skill_age"
+              main_bracket =  item.brackets.where(:id => item.event_bracket_id).first
+              if main_bracket.nil?
+                main_bracket = item
+              end
+              if item.age.present?
+                age = "Age: #{item.age}"
+              else
+                age = "Young age: #{item.young_age}, Old age: #{item.old_age}"
+              end
+              @bracket_description = "Lowest skill: #{main_bracket.lowest_skill}, Highest skill: #{main_bracket.highest_skill} [#{age}]"
+            when "age_skill"
+              main_bracket =  item.brackets.where(:id => item.event_bracket_id).first
+              if main_bracket.nil?
+                main_bracket = item
+              end
+              skill = "Lowest skill: #{item.lowest_skill}, Highest skill: #{item.highest_skill}"
+              if item.age.present?
+                @bracket_description = "Age: #{main_bracket.age} [#{skill}]"
+              else
+                @bracket_description = "Young age: #{main_bracket.young_age}, Old age: #{main_bracket.old_age} [#{skill}]"
+              end
             end
           end
+
+          topic = "user_chanel_#{@invitation.sender_id}"
+          user_to = @invitation.user
+          #topic = 'user_chanel_3'
+          options = {data: {type:"accept_invitation", id: @invitation.id}, collapse_key: "invitation", notification: {
+              body: "#{user_to.first_name}, #{user_to.last_name}, has accepted your invitation on Tournament #{event.title} and Bracket #{@bracket_description}", sound: 'default'}}
+          send_push_topic(topic, options)
         end
       end
     end
@@ -706,13 +761,20 @@ class InvitationsController < ApplicationController
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
     selector = [1, 0, "1", "0"].include?(partner_params[:for_registered]) ? partner_params[:for_registered] : nil
     #set brackets
-    category_ids = []
+    category_id = 0
     if type == "partner_mixed"
-      category_ids = Category.mixed_categories
+      category_id = Category.single_mixed_category
     elsif type == "partner_double"
+      if @resource.present?
+        if @resource.gender == "Male"
+          category_id = Category.single_men_double_category
+        elsif @resource.gender == "Female"
+          category_id = Category.single_women_double_category
+        end
+      end
       category_ids = Category.doubles_categories
     end
-    brackets = player.brackets.where(:category_id => category_ids).all
+    brackets = player.brackets.where(:category_id => category_id).all
     if brackets.count <= 0
       return response_no_category
     end
@@ -741,9 +803,9 @@ class InvitationsController < ApplicationController
       @invitation.save!
       @invitation.send_mail(true)
       brackets.each do |item|
-        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id).first
+        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id, :category_id => category_id).first
         if saved.nil?
-          @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id})
+          @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id, :category_id => category_id})
         end
       end
     else
@@ -799,7 +861,7 @@ class InvitationsController < ApplicationController
       }
       @invitations.each {|invitation|
         event = invitation.event
-        if invitation.invitation_type == "sing_up" or (event.present? and (event.registration_rule.nil? or event.registration_rule.allow_group_registrations) or event.creator_user_id == @resource.id)
+        if invitation.invitation_type == "date" or invitation.invitation_type == "sing_up" or (event.present? and (event.registration_rule.nil? or event.registration_rule.allow_group_registrations) or event.creator_user_id == @resource.id)
           invitation.send_mail
         else
           return render_not_permit_error

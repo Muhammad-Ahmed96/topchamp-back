@@ -6,6 +6,8 @@ class EventSchedule < ApplicationRecord
   belongs_to :category,  optional: true
   has_and_belongs_to_many :players
 
+  has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
+
   validates :cost, numericality: true, :allow_nil => true
   validates :capacity, numericality: {only_integer: true}, :allow_nil => true
 

@@ -1,4 +1,5 @@
 class ApplicationRecord < ActiveRecord::Base
+  delegate :t, to: I18n
   self.abstract_class = true
 
   scope :my_order, lambda{ |column, direction = "desc"| order "#{column} #{direction}" if column.present? }

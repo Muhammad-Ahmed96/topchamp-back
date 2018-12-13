@@ -3,7 +3,7 @@ class EventsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_resource, only: [:update, :destroy, :activate, :inactive, :create_venue, :payment_information,
                                       :payment_method, :discounts, :import_discount_personalizeds, :tax, :refund_policy,
-                                      :service_fee, :venue, :details, :categories]
+                                      :service_fee, :venue, :details, :categories, :taken_brackets]
   around_action :transactions_filter, only: [:update, :create, :create_venue, :discounts, :import_discount_personalizeds,
                                              :details, :activate]
 
@@ -1604,10 +1604,16 @@ class EventsController < ApplicationController
 
   def available_categories
     @event =  Event.find(params[:id])
-    player = Player.where(user_id: @resource.id).where(event_id: @event.id).first
+    if  available_categories_params[:player_id].present?
+      player = Player.find(available_categories_params[:player_id])
+      user = player.user
+    else
+      user = @resource
+      player = Player.where(user_id: user.id).where(event_id: @event.id).first
+    end
     in_categories_id = player.present? ? player.brackets.pluck(:category_id): []
     response_data = []
-    gender = @resource.gender
+    gender = user.gender
     event_categories = @event.categories.where.not(:category_id => in_categories_id)
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
@@ -1621,11 +1627,11 @@ class EventsController < ApplicationController
       event_categories = event_categories.only_women
     end
     #validate bracket
-    age = @resource.age
-    skill = @resource.skill_level
+    age = user.age
+    skill = user.skill_level
     event_categories.each do |item|
       item.player = player
-      item.user = @resource
+      item.user = user
     end
     event_categories.to_a.each do |item|
       if @event.bracket_by == "age" or @event.bracket_by == "skill"
@@ -1784,6 +1790,46 @@ class EventsController < ApplicationController
     json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount, :total => amount})
   end
 
+  swagger_path '/events/:id/taken_brackets' do
+    operation :get do
+      key :summary, 'Events taken brackets'
+      key :description, 'Get taken brackets'
+      key :operationId, 'eventsTakenBrackets'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :category_id
+        key :in, :query
+        key :required, true
+        key :type, :integer
+      end
+      response 200 do
+        key :name, :brackets
+        key :description, 'brackets'
+        schema do
+          key :type, :array
+          items do
+            key :'$ref', :EventBracket
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+  def taken_brackets
+    ids = @event.tournaments.where(:category_id => taken_brackets_params[:category_id]).pluck(:event_bracket_id)
+    event_brackets = EventBracket.where(:id => ids)
+    json_response_serializer_collection(event_brackets, EventBracketSerializer)
+  end
+
   private
 
   def resource_params
@@ -1928,5 +1974,14 @@ class EventsController < ApplicationController
 
   def subscribe_params
     params.permit(:discount_code, :brackets_count)
+  end
+
+  def taken_brackets_params
+    params.require('category_id')
+    params.permit('event_id', 'category_id')
+  end
+
+  def available_categories_params
+    params.permit('player_id', 'user_id')
   end
 end

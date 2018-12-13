@@ -9,6 +9,12 @@ class Event < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
 
+  attr_accessor :reminder
+ # attr_accessor :gross_income
+ # attr_accessor :net_income
+  #attr_accessor :refund
+  #attr_accessor :balance
+
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions
   has_and_belongs_to_many :internal_categories, :join_table => "categories_events", class_name: "Category"
@@ -30,6 +36,7 @@ class Event < ApplicationRecord
   belongs_to :elimination_format, optional: true
   has_many :tournaments
   has_many :teams
+  has_many :event_reminders, :class_name => 'UserEventReminder'
 
 
   has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
@@ -66,6 +73,7 @@ class Event < ApplicationRecord
 
   scope :in_status, lambda {|status| where status: status if status.present?}
   scope :only_directors, lambda {|id| joins(participants: [:attendee_types]).merge(Participant.where :user_id => id).merge(AttendeeType.where :id => AttendeeType.director_id) if id.present?}
+  scope :only_creator, lambda {|id| where(:creator_user_id => id) if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
   scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
@@ -638,7 +646,7 @@ class Event < ApplicationRecord
 
   #Attach creator
   def save_creator!
-    if Current.user
+    if Current.user and !self.creator_user_id.present?
       self.creator_user_id = Current.user.id
     end
   end
@@ -720,6 +728,28 @@ class Event < ApplicationRecord
     #return  enroll_fee - ((discount * enroll_fee) / 100)
   end
 
+#get if current user reminder event
+  def reminder
+    reminder = false
+    user = Current.user
+    unless user.nil?
+      event_reminder = user.event_reminders.where(:event_id => self.id).first
+      unless event_reminder.nil?
+        reminder = event_reminder.reminder
+      end
+    end
+    reminder
+  end
+
+  def send_notification
+    event_reminders = self.event_reminders.where(:reminder => true).all
+    event_reminders.each do |reminder|
+      fcm = FCM.new(Rails.configuration.fcm_api_key)
+      options = {data: {type:"event_reminder", id: self.id}, collapse_key: "updated_event", notification: {
+          body: t("events.reminder_notification", event_title: self.title), sound: 'default'}}
+      response = fcm.send_to_topic("user_chanel_#{reminder.user_id}", options)
+    end
+  end
   private
 
   #validate a url
