@@ -140,8 +140,20 @@ class EventSchedulersController < ApplicationController
   end
 
   def calendar
-    schedules = @event.schedules
-    json_response_success 'calendar', true
+
+    my_calendar = EventCalendar.new
+    my_calendar.brackets = EventContestCategoryBracketDetail.start_date_between(calendar_params[:start_date], calendar_params[:end_date])
+    .where(:event_id => @event.id)
+
+    unless calendar_params[:contest_id].nil?
+      brackest = brackest.where(:contest_id => calendar_params[:contest_id])
+    end
+
+    my_calendar.schedules = EventSchedule.where(:event_id => @event.id).start_date_between(calendar_params[:start_date], calendar_params[:end_date])
+    .where.not(:agenda_type_id => AgendaType.competition_id)
+    #json_response_serializer_collection(schedules, EventScheduleSerializer)
+    #json_response_serializer_collection(brackest, EventContestCategoryBracketDetailSerializer)
+    json_response_serializer(my_calendar, EventCalendarSerializer)
   end
 
   private
