@@ -1571,8 +1571,8 @@ class EventsController < ApplicationController
                       child_data = {:id => item_child[:id], :quantity => item_child[:quantity], :age => item_child[:age], :lowest_skill => item_child[:lowest_skill],
                                     :highest_skill => item_child[:highest_skill], :young_age => item_child[:young_age],
                                     :old_age => item_child[:old_age], :category_id => category.category_id, :event_id => @event.id,
-                                    :contest_id => contest.id,  :start_date => item_details[:start_date], :time_start => item_details[:time_start],
-                                    :time_end => item_details[:time_end]}
+                                    :contest_id => contest.id,  :start_date => item_child[:start_date], :time_start => item_child[:time_start],
+                                    :time_end => item_child[:time_end]}
                       child = detail.brackets.where(:id => child_data[:id]).update_or_create!(child_data)
                       child_ids << child.id
                     end
@@ -2032,7 +2032,7 @@ class EventsController < ApplicationController
         ActionController::Parameters.new(p.to_unsafe_h).permit(:id, :elimination_format_id, :scoring_option_match_1_id,
                                                                :scoring_option_match_2_id, :sport_regulator_id, categories: [:category_id, :bracket_types, brackets: [:id, :awards_for, :awards_through, :awards_plus, :bracket_type,
                                                                                                                                                                       details: [:id, :age, :lowest_skill,
-                                                                                                                                                                                :highest_skill, :young_age, :old_age, :quantity, brackets: [:id, :age, :lowest_skill, :highest_skill, :young_age, :old_age, :quantity]]]])
+                                                                                                                                                                                :highest_skill, :young_age, :old_age, :quantity, brackets: [:id, :age, :lowest_skill, :highest_skill, :young_age, :old_age, :quantity, :start_date, :time_start, :time_end]]]])
       end
     end
   end
