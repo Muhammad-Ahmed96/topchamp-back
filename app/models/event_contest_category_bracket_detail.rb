@@ -23,6 +23,7 @@ class EventContestCategoryBracketDetail < ApplicationRecord
 
   scope :skill_filter, lambda {|skill| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill).or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
   scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
+  scope :start_date_between, lambda {|start_date, end_date| where("start_date >= ? AND start_date <= ?", start_date, end_date ) if start_date.present? and end_date.present?}
 
 
   def validate_to_delete
@@ -107,8 +108,8 @@ class EventContestCategoryBracketDetail < ApplicationRecord
       if free_spaces.present? and free_spaces > 0
 
         url = Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
-        url = url.gsub "{event_bracket_id}", bracket.id.to_s
-        url = url.gsub "{category_id}", category.id.to_s
+        url = url.gsub "{event_bracket_id}", self.id.to_s
+        url = url.gsub "{category_id}", self.category_id.to_s
         url = Invitation.short_url url
         users = User.joins(:wait_lists).merge(WaitList.where(:category_id => self.category_id).where(:event_bracket_id => self.id)
                                                   .where(:event_id => event.id)).all

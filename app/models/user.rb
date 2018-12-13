@@ -520,4 +520,11 @@ class User < ApplicationRecord
     end
   end
 
+  protected
+
+  def get_contest
+    contest_id = PlayerBracket.joins(:player).merge(Player.where(:user_id => self.id)).pluck(:contest_id)
+    EventContest.where(:id => contest_id)
+  end
+
 end
