@@ -1,5 +1,5 @@
 class TeamScoreSerializer < ActiveModel::Serializer
-  attributes :id, :name
+  attributes :id, :name, :general_score, :match_won
   has_many :players, :serializer => PlayerSingleSerializer
   has_many :scores, :serializer => ScoreSingleSerializer
   def scores

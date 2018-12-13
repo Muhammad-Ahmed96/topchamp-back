@@ -1,9 +1,11 @@
 class EventBracket < ApplicationRecord
   include Swagger::Blocks
   scope :only_parent, -> {where :event_bracket_id => nil}
+  #scope :without_tournament, lambda {|id| joins(:tournament).merge(Tournament.where.not(:event_bracket_id => id))}
   after_destroy :on_destroy
 
   belongs_to :event
+  has_one :tournament
   has_one :free, :class_name => "EventBracketFree"
   attr_accessor :status
   attr_accessor :user_age

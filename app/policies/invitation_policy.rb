@@ -44,7 +44,11 @@ class InvitationPolicy < ApplicationPolicy
 
   class Scope < Scope
     def resolve
-      scope.joins(:event).merge(Event.where :creator_user_id => user.id)
+      if user.sysadmin?
+        scope
+      else
+        scope.joins(:event).merge(Event.where :creator_user_id => user.id)
+      end
     end
   end
 end

@@ -267,6 +267,9 @@ class Player < ApplicationRecord
     if tournament.present?
       tournament.update_internal_data
     end
+
+    #sent to refund charges
+    self.payment_transactions.update!({:for_refund => true})
   end
 
   def inactivate
@@ -287,7 +290,7 @@ class Player < ApplicationRecord
 
   def is_event_paid?
     result = false
-    if self.payment_transactions.where(:type_payment => "event").where(:status => 1).count > 0
+    if self.payment_transactions.joins(:details).merge(Payments::PaymentTransactionDetail.where(:type_payment => "event_enroll")).where(:status => 1).count > 0
       result = true
     end
     return result

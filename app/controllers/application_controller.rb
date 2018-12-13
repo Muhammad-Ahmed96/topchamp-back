@@ -37,6 +37,20 @@ class ApplicationController < ActionController::API
     DeviseTokenAuth.redirect_whitelist && !DeviseTokenAuth::Url.whitelisted?(@redirect_url)
   end
 
+  def send_push(registration_ids, options)
+    if registration_ids.length > 0
+      fcm = FCM.new(Rails.configuration.fcm_api_key)
+      response = fcm.send(registration_ids, options)
+    end
+  end
+
+  def send_push_topic(topic, options)
+      fcm = FCM.new(Rails.configuration.fcm_api_key)
+      response = fcm.send_to_topic(topic, options)
+  end
+
+
+
   private
 
   def user_not_authorized(exception)

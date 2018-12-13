@@ -71,66 +71,92 @@ class Payments::CheckOutController < ApplicationController
   end
 
   def event
+    is_test = false #change to false for checkout event on authorize.net
     event = Event.find(event_params[:event_id])
     if event.is_paid == false
       director = event.director
       customer = Payments::Customer.get(@resource)
       config = Payments::ItemsConfig.get_event
       amount = 0
+      total_discount = 0
+      total_fee = 0
       fees = EventFee.first
-      personalized_discount = EventPersonalizedDiscount.where(:code => subscribe_params[:code]).where(:email => director.email).first
-      if subscribe_params[:code].present? and personalized_discount.nil?
-        return response_invalid
-      elsif subscribe_params[:code].present? and personalized_discount.usage > 0
-        return response_usage
-      end
-      if fees.present?
-        amount = fees.base_fee
-      end
-      if personalized_discount.present?
-        if personalized_discount.is_discount_percent
-          amount =  amount - ((personalized_discount.discount * amount) / 100)
-        else
-          amount =  amount - personalized_discount.discount
+      if fees.present? and fees.base_fee > 0 and is_test == false
+        personalized_discount = EventPersonalizedDiscount.where(:code => event_params[:code]).where(:email => director.email).first
+        if event_params[:code].present? and personalized_discount.nil?
+          return response_invalid
+        elsif event_params[:code].present? and personalized_discount.usage > 0
+          return response_usage
         end
-        personalized_discount.usage = general_discount.usage + 1
-        personalized_discount.save!(:validate => false)
-      end
-
-      if fees.present?
-        if fees.is_transaction_fee_percent
-          amount =  amount + ((fees.transaction_fee * amount) / 100)
-        else
-          amount = amount + fees.transaction_fee
+        if fees.present?
+          amount = fees.base_fee
         end
-      end
+        if personalized_discount.present?
+          if personalized_discount.is_discount_percent
+            total_discount =  ((personalized_discount.discount * amount) / 100)
+            amount = amount - total_discount
+          else
+            total_discount = personalized_discount.discount
+            amount = amount - total_discount
+          end
+          personalized_discount.usage = general_discount.usage + 1
+          personalized_discount.save!(:validate => false)
+        end
 
-      items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
-                taxable: config[:taxable]}]
-      tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
-      response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
-                                           config[:unit_price], items, tax)
-      if response.messages.resultCode == MessageTypeEnum::Ok
-        #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
-        if response.transactionResponse.responseCode != "1"
-          case response.transactionResponse.responseCode
-          when "2"
-            return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+        if fees.present?
+          if fees.is_transaction_fee_percent
+            total_fee =  ((fees.transaction_fee * amount) / 100)
+            amount = amount + total_fee
+          else
+            total_fee = fees.transaction_fee
+            amount = amount + total_fee
           end
         end
-        if response.transactionResponse.cvvResultCode != "M"
-          return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
+        #only for test
+        #amount = 1
+        items = [{id: "#{config[:id]}-#{event.id}", name: config[:name], description: config[:description], quantity: 1, unit_price: amount,
+                  taxable: config[:taxable]}]
+        tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
+        #only for test
+        #tax[:amount] = 0
+        #
+        amount = amount + tax[:amount]
+        response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
+                                             amount, items, tax)
+        if response.messages.resultCode == MessageTypeEnum::Ok
+          #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
+          if response.transactionResponse.responseCode != "1"
+            case response.transactionResponse.responseCode
+            when "2"
+              return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+            end
+          end
+          if response.transactionResponse.cvvResultCode != '' and response.transactionResponse.cvvResultCode != "M"
+            return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
+          end
+        else
+          if response.transactionResponse != nil && response.transactionResponse.errors != nil
+            return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+          else
+            return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+          end
         end
       else
-        if response.transactionResponse != nil && response.transactionResponse.errors != nil
-          return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
-        else
-          return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
-        end
+        tax = {:amount => ((config[:tax] * amount) / 100), :name => "tax", :description => "Tax venue top champ"}
+        response = JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
       end
 
-      event.create_payment_transaction!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => config[:unit_price], :tax => tax[:amount],
-                                         :description => "Event payment"})
+      authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+      account = amount - authorize_fee
+      app_fee = total_fee
+      director_receipt = amount - (authorize_fee + app_fee)
+      paymentTransaction = event.create_payment_transaction!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
+                                                               :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "EventPayment",
+                                                               :event_id => event.id, :discount => total_discount, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                               :director_receipt => director_receipt, :account => account)
+
+      paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),
+                                          :event_id => event.id, :type_payment => "event_payment", :discount => total_discount})
       event.is_paid = true
       event.status = :Active
       if personalized_discount
@@ -139,12 +165,13 @@ class Payments::CheckOutController < ApplicationController
       end
       event.save!(:validate => false)
       event.public_url
-      json_response_data([:transaction => response.transactionResponse.transId ], :ok)
+      json_response_data([:transaction => response.transactionResponse.transId], :ok)
     else
       json_response_error(["event is already paid"], 401)
     end
 
   end
+
   swagger_path '/payments/check_out/subscribe' do
     operation :post do
       key :summary, 'Check out brackets'
@@ -204,6 +231,7 @@ class Payments::CheckOutController < ApplicationController
       end
     end
   end
+
   def subscribe
     #only for test
     #@resource = User.find(params[:user_id])
@@ -215,6 +243,8 @@ class Payments::CheckOutController < ApplicationController
     config = Payments::ItemsConfig.get_bracket
     items = []
     amount = 0
+    tax_total = 0
+    discounts_total = 0
     tax_for_registration = 0
     tax_for_bracket = 0
     enroll_fee = event.registration_fee
@@ -229,14 +259,19 @@ class Payments::CheckOutController < ApplicationController
     #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
 
     if personalized_discount.present?
-      enroll_fee =  enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
-     # bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+      discounts_total = ((personalized_discount.discount * enroll_fee) / 100)
+      enroll_fee = enroll_fee - discounts_total
+      # bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
     elsif general_discount.present? and general_discount.limited > general_discount.applied
-      enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
+      discounts_total = ((general_discount.discount * enroll_fee) / 100)
+      enroll_fee = enroll_fee - discounts_total
       #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
       general_discount.applied = general_discount.applied + 1
       general_discount.save!(:validate => false)
     end
+    #only for test
+    #enroll_fee = 1
+    #bracket_fee = 1
     #first item event fee
     item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: enroll_fee,
             taxable: true}
@@ -250,7 +285,6 @@ class Payments::CheckOutController < ApplicationController
       end
     end
     amount += enroll_fee
-    customer = Payments::Customer.get(@resource)
     #set tax of event
     tax = nil
     #todo review process
@@ -261,16 +295,22 @@ class Payments::CheckOutController < ApplicationController
         tax_for_bracket = ((event.tax.tax * bracket_fee) / 100)
       else
         tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to enroll"}
-        tax_for_registration = event.tax.tax/ (1 + (brackets.length))
-        tax_for_bracket = event.tax.tax/ (1 + (brackets.length))
+        tax_for_registration = event.tax.tax / (1 + (brackets.length))
+        tax_for_bracket = event.tax.tax / (1 + (brackets.length))
       end
 
     end
     if tax.present?
-     amount = amount + tax[:amount]
+      tax_total = tax[:amount]
+      amount = amount + tax_total
     end
     # no payment if items is empty
+    # Comment on test
+    # Only for test
+    #amount = 1
+    #tax[:amount] = 1
     if items.length > 0
+      customer = Payments::Customer.get(@resource)
       amount = number_with_precision(amount, precision: 2)
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
                                            amount, items, tax)
@@ -282,7 +322,7 @@ class Payments::CheckOutController < ApplicationController
             return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
           end
         end
-        if response.transactionResponse.cvvResultCode != "M"
+        if response.transactionResponse.cvvResultCode != '' and response.transactionResponse.cvvResultCode != "M"
           return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
         end
       else
@@ -293,26 +333,186 @@ class Payments::CheckOutController < ApplicationController
         end
       end
     end
-    #response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+    # end Comment on test
+    #only for test
+    # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
-    brackets.each do |item|
-      player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
-                                           :description => "Bracket subscribe payment", :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
-                                          :event_id => player.event_id, :type_payment => "bracket"})
-    end
 
-    player.payment_transactions.create!({:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id, :amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
-                                         :description => "Event subscribe payment", :event_id => player.event_id, :type_payment => "event"})
+    fees = EventFee.first
+    app_fee = 0.0
+    amount = amount.to_f
+    if fees.present?
+      if fees.is_transaction_fee_percent
+        app_fee =  ((fees.transaction_fee * amount) / 100)
+      else
+        app_fee = fees.transaction_fee
+      end
+    end
+    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+    account = amount - authorize_fee
+
+    director_receipt = amount - (authorize_fee + app_fee)
+
+    paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
+                                                             :amount => amount, :tax => number_with_precision(tax_total, precision: 2), :description => "TransactionForSubscribe",
+                                                             :event_id => player.event_id, :discount => discounts_total, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                             :director_receipt => director_receipt, :account => account)
+    brackets.each do |item|
+      paymentTransaction.details.create!({:amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
+                                  :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
+                                  :event_id => player.event_id, :type_payment => "bracket"})
+    end
+    paymentTransaction.details.create!({:amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
+                                :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id})
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
-        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id  => brackets.pluck(:category_id))
-        .update(:payment_transaction_id =>  response.transactionResponse.transId)
+        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id => brackets.pluck(:category_id))
+        .update(:payment_transaction_id => response.transactionResponse.transId)
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 
+  swagger_path '/payments/check_out/schedule' do
+    operation :post do
+      key :summary, 'Check out schedule'
+      key :description, 'Check out schedule'
+      key :operationId, 'paymentsSchedule'
+      key :produces, ['application/json',]
+      key :tags, ['schedule check out']
+      parameter do
+        key :name, :event_schedule_id
+        key :in, :body
+        key :required, true
+        key :type, :integer
+      end
+      parameter do
+        key :name, :card_id
+        key :description, 'customerPaymentProfileId of card'
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      parameter do
+        key :name, :cvv
+        key :in, :body
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, ''
+        schema do
+          key :'$ref', :SuccessModel
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def schedule
+    schedule = EventSchedule.find(schedule_params[:event_schedule_id])
+    event = schedule.event
+    user = @resource
+    tax_for_registration = 0
+    save_transaction = false
+    amount = schedule.cost.present? ? schedule.cost : 0
+    if amount > 0
+      save_transaction = true
+      tax = {:amount => tax_for_registration, :name => "tax", :description => "Tax event schedule"}
+
+      if event.tax.present?
+        if event.tax.is_percent
+          tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to shedule"}
+        else
+          tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to shedule"}
+        end
+
+      end
+      #for test
+      amount = 1
+      tax[:amount] = 0
+      items = [{id: "Schedule-#{schedule.id}", name: "Enroll schedule", description: "Enroll schedule", quantity: 1, unit_price: amount,
+                taxable: true}]
+      customer = Payments::Customer.get(user)
+      amount = amount + tax[:amount]
+      response = Payments::Charge.customer(customer.profile.customerProfileId, schedule_params[:card_id], schedule_params[:cvv],
+                                           amount, items, tax)
+      if response.messages.resultCode == MessageTypeEnum::Ok
+        if response.transactionResponse.responseCode != "1"
+          case response.transactionResponse.responseCode
+          when "2"
+            return json_response_error([t("payments.declined")], 422, response.transactionResponse.responseCode)
+          end
+        end
+        if response.transactionResponse.cvvResultCode != '' and response.transactionResponse.cvvResultCode != "M"
+          return json_response_error([Payments::Charge.get_message(response.transactionResponse.cvvResultCode)], 422, response.messages.messages[0].code)
+        end
+      else
+        if response.transactionResponse != nil && response.transactionResponse.errors != nil
+          return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+        else
+          return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
+        end
+      end
+    end
+
+    fees = EventFee.first
+    amount = amount.to_f
+    app_fee = 0.0
+    if fees.present?
+      if fees.is_transaction_fee_percent
+        app_fee =  ((fees.transaction_fee * amount) / 100)
+      else
+        app_fee = fees.transaction_fee
+      end
+    end
+    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+    account = amount - authorize_fee
+    director_receipt = amount - (authorize_fee + app_fee)
+    player = Player.where(user_id: user.id).where(event_id: schedule.event_id).first
+    if player.present?
+      if save_transaction
+        paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
+                                                                :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "SchedulePayment",
+                                                                :event_id => event.id, :discount => 0, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                                :director_receipt => director_receipt, :account => account)
+
+        paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),:event_schedule_id => schedule.id,
+                                            :event_id => event.id, :type_payment => "shedule", :discount => 0})
+      end
+      schedules_ids = player.schedule_ids + [schedule.id]
+      player.schedule_ids = schedules_ids
+    else
+      participant = Participant.where(:user_id => user.id).where(:event_id => schedule.event_id).first_or_create!
+      if save_transaction
+
+        paymentTransaction = participant.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
+                                                                 :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "SchedulePayment",
+                                                                 :event_id => event.id, :discount => total_discount, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                                 :director_receipt => director_receipt, :account => account)
+
+        paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),:event_schedule_id => schedule.id,
+                                            :event_id => event.id, :type_payment => "shedule", :discount => total_discount})
+      end
+      schedules_ids = participant.schedule_ids + [schedule.id]
+      participant.schedule_ids = schedules_ids
+    end
+    if save_transaction
+      json_response_data({:transaction => response.transactionResponse.transId})
+    else
+      json_response_success("You are now enrolled!", true)
+    end
+
+  end
 
   private
 
@@ -331,6 +531,13 @@ class Payments::CheckOutController < ApplicationController
     params.required(:cvv)
     params.required(:enrolls)
     params.permit(:event_id, :amount, :tax, :card_id, :cvv, :discount_code, enrolls: [:category_id, :event_bracket_id])
+  end
+
+  def schedule_params
+    params.required(:event_schedule_id)
+    params.required(:card_id)
+    params.required(:cvv)
+    params.permit(:event_schedule_id, :amount, :tax, :card_id, :cvv)
   end
 
   def player_brackets_params

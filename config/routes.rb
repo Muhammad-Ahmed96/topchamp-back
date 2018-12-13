@@ -74,6 +74,7 @@ Rails.application.routes.draw do
         get :categories
         get :available_categories
         get :get_registration_fee, :path => :registration_fee
+        get :taken_brackets
       end
       #Deleted  :create path
       resources :event_enrolls,only: [:index], :path => :enrolls do
@@ -102,6 +103,7 @@ Rails.application.routes.draw do
           get :teams_list, :path => :teams
           get :rounds_list, :path => :rounds
           get :details
+          put :update_matches
         end
       end
       resources :scores, only: [:create, :index] do
@@ -110,6 +112,13 @@ Rails.application.routes.draw do
         end
       end
       resources :wait_list, only: [:create, :index]
+      resources :event_brackets, only: [] do
+        collection do
+          get :available
+        end
+      end
+
+      resources :event_tax, only: [:index], :path => :taxes
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
@@ -174,6 +183,13 @@ Rails.application.routes.draw do
         collection do
           post :event
           post :subscribe
+          post :schedule
+        end
+      end
+      resources :refunds, only: [] do
+        collection do
+          post :credit_card
+          post :bank_account
         end
       end
     end
@@ -186,6 +202,22 @@ Rails.application.routes.draw do
         get :calculate
         delete :delete_discount
       end
+    end
+
+    resources :certify_score, only: [:create, :show, :update]
+    resources :devices, only: [:create, :destroy]
+    resources :user_event_reminder, only: [:create],  :path => :event_reminder
+
+    namespace :reports do
+      get 'events/:event_id/participant_payment', action: :participant_payment, controller: :events
+      get 'events/:event_id/registration_status', action: :registration_status, controller: :events
+      get 'events/:event_id/agenda_registration', action: :agenda_registration, controller: :events
+
+      get 'admin/:user_id/revenue', action: :revenue, controller: :admin
+      get 'admin/:user_id/report', action: :report, controller: :admin
+      get 'reports/:user_id/account', action: :account, controller: :reports
+      get 'reports/transaction', action: :transaction, controller: :reports
+      get 'director/balance', action: :balance, controller: :director
     end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html

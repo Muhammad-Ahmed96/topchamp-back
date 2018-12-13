@@ -160,7 +160,7 @@ class Invitation < ApplicationRecord
       info_android = Google::Apis::FirebasedynamiclinksV1::AndroidInfo.new # Alias the module
       info_ios = Google::Apis::FirebasedynamiclinksV1::IosInfo.new # Alias the module
       info_android.android_package_name = "com.topchamp"
-      info_ios.ios_bundle_id = "org.reactjs.native.example.topchamp"
+      info_ios.ios_bundle_id = "com.topchamp"
       info.dynamic_link_domain = "topchamp.page.link"
       info.link = url
       #info_android. = url

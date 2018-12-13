@@ -1,0 +1,2 @@
+class UserEventReminder < ApplicationRecord
+end

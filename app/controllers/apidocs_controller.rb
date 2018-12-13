@@ -75,9 +75,14 @@ class ApidocsController < ApplicationController
       PartnersController,
       Payments::CreditCardsController,
       Payments::CheckOutController,
+      Payments::RefundsController,
       WaitListController,
       ScoresController,
       EventFeesController,
+      CertifyScoreController,
+      UserEventReminderController,
+      DevicesController,
+      EventBracketsController,
       ErrorModel,
       SuccessModel,
       PaginateModel,
@@ -129,6 +134,8 @@ class ApidocsController < ApplicationController
       WaitList,
       EventFee,
       EventPersonalizedDiscount,
+      CertifiedScore,
+      Device,
       self,
   ].freeze
 

@@ -16,6 +16,8 @@ class User < ApplicationRecord
   has_many :players, :dependent => :destroy
   has_many :participants, :dependent => :destroy
   has_many :wait_lists, :dependent => :destroy
+  has_many :devices
+  has_many :event_reminders, :class_name => 'UserEventReminder'
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
@@ -424,8 +426,8 @@ class User < ApplicationRecord
     count =  Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
                  .where(:category_id => category_id).count
     team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-                     .where(:category_id => category_id).first
-    team_name = 'Team'
+                     .where(:creator_user_id => user_root_id).where(:category_id => category_id).first
+    team_name = 'Team 1'
     if team_exist.present?
       if team_exist.name.nil?
         team_name = "Team #{count + 1}"
