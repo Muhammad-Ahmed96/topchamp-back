@@ -1,6 +1,6 @@
 class EventScheduleSerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :start_date, :end_date, :start_time, :end_time, :cost, :capacity, :instructor,
-             :venue
+             :venue, :currency
 
   belongs_to :agenda_type, serializer: AgendaTypeSerializer
   belongs_to :category, serializer: CategorySerializer
