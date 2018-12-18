@@ -1,5 +1,5 @@
 class EventContestCategorySerializer < ActiveModel::Serializer
-  attributes :id, :category_id, :name,:bracket_types
+  attributes :id, :category_id, :name,:bracket_types, :has_players
   belongs_to :brackets, serializer: EventContestCategoryBracketSerializer
 
   def category_id
