@@ -140,20 +140,43 @@ class EventSchedulersController < ApplicationController
   end
 
   def calendar
-
+    response = []
     my_calendar = EventCalendar.new
-    my_calendar.brackets = EventContestCategoryBracketDetail.start_date_between(calendar_params[:start_date], calendar_params[:end_date])
+    brackest = EventContestCategoryBracketDetail.start_date_between(calendar_params[:start_date], calendar_params[:end_date])
     .where(:event_id => @event.id)
-
     unless calendar_params[:contest_id].nil?
       brackest = brackest.where(:contest_id => calendar_params[:contest_id])
     end
+    my_calendar.brackets = brackest
 
     my_calendar.schedules = EventSchedule.where(:event_id => @event.id).start_date_between(calendar_params[:start_date], calendar_params[:end_date])
     .where.not(:agenda_type_id => AgendaType.competition_id)
     #json_response_serializer_collection(schedules, EventScheduleSerializer)
     #json_response_serializer_collection(brackest, EventContestCategoryBracketDetailSerializer)
-    json_response_serializer(my_calendar, EventCalendarSerializer)
+    for_date = {}
+    my_calendar.brackets.each do |item|
+      unless for_date[item.start_date.to_s].present?
+        for_date[item.start_date.to_s] = {}
+        for_date[item.start_date.to_s]["brackets"] = []
+      end
+      for_date[item.start_date.to_s]["brackets"] << item
+    end
+
+    my_calendar.schedules.each do |item|
+      unless for_date[item.start_date.to_s].present?
+        for_date[item.start_date.to_s] = {}
+        for_date[item.start_date.to_s]["schedules"] = []
+      end
+      for_date[item.start_date.to_s]["schedules"] << item
+    end
+    for_date.each.with_index do |item, index|
+      my_calendar_date = EventCalendarDate.new
+      my_calendar_date.date = item[0]
+      my_calendar_date.schedules = for_date[item[0]]["schedules"]
+      my_calendar_date.brackets = for_date[item[0]]["brackets"]
+      response << my_calendar_date
+    end
+    json_response_serializer_collection(response, EventCalendarGroupedSerializer)
   end
 
   private
