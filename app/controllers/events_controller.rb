@@ -1534,12 +1534,12 @@ class EventsController < ApplicationController
     contest_params.each do |item|
       data_contest = {:id => item[:id], :elimination_format_id => item[:elimination_format_id], :scoring_option_match_1_id => item[:scoring_option_match_1_id],
                       :scoring_option_match_2_id => item[:scoring_option_match_2_id], :sport_regulator_id => item[:sport_regulator_id]}
-      contest = @event.contests.where(:id => item[:id]).update_or_create!(data_contest)
+      contest = @event.contests.where(:id => item[:id]).first_or_create!(data_contest)
       unless item[:categories].nil?
         categories_ids = []
         item[:categories].each do |item_category|
           data_categories = {:category_id => item_category[:category_id], :bracket_types => item_category[:bracket_types]}
-          category = contest.categories.where(:category_id => data_categories[:category_id]).update_or_create!(data_categories)
+          category = contest.categories.where(:category_id => data_categories[:category_id]).first_or_create!(data_categories)
           categories_ids << category.id
           #save category
           unless item_category[:brackets].nil?
@@ -1547,7 +1547,7 @@ class EventsController < ApplicationController
             item_category[:brackets].each do |item_bracket|
               data_bracket = {:id => item_bracket[:id], :bracket_type => item_bracket[:bracket_type], :awards_for => item_bracket[:awards_for],
                               :awards_through => item_bracket[:awards_through], :awards_plus => item_bracket[:awards_plus]}
-              bracket = category.brackets.where(:id => data_bracket[:id]).update_or_create!(data_bracket)
+              bracket = category.brackets.where(:id => data_bracket[:id]).first_or_create!(data_bracket)
               #save details brackets
               unless item_bracket[:details].nil?
                 details_ids = []
@@ -1558,7 +1558,7 @@ class EventsController < ApplicationController
                                  :contest_id => contest.id, :start_date => item_details[:start_date], :time_start => item_details[:time_start],
                                  :time_end => item_details[:time_end]}
                   exist_bracket = bracket.details.where(:id => detail_data[:id]).first
-                  detail = bracket.details.where(:id => detail_data[:id]).update_or_create!(detail_data)
+                  detail = bracket.details.where(:id => detail_data[:id]).first_or_create!(detail_data)
                   #send mail New spot open!
                   unless exist_bracket.nil?
                     detail.send_free_mail
@@ -1573,8 +1573,13 @@ class EventsController < ApplicationController
                                     :old_age => item_child[:old_age], :category_id => category.category_id, :event_id => @event.id,
                                     :contest_id => contest.id,  :start_date => item_child[:start_date], :time_start => item_child[:time_start],
                                     :time_end => item_child[:time_end]}
-                      child = detail.brackets.where(:id => child_data[:id]).update_or_create!(child_data)
+                      exist_child = detail.brackets.where(:id => child_data[:id]).first
+                      child = detail.brackets.where(:id => child_data[:id]).first_or_create!(child_data)
                       child_ids << child.id
+                      #send mail New spot open!
+                      unless exist_child.nil?
+                        child.send_free_mail
+                      end
                     end
                     detail.brackets.where.not(:id => child_ids).destroy_all
                   end
