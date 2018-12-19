@@ -23,6 +23,10 @@ class EventContestCategory < ApplicationRecord
     result
   end
 
+  def has_players
+    !self.is_for_delete?
+  end
+
   def players
     Player.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => brackets_ids))
   end

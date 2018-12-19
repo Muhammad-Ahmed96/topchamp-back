@@ -1,5 +1,6 @@
 class EventContestCategoryBracketDetailFilterSerializer < ActiveModel::Serializer
-  attributes :id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity, :status,  :start_date, :time_start, :time_end
+  attributes :id, :age, :young_age, :old_age, :lowest_skill, :highest_skill, :quantity, :status,  :start_date, :time_start, :time_end,
+             :has_players
   has_many :brackets, serializer: EventContestCategoryBracketDetailFilterSerializer
 
   def brackets
