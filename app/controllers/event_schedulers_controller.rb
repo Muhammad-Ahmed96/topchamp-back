@@ -143,14 +143,14 @@ class EventSchedulersController < ApplicationController
     response = []
     my_calendar = EventCalendar.new
     brackest = EventContestCategoryBracketDetail.start_date_between(calendar_params[:start_date], calendar_params[:end_date])
-    .where(:event_id => @event.id)
+    .where(:event_id => @event.id).order(start_date: :desc)
     unless calendar_params[:contest_id].nil?
       brackest = brackest.where(:contest_id => calendar_params[:contest_id])
     end
     my_calendar.brackets = brackest
 
     my_calendar.schedules = EventSchedule.where(:event_id => @event.id).start_date_between(calendar_params[:start_date], calendar_params[:end_date])
-    .where.not(:agenda_type_id => AgendaType.competition_id)
+    .where.not(:agenda_type_id => AgendaType.competition_id).order(start_date: :desc)
     #json_response_serializer_collection(schedules, EventScheduleSerializer)
     #json_response_serializer_collection(brackest, EventContestCategoryBracketDetailSerializer)
     for_date = {}
@@ -176,6 +176,7 @@ class EventSchedulersController < ApplicationController
       my_calendar_date.brackets = for_date[item[0]]["brackets"]
       response << my_calendar_date
     end
+    response = response.sort_by &:date
     json_response_serializer_collection(response, EventCalendarGroupedSerializer)
   end
 
