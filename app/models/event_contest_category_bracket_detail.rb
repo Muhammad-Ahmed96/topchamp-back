@@ -126,4 +126,9 @@ class EventContestCategoryBracketDetail < ApplicationRecord
       end
     end
   end
+  def bracket_type
+    unless self.contest_bracket.nil?
+      self.contest_bracket.bracket_type
+    end
+  end
 end
