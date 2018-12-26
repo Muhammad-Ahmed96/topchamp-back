@@ -52,8 +52,8 @@ class EventBracketsController < ApplicationController
   end
   def available
     used_ids = Tournament.where(:event_id => @event.id).where(:category_id => index_params[:category_id]).pluck(:event_bracket_id)
-    event_brackets = @event.brackets.where.not(:id => used_ids)
-    json_response_serializer_collection(event_brackets, EventContestCategoryBracket)
+    event_brackets = EventContestCategoryBracketDetail.where(:event => @event.id).where.not(:id => used_ids)#@event.brackets.where.not(:id => used_ids)
+    json_response_serializer_collection(event_brackets, EventContestCategoryBracketDetailSerializer)
   end
 
   private
