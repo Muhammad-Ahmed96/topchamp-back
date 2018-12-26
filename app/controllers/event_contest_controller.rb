@@ -1,7 +1,7 @@
 class EventContestController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_resource, only: [:destroy]
+  before_action :set_resource, only: [:destroy, :change_type]
   before_action :set_event_resource, only: [:index]
   around_action :transactions_filter, only: [:destroy]
 
@@ -30,8 +30,8 @@ class EventContestController < ApplicationController
     @contest.players.each do |player|
       player.payment_transactions.where(:contest_id => @contest.id).where(:is_refund => false).update_all({:for_refund => true})
     end
-    PlayerBracket.where(:event_bracket_id => brackets_ids).destroy_all
-    @contest.categories.destroy_all
+   PlayerBracket.where(:event_bracket_id => brackets_ids).destroy_all
+   @contest.categories.destroy_all
     json_response_success(t("deleted_success", model: EventContest.model_name.human), true)
   end
 
