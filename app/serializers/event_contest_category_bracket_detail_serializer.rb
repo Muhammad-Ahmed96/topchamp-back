@@ -1,6 +1,6 @@
 class EventContestCategoryBracketDetailSerializer < ActiveModel::Serializer
   attributes :id, :age,:young_age, :old_age, :lowest_skill, :highest_skill, :quantity, :start_date, :time_start, :time_end,
-             :has_players
+             :has_players, :bracket_type
   has_many :brackets, serializer: EventContestCategoryBracketDetailSerializer
 
   def time_start
@@ -14,4 +14,5 @@ class EventContestCategoryBracketDetailSerializer < ActiveModel::Serializer
       object.time_end.strftime("%H:%M:%S")
     end
   end
+
 end
