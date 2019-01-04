@@ -758,6 +758,11 @@ class Event < ApplicationRecord
     end
     query.pluck('event_contest_categories.category_id')
   end
+  #get categories
+  def categories
+    categories = EventContestCategory.joins(:contest).merge(EventContest.where(:event_id => self.id)).pluck(:category_id)
+    Category.where(:id => categories)
+  end
   private
 
   #validate a url
