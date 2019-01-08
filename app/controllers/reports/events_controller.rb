@@ -6,8 +6,9 @@ class Reports::EventsController < ApplicationController
     search = params[:search].strip unless params[:search].nil?
     column = params[:column].nil? ? 'name' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
-    items = AttendeeType.joins(participants: [:event]).joins( "LEFT JOIN payment_transactions ON payment_transactions.attendee_type_id = attendee_types.id AND payment_transactions.event_id = #{event_id}").merge(Event.where(:id => event_id)).my_order(column, direction)
-                .search(search).select("attendee_types.id, attendee_types.name, COUNT(participants.*) AS atttendees_number, COALESCE(SUM(payment_transactions.amount), 0) AS subtotal_charges")
+    items = AttendeeType.joins(participants: [:event]).merge(Event.where(:id => event_id)).my_order(column, direction)
+                .search(search).select("attendee_types.id, attendee_types.name, COUNT(participants.*) AS atttendees_number,
+COALESCE((SELECT SUM(ptd.amount) FROM payment_transaction_details AS ptd WHERE ptd.event_id = #{event_id} AND ptd.attendee_type_id = attendee_types.id), 0) AS subtotal_charges")
                 .group('attendee_types.id')
     json_response_data items
   end
