@@ -90,7 +90,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :event_schedulers, only: [:create, :index, :show], :path => :schedules do
+      resources :event_schedulers, only: [:create, :index, :show, :update], :path => :schedules do
         collection do
           get :calendar
         end

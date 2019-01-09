@@ -2,6 +2,7 @@ class EventSchedulersController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
   before_action :set_resource, only: [:create, :index, :show, :calendar]
+  before_action :set_schedule_resource, only: [:update]
   around_action :transactions_filter, only: [:create]
 
   swagger_path '/events/:event_id/schedules' do
@@ -104,7 +105,11 @@ class EventSchedulersController < ApplicationController
 
   def create
     authorize Event
-    @event.sync_schedules! schedules_params
+    if schedules_params.present?
+      @event.sync_schedules! schedules_params
+    else
+      @event.schedules.create! schedule_param
+    end
     json_response_serializer(@event, EventSerializer)
   end
 
@@ -180,6 +185,13 @@ class EventSchedulersController < ApplicationController
     json_response_serializer_collection(response, EventCalendarGroupedSerializer)
   end
 
+  def update
+    authorize Event
+    @schedule.update!(schedule_param)
+    #@event.remove_public_url
+    json_response_serializer(@event, EventSerializer)
+  end
+
   private
 
   def schedules_params
@@ -192,10 +204,20 @@ class EventSchedulersController < ApplicationController
     end
   end
 
+  def schedule_param
+    params.permit(:id, :agenda_type_id, :venue, :title, :instructor, :description, :start_date, :end_date, :start_time,
+                  :end_time, :cost, :capacity, :category_id, :currency)
+  end
+
   # search current resource of id
   def set_resource
     #apply policy scope
     @event = Event.find(params[:event_id])
+  end
+  def set_schedule_resource
+    #apply policy scope
+    @event = Event.find(params[:event_id])
+    @schedule = @event.schedules.where(:id => params[:id]).first!
   end
 
   def calendar_params
