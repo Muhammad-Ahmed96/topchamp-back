@@ -172,6 +172,9 @@ class EventSchedulersController < ApplicationController
         for_date[item.start_date.to_s] = {}
         for_date[item.start_date.to_s]["schedules"] = []
       end
+      if for_date[item.start_date.to_s]["schedules"].nil?
+        for_date[item.start_date.to_s]["schedules"] = []
+      end
       for_date[item.start_date.to_s]["schedules"] << item
     end
     for_date.each.with_index do |item, index|
