@@ -160,7 +160,7 @@ class EventSchedulersController < ApplicationController
     #json_response_serializer_collection(brackest, EventContestCategoryBracketDetailSerializer)
     for_date = {}
     my_calendar.brackets.each do |item|
-      unless for_date[item.start_date.to_s].present?
+      if for_date[item.start_date.to_s].nil?
         for_date[item.start_date.to_s] = {}
         for_date[item.start_date.to_s]["brackets"] = []
       end
@@ -168,8 +168,11 @@ class EventSchedulersController < ApplicationController
     end
 
     my_calendar.schedules.each do |item|
-      unless for_date[item.start_date.to_s].present?
+      if for_date[item.start_date.to_s].nil?
         for_date[item.start_date.to_s] = {}
+        for_date[item.start_date.to_s]["schedules"] = []
+      end
+      if for_date[item.start_date.to_s]["schedules"].nil?
         for_date[item.start_date.to_s]["schedules"] = []
       end
       for_date[item.start_date.to_s]["schedules"] << item
