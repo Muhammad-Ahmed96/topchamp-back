@@ -5,7 +5,7 @@ class EventCalendar
   extend ActiveModel::Naming
   include ActiveModel::Serialization
 
-  attr_accessor :schedules, :brackets
+  attr_accessor :schedules, :brackets, :matches
 
   def initialize(attributes = {})
     attributes.each do |name, value|
