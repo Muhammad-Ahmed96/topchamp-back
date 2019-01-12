@@ -146,43 +146,68 @@ class EventSchedulersController < ApplicationController
 
   def calendar
     response = []
-    my_calendar = EventCalendar.new
-    brackest = EventContestCategoryBracketDetail.start_date_between(calendar_params[:start_date], calendar_params[:end_date])
-    .where(:event_id => @event.id).order(start_date: :desc,  time_start: :desc)
-    unless calendar_params[:contest_id].nil?
-      brackest = brackest.where(:contest_id => calendar_params[:contest_id])
-    end
-    my_calendar.brackets = brackest
+    start_date = calendar_params[:start_date].to_date
+    end_date = calendar_params[:end_date].to_date
+    start_date.upto(end_date) do |date|
+      my_calendar = EventCalendar.new
+      brackest = EventContestCategoryBracketDetail.start_date_between(date, date)
+                     .where(:event_id => @event.id).order(start_date: :desc, time_start: :desc)
+      unless calendar_params[:contest_id].nil?
+        brackest = brackest.where(:contest_id => calendar_params[:contest_id])
+      end
+      my_calendar.brackets = brackest
 
-    my_calendar.schedules = EventSchedule.where(:event_id => @event.id).start_date_between(calendar_params[:start_date], calendar_params[:end_date])
-    .where.not(:agenda_type_id => AgendaType.competition_id).order(start_date: :desc, start_time: :desc)
-    #json_response_serializer_collection(schedules, EventScheduleSerializer)
-    #json_response_serializer_collection(brackest, EventContestCategoryBracketDetailSerializer)
-    for_date = {}
-    my_calendar.brackets.each do |item|
-      if for_date[item.start_date.to_s].nil?
-        for_date[item.start_date.to_s] = {}
-        for_date[item.start_date.to_s]["brackets"] = []
-      end
-      for_date[item.start_date.to_s]["brackets"] << item
-    end
+      my_calendar.schedules = EventSchedule.where(:event_id => @event.id).date_between(date, date)
+                                  .where.not(:agenda_type_id => AgendaType.competition_id).order(start_date: :desc, start_time: :desc)
 
-    my_calendar.schedules.each do |item|
-      if for_date[item.start_date.to_s].nil?
-        for_date[item.start_date.to_s] = {}
-        for_date[item.start_date.to_s]["schedules"] = []
+      matches = Match.joins(round: [tournament: :contest]).merge(Tournament.where(:event_id => @event.id)).order(date: :desc)
+                    .where(:date => date)
+                    .select('matches.*', 'tournaments.event_bracket_id AS event_bracket_id', 'event_contests.index AS contest_index', "(SELECT agt.name FROM agenda_types AS agt WHERE agt.id = #{AgendaType.competition_id}) AS title",
+                            'tournaments.category_id AS category_id')
+      unless calendar_params[:contest_id].nil?
+        matches = matches.merge(Tournament.where(:contest_id => calendar_params[:contest_id]))
       end
-      if for_date[item.start_date.to_s]["schedules"].nil?
-        for_date[item.start_date.to_s]["schedules"] = []
+      my_calendar.matches = matches
+      #json_response_serializer_collection(schedules, EventScheduleSerializer)
+      #json_response_serializer_collection(brackest, EventContestCategoryBracketDetailSerializer)
+      for_date = {}
+      my_calendar.brackets.each do |item|
+        if for_date[item.start_date.to_s].nil?
+          for_date[item.start_date.to_s] = {}
+          for_date[item.start_date.to_s]["brackets"] = []
+        end
+        for_date[item.start_date.to_s]["brackets"] << item
       end
-      for_date[item.start_date.to_s]["schedules"] << item
-    end
-    for_date.each.with_index do |item, index|
-      my_calendar_date = EventCalendarDate.new
-      my_calendar_date.date = item[0]
-      my_calendar_date.schedules = for_date[item[0]]["schedules"]
-      my_calendar_date.brackets = for_date[item[0]]["brackets"]
-      response << my_calendar_date
+
+      my_calendar.schedules.each do |item|
+        if for_date[item.start_date.to_s].nil?
+          for_date[item.start_date.to_s] = {}
+          for_date[item.start_date.to_s]["schedules"] = []
+        end
+        if for_date[item.start_date.to_s]["schedules"].nil?
+          for_date[item.start_date.to_s]["schedules"] = []
+        end
+        for_date[item.start_date.to_s]["schedules"] << item
+      end
+
+      my_calendar.matches.each do |item|
+        if for_date[item.date.to_s].nil?
+          for_date[item.date.to_s] = {}
+          for_date[item.date.to_s]["matches"] = []
+        end
+        if for_date[item.date.to_s]["matches"].nil?
+          for_date[item.date.to_s]["matches"] = []
+        end
+        for_date[item.date.to_s]["matches"] << item
+      end
+      for_date.each.with_index do |item, index|
+        my_calendar_date = EventCalendarDate.new
+        my_calendar_date.date = item[0]
+        my_calendar_date.schedules = for_date[item[0]]["schedules"]
+        my_calendar_date.brackets = for_date[item[0]]["brackets"]
+        my_calendar_date.matches = for_date[item[0]]["matches"]
+        response << my_calendar_date
+      end
     end
     response = response.sort_by &:date
     json_response_serializer_collection(response, EventCalendarGroupedSerializer)
@@ -217,6 +242,7 @@ class EventSchedulersController < ApplicationController
     #apply policy scope
     @event = Event.find(params[:event_id])
   end
+
   def set_schedule_resource
     #apply policy scope
     @event = Event.find(params[:event_id])

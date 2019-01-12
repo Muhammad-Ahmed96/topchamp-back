@@ -7,6 +7,7 @@ class Match < ApplicationRecord
   has_many :sets, :class_name => "MatchSet"
 
   scope :order_by_index, -> {order(index: :asc)}
+  scope :start_date_between, lambda {|start_date, end_date| where("date >= ? AND date <= ?", start_date, end_date ) if start_date.present? and end_date.present?}
 
   swagger_schema :Match do
     property :id do

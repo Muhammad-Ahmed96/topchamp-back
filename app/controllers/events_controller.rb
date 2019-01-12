@@ -1532,9 +1532,12 @@ class EventsController < ApplicationController
   def details
     authorize Event
     contest_params.each do |item|
+      index = 1
       data_contest = {:id => item[:id], :elimination_format_id => item[:elimination_format_id], :scoring_option_match_1_id => item[:scoring_option_match_1_id],
-                      :scoring_option_match_2_id => item[:scoring_option_match_2_id], :sport_regulator_id => item[:sport_regulator_id]}
+                      :scoring_option_match_2_id => item[:scoring_option_match_2_id], :sport_regulator_id => item[:sport_regulator_id],
+      :index => index}
       contest = @event.contests.where(:id => item[:id]).update_or_create!(data_contest)
+      index = index + 1
       unless item[:categories].nil?
         categories_ids = []
         item[:categories].each do |item_category|
