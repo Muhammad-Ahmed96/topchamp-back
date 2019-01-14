@@ -8,4 +8,16 @@ class EventBracketParentCalendarSerializer < ActiveModel::Serializer
       EventContestCategoryBracketDetail.where(:id => object.event_contest_category_bracket_detail_id).first
     end
   end
+
+  def time_start
+    unless object.time_start.nil?
+      object.time_start.strftime("%H:%M:%S")
+    end
+  end
+
+  def time_end
+    unless object.time_end.nil?
+      object.time_end.strftime("%H:%M:%S")
+    end
+  end
 end
