@@ -1,6 +1,7 @@
 class EventContestCategoryBracketDetail < ApplicationRecord
   belongs_to :category,:optional => true
   belongs_to :event,  :optional => true
+  belongs_to :contest, class_name: 'EventContest', :optional => true
   belongs_to :contest_bracket, class_name: 'EventContestCategoryBracket', :foreign_key => 'event_contest_category_bracket_id',
              :optional => true
   has_many :brackets, class_name: "EventContestCategoryBracketDetail", :dependent => :destroy
@@ -130,5 +131,9 @@ class EventContestCategoryBracketDetail < ApplicationRecord
     unless self.contest_bracket.nil?
       self.contest_bracket.bracket_type
     end
+  end
+
+  def contest_index
+    self.contest.index
   end
 end

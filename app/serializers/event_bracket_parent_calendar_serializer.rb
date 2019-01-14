@@ -1,5 +1,6 @@
 class EventBracketParentCalendarSerializer < ActiveModel::Serializer
-  attributes :id, :age,:young_age, :old_age, :lowest_skill, :highest_skill, :quantity, :start_date, :time_start, :time_end
+  attributes :id, :age,:young_age, :old_age, :lowest_skill, :highest_skill, :quantity, :start_date, :time_start, :time_end,
+             :contest_index
   has_many :brackets, serializer: EventContestCategoryBracketDetailSerializer
   has_one :parent_bracket, serializer: EventBracketSingleSerializer
   has_one :category, serializer: CategorySerializer
