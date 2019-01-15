@@ -54,7 +54,7 @@ class EventContestCategoryBracketsController < ApplicationController
   def set_category_resource
     @event = Event.find(params[:event_id])
     @contest = @event.contests.where(:id => params[:event_contest_id]).first!
-    @category = @contest.categories.where(:category_id => params[:event_contest_category_id] ).first!
+    @category = @contest.categories.where(:id => params[:event_contest_category_id] ).first!
   end
 
   def response_impossible_eliminate(message)
