@@ -68,7 +68,7 @@ if Language.count == 0
 end
 
 if Category.count == 0
-  Category.create([{name: 'Men Singles'},{name: "Men's doubles"},{name: 'Women Singles'}, {name: "Women's doubles"}, {name: 'Mixed Double'}])
+  Category.create([{name: "Men's Singles"},{name: "Men's doubles"},{name: "Women's Singles"}, {name: "Women's doubles"}, {name: 'Mixed Doubles'}])
 end
 
 if ScoringOption.count == 0
