@@ -37,7 +37,8 @@ class EventContestCategoryBracketsController < ApplicationController
 
   def available
     used_ids = Tournament.where(:event_id => @event.id).where(:category_id => @category.category_id).where(:contest_id => @contest.id).pluck(:event_bracket_id)
-    brackets = EventContestCategoryBracketDetail.where(:event_contest_category_bracket_id => @category.id)
+
+    brackets = EventContestCategoryBracketDetail.joins(:contest_bracket).merge(EventContestCategoryBracket.where(:event_contest_category_id => @category.id))
                    .where.not(:id => used_ids)
     json_response_serializer_collection(brackets, EventContestCategoryBracketDetailSerializer)
   end
@@ -47,7 +48,7 @@ class EventContestCategoryBracketsController < ApplicationController
   def set_resource
     @event = Event.find(params[:event_id])
     @contest = @event.contests.where(:id => params[:event_contest_id]).first!
-    @category = @contest.categories.where(:category_id => params[:event_contest_category_id] ).first!
+    @category = @contest.categories.where(:id => params[:event_contest_category_id] ).first!
     @bracket = @category.brackets.where(:bracket_type => params[:id] ).first!
   end
 
