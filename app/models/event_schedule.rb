@@ -14,6 +14,7 @@ class EventSchedule < ApplicationRecord
   scope :title_like, lambda {|search| left_outer_joins(:category).where("LOWER(title) LIKE LOWER(?) OR LOWER(categories.name) LIKE LOWER(?)", "%#{search}%",  "%#{search}%") if search.present?}
   scope :start_date_between, lambda {|start_date, end_date| where("start_date >= ? AND start_date <= ?", start_date, end_date ) if start_date.present? and end_date.present?}
   scope :date_between, lambda {|start_date, end_date| where("start_date >= ? AND end_date <= ?", start_date, end_date ) if start_date.present? and end_date.present?}
+  scope :date_in, lambda {|start_date, end_date| where("start_date <= ? AND end_date >= ?", start_date, end_date ) if start_date.present? and end_date.present?}
 
 
 

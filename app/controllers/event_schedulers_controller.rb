@@ -150,14 +150,14 @@ class EventSchedulersController < ApplicationController
     end_date = calendar_params[:end_date].to_date
     start_date.upto(end_date) do |date|
       my_calendar = EventCalendar.new
-      brackest = EventContestCategoryBracketDetail.start_date_between(date, date)
+      brackest = EventContestCategoryBracketDetail.where(:start_date => date)
                      .where(:event_id => @event.id).order(start_date: :desc, time_start: :desc)
       unless calendar_params[:contest_id].nil?
         brackest = brackest.where(:contest_id => calendar_params[:contest_id])
       end
       my_calendar.brackets = brackest
 
-      my_calendar.schedules = EventSchedule.where(:event_id => @event.id).date_between(date, date)
+      my_calendar.schedules = EventSchedule.where(:event_id => @event.id).date_in(date, date)
                                   .where.not(:agenda_type_id => AgendaType.competition_id).order(start_date: :desc, start_time: :desc)
 
       matches = Match.joins(round: [tournament: :contest]).merge(Tournament.where(:event_id => @event.id)).order(date: :desc)
@@ -172,33 +172,33 @@ class EventSchedulersController < ApplicationController
       #json_response_serializer_collection(brackest, EventContestCategoryBracketDetailSerializer)
       for_date = {}
       my_calendar.brackets.each do |item|
-        if for_date[item.start_date.to_s].nil?
-          for_date[item.start_date.to_s] = {}
-          for_date[item.start_date.to_s]["brackets"] = []
+        if for_date[date.to_s].nil?
+          for_date[date.to_s] = {}
+          for_date[date.to_s]["brackets"] = []
         end
-        for_date[item.start_date.to_s]["brackets"] << item
+        for_date[date.to_s]["brackets"] << item
       end
 
       my_calendar.schedules.each do |item|
-        if for_date[item.start_date.to_s].nil?
-          for_date[item.start_date.to_s] = {}
-          for_date[item.start_date.to_s]["schedules"] = []
+        if for_date[date.to_s].nil?
+          for_date[date.to_s] = {}
+          for_date[date.to_s]["schedules"] = []
         end
-        if for_date[item.start_date.to_s]["schedules"].nil?
-          for_date[item.start_date.to_s]["schedules"] = []
+        if for_date[date.to_s]["schedules"].nil?
+          for_date[date.to_s]["schedules"] = []
         end
-        for_date[item.start_date.to_s]["schedules"] << item
+        for_date[date.to_s]["schedules"] << item
       end
 
       my_calendar.matches.each do |item|
-        if for_date[item.date.to_s].nil?
-          for_date[item.date.to_s] = {}
-          for_date[item.date.to_s]["matches"] = []
+        if for_date[date.to_s].nil?
+          for_date[date.to_s] = {}
+          for_date[date.to_s]["matches"] = []
         end
-        if for_date[item.date.to_s]["matches"].nil?
-          for_date[item.date.to_s]["matches"] = []
+        if for_date[date.to_s]["matches"].nil?
+          for_date[date.to_s]["matches"] = []
         end
-        for_date[item.date.to_s]["matches"] << item
+        for_date[date.to_s]["matches"] << item
       end
       for_date.each.with_index do |item, index|
         my_calendar_date = EventCalendarDate.new
