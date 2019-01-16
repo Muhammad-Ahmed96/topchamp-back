@@ -140,8 +140,8 @@ class TournamentsController < ApplicationController
   end
   def teams_list
       paginate = params[:paginate].nil? ? '1' : params[:paginate]
-      teams = @event.teams.where(:event_bracket_id => players_list_params[:bracket_id]).where(:category_id => players_list_params[:category_id])
-      if paginate.to_s == "0"
+      teams = @event.teams.where(:event_bracket_id => players_list_params[:bracket_id])
+        if paginate.to_s == "0"
         json_response_serializer_collection(teams.all, TeamSerializer)
       else
         paginate teams, per_page: 50, root: :data
