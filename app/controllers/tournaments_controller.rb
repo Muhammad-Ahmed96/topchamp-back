@@ -555,9 +555,9 @@ class TournamentsController < ApplicationController
   end
   
   def players_list_params
-    params.required(:category_id)
+    #params.required(:category_id)
     params.required(:bracket_id)
-    params.required(:contest_id)
+    #params.required(:contest_id)
     params.permit(:category_id, :bracket_id, :contest_id)
   end
 
