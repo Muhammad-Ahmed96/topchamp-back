@@ -214,8 +214,10 @@ class TournamentsController < ApplicationController
     end
   end
   def create
+    category = EventContestCategory.find( players_list_params[:category_id])
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:category_id => players_list_params[:category_id]).where(:contest_id => players_list_params[:contest_id]).first_or_create!
+                     .where(:category_id => category.category_id).where(:contest_id => players_list_params[:contest_id])
+                     .where(:event_contest_category_id => category.id).first_or_create!
     if rounds_params.present?
       tournament.sync_matches!(rounds_params, losers_params)
     end
