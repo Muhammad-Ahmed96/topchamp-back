@@ -403,6 +403,7 @@ class TournamentsController < ApplicationController
     matches_status = params[:matches_status]
     category_id = params[:category_id]
     bracket_id = params[:bracket_id]
+    contest_id = params[:contest_id]
     bracket = params[:bracket]
     teams_count = params[:teams_count]
 
@@ -427,7 +428,7 @@ class TournamentsController < ApplicationController
 
     tournaments = TournamentPolicy::Scope.new(current_user, Tournament).resolve.my_order(column, direction).matches_status_in(matches_status).event_in(event_id).category_in(category_id)
     .bracket_in(bracket_id).bracket_like(bracket).event_order(order_event, direction).category_order(order_category, direction).bracket_order(order_bracket, direction)
-    .teams_count_in(teams_count).event_like(event)
+    .teams_count_in(teams_count).event_like(event).contest_in(contest_id)
     if paginate.to_s == "0"
       json_response_serializer_collection(tournaments.all, TournamentSerializer)
     else

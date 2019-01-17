@@ -15,6 +15,7 @@ class Tournament < ApplicationRecord
   scope :matches_status_in, lambda {|progress| where matches_status: progress if progress.present?}
   scope :teams_count_in, lambda {|count| where teams_count: count if count.present?}
   scope :event_in, lambda {|search| joins(:event).merge(Event.where id: search) if search.present?}
+  scope :contest_in, lambda {|search| where(contest_id: search) if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where("LOWER(title) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :category_in, lambda {|search| joins(:category).merge(Category.where id: search) if search.present?}
   scope :bracket_in, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where id: search) if search.present?}
