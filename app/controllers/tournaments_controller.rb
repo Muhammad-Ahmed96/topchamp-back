@@ -547,7 +547,7 @@ class TournamentsController < ApplicationController
       end
     end
   end
-  def details
+  def details 
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:category_id => players_list_params[:category_id]).first_or_create!
     json_response_serializer(tournament, TournamentWithTeamsSerializer)
