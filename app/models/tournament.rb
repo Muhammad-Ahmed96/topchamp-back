@@ -194,7 +194,7 @@ class Tournament < ApplicationRecord
 
   def set_winner(match)
     last_winner_team_id = match.team_winner_id
-    elimination_format = self.event.elimination_format
+    elimination_format = self.contest.elimination_format
     winner_team_id = nil
     unless elimination_format.nil?
       #Logic for single elimination
@@ -361,7 +361,7 @@ class Tournament < ApplicationRecord
   end
 
   def verify_complete_status
-    elimination_format = self.event.elimination_format
+    elimination_format = self.contest.elimination_format
     if self.rounds_all.count == self.rounds_all.where(:status => :complete).count
       self.status = :complete
       if elimination_format.slug != 'double'
