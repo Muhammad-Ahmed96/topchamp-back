@@ -8,4 +8,5 @@ class EventSingleSerializer < ActiveModel::Serializer
  # has_one :scoring_option_match_1
   #has_one :scoring_option_match_2
   #belongs_to :elimination_format, serializer: EliminationFormatSerializer
+  has_many :contests, serializer: EventContestSingleSerializer
 end
