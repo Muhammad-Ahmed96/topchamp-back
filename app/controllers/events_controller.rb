@@ -1912,7 +1912,7 @@ class EventsController < ApplicationController
   end
 
   def taken_brackets
-    ids = @event.tournaments.where(:category_id => taken_brackets_params[:category_id])
+    ids = @event.tournaments.where(:event_contest_category_id => taken_brackets_params[:category_id])
               .where(:contest_id => taken_brackets_params[:contest_id]).pluck(:event_bracket_id)
     event_brackets = EventContestCategoryBracketDetail.where(:id => ids)
     json_response_serializer_collection(event_brackets, EventBracketSerializer)
