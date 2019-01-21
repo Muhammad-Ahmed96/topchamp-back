@@ -1531,8 +1531,8 @@ class EventsController < ApplicationController
 
   def details
     authorize Event
+    index = 1
     contest_params.each do |item|
-      index = 1
       data_contest = {:id => item[:id], :elimination_format_id => item[:elimination_format_id], :scoring_option_match_1_id => item[:scoring_option_match_1_id],
                       :scoring_option_match_2_id => item[:scoring_option_match_2_id], :sport_regulator_id => item[:sport_regulator_id],
       :index => index}
