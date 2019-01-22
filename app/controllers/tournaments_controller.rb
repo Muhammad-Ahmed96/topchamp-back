@@ -214,9 +214,9 @@ class TournamentsController < ApplicationController
     end
   end
   def create
-    category = EventContestCategory.find( players_list_params[:category_id])
-    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:category_id => category.category_id).where(:contest_id => players_list_params[:contest_id])
+    category = EventContestCategory.find( create_params[:category_id])
+    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => create_params[:bracket_id])
+                     .where(:category_id => category.category_id).where(:contest_id => create_params[:contest_id])
                      .where(:event_contest_category_id => category.id).first_or_create!
     if rounds_params.present?
       tournament.sync_matches!(rounds_params, losers_params)
@@ -561,6 +561,13 @@ class TournamentsController < ApplicationController
     #params.required(:category_id)
     params.required(:bracket_id)
     #params.required(:contest_id)
+    params.permit(:category_id, :bracket_id, :contest_id)
+  end
+
+  def create_params
+    params.required(:category_id)
+    params.required(:bracket_id)
+    params.required(:contest_id)
     params.permit(:category_id, :bracket_id, :contest_id)
   end
 
