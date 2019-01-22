@@ -1,9 +1,9 @@
 class Tournament < ApplicationRecord
   include Swagger::Blocks
   belongs_to :event
-  belongs_to :contest, :class_name => "EventContest"
+  belongs_to :contest, :class_name => "EventContest",  :optional => true
   belongs_to :bracket, :class_name => "EventContestCategoryBracketDetail", :foreign_key => "event_bracket_id"
-  belongs_to :category
+  belongs_to :category,  :optional => true
 
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
   has_many :rounds_all, :dependent => :destroy, class_name: 'Round'
