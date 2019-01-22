@@ -281,7 +281,7 @@ class TournamentsController < ApplicationController
   end
   def update_matches
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:category_id => players_list_params[:category_id]).where(:contest_id => players_list_params[:contest_id]).first
+                     .where(:event_contest_category_id => players_list_params[:category_id]).where(:contest_id => players_list_params[:contest_id]).first!
     if rounds_params.present? and tournament.present?
       tournament.update_match!(rounds_params, losers_params)
     end
@@ -490,7 +490,7 @@ class TournamentsController < ApplicationController
   end
   def rounds_list
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:category_id => players_list_params[:category_id]).first!
+                     .where(:event_contest_category_id => players_list_params[:category_id]).first!
     json_response_serializer(tournament, TournamentRoundsSerializer)
   end
 
