@@ -378,24 +378,26 @@ class User < ApplicationRecord
   def self.create_teams(brackets, user_root_id, event_id, parent_root = false)
     #ckeck partner brackets
     brackets.each do |item|
-      category_type = ""
-      if [item[:category_id].to_i].included_in? Category.doubles_categories
-        category_type = "partner_double"
-      elsif [item[:category_id].to_i].included_in? Category.mixed_categories
-        category_type = "partner_mixed"
+      exist = EventContestCategoryBracketDetail.where(:id => item[:event_bracket_id]).first
+      unless exist.nil?
+        category_type = ""
+        if [item[:category_id].to_i].included_in? Category.doubles_categories
+          category_type = "partner_double"
+        elsif [item[:category_id].to_i].included_in? Category.mixed_categories
+          category_type = "partner_mixed"
+        end
+        invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
+                         .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
+        if invitation.present?
+          result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
+                                       parent_root)
+        else
+          #if [item[:category_id].to_i].included_in? Category.single_categories
+          player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
+          self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
+          #end
+        end
       end
-      invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
-                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
-      if invitation.present?
-        result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
-                                     parent_root)
-      else
-        #if [item[:category_id].to_i].included_in? Category.single_categories
-        player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
-        self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
-        #end
-      end
-
     end
   end
 
@@ -423,8 +425,8 @@ class User < ApplicationRecord
 
 
   def self.create_team(user_root_id, event_id, event_bracket_id, category_id, players_ids)
-    count =  Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-                 .where(:category_id => category_id).count
+    count = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
+                .where(:category_id => category_id).count
     team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
                      .where(:creator_user_id => user_root_id).where(:category_id => category_id).first
     team_name = 'Team 1'
@@ -500,7 +502,7 @@ class User < ApplicationRecord
       data.each do |discount|
         discount.delete(:id)
         discount = EventPersonalizedDiscount.where(:email => discount[:email]).where(:code => discount[:code])
-            .update_or_create!(discount)
+                       .update_or_create!(discount)
         deleteIds << discount.id
       end
     end
