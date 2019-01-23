@@ -242,3 +242,7 @@ if BusinessCategory.count == 0
                            {code: "119",group:"tech",description:"Wireless"},
                            {code: "103",group:"art, med, rec",description:"Writing and Editing"}])
 end
+
+if ProcessingFee.count == 0
+  ProcessingFee.create([{title: 'Pass 100% of platform fee to registrants', amount_director: 0, amount_registrant: 100}, {title: 'Director pays registration fee', amount_director: 100, amount_registrant: 0}])
+end

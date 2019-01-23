@@ -1,0 +1,2 @@
+class ProcessingFee < ApplicationRecord
+end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_23_170026) do
+ActiveRecord::Schema.define(version: 2019_01_23_202640) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -273,6 +273,7 @@ ActiveRecord::Schema.define(version: 2019_01_23_170026) do
     t.string "currency"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "processing_fee_id"
   end
 
   create_table "event_personalized_discounts", force: :cascade do |t|
@@ -590,6 +591,15 @@ ActiveRecord::Schema.define(version: 2019_01_23_170026) do
     t.bigint "player_id", null: false
     t.index ["player_id"], name: "index_players_teams_on_player_id"
     t.index ["team_id"], name: "index_players_teams_on_team_id"
+  end
+
+  create_table "processing_fees", force: :cascade do |t|
+    t.string "title"
+    t.float "amount_director", default: 0.0
+    t.float "amount_registrant", default: 0.0
+    t.boolean "is_percent", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "refund_transactions", force: :cascade do |t|

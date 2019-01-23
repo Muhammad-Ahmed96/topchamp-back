@@ -1191,7 +1191,7 @@ class EventsController < ApplicationController
     if payment_method_params.present?
       payment_method = @event.payment_method
       if payment_method.present?
-        payment_method.update!(payment_method_params)
+        payment_method.update!(payment_mthod_params)
       else
         @event.create_payment_method!(payment_method_params)
       end
@@ -1963,7 +1963,7 @@ class EventsController < ApplicationController
   def payment_method_params
     # whitelist params
     unless params[:payment_method].nil?
-      params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency)
+      params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency, :processing_fee_id)
     end
   end
 
