@@ -21,15 +21,15 @@ class User < ApplicationRecord
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/user/:style/avatar_profile.png"
+                    styles: {medium: "300X300>", thumb: "50x50>"}, default_url: "/assets/user/:style/avatar_profile.png"
 
   # authenticate :resend_limit, if: :new_record?
   #authenticate :valid_pin, unless: :new_record?
   after_initialize :set_random_pin!, if: :new_record?
   after_initialize :set_random_membership_id!, if: :new_record?
-  validates_attachment :profile
-  validate :check_dimensions
-  validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
+  #validates_attachment :profile
+  #validate :check_dimensions
+  #validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
   validates_attachment_content_type :profile, content_type: /\Aimage\/.*\z/
 
   validates :first_name, length: {maximum: 50}, presence: true
