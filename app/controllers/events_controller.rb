@@ -1191,7 +1191,7 @@ class EventsController < ApplicationController
     if payment_method_params.present?
       payment_method = @event.payment_method
       if payment_method.present?
-        payment_method.update!(payment_mthod_params)
+        payment_method.update!(payment_method_params)
       else
         @event.create_payment_method!(payment_method_params)
       end
