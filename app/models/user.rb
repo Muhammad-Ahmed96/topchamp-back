@@ -97,6 +97,15 @@ class User < ApplicationRecord
     end
   end
 
+  def is_player
+    count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.player_id).count
+    if count > 0
+      return true
+    else
+      return false
+    end
+  end
+
   def my_events
     Event.only_directors(self.id).pluck(:id)
   end

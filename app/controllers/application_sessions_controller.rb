@@ -31,6 +31,13 @@ Authentication headers example:
         key :required, true
         key :type, :string
       end
+      parameter do
+        key :name, :user_type
+        key :in, :body
+        key :description, 'User type, admin, player and movil'
+        key :required, true
+        key :type, :string
+      end
       response 200 do
         key :description, 'This route will return a JSON representation of the User model on successful login along with the access-token and client in the header of the response.
 in Header response :
