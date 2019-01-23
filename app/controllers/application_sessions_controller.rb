@@ -32,7 +32,7 @@ Authentication headers example:
         key :type, :string
       end
       parameter do
-        key :name, :user_type
+        key :name, :type
         key :in, :body
         key :description, 'User type, director, player and mobile'
         key :required, true
