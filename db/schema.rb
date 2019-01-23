@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_11_231928) do
+ActiveRecord::Schema.define(version: 2019_01_23_202640) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -273,6 +273,7 @@ ActiveRecord::Schema.define(version: 2019_01_11_231928) do
     t.string "currency"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "processing_fee_id"
   end
 
   create_table "event_personalized_discounts", force: :cascade do |t|
@@ -345,6 +346,7 @@ ActiveRecord::Schema.define(version: 2019_01_11_231928) do
     t.bigint "category_id"
     t.string "venue"
     t.string "currency"
+    t.string "time_zone"
   end
 
   create_table "event_schedules_players", id: false, force: :cascade do |t|
@@ -591,6 +593,15 @@ ActiveRecord::Schema.define(version: 2019_01_11_231928) do
     t.index ["team_id"], name: "index_players_teams_on_team_id"
   end
 
+  create_table "processing_fees", force: :cascade do |t|
+    t.string "title"
+    t.float "amount_director", default: 0.0
+    t.float "amount_registrant", default: 0.0
+    t.boolean "is_percent", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "refund_transactions", force: :cascade do |t|
     t.string "payment_transaction_id"
     t.float "amount"
@@ -757,6 +768,7 @@ ActiveRecord::Schema.define(version: 2019_01_11_231928) do
     t.integer "teams_count", default: 0
     t.integer "winner_team_id"
     t.bigint "contest_id", default: 0
+    t.integer "event_contest_category_id"
   end
 
   create_table "user_event_reminders", force: :cascade do |t|

@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'processing_fees/index'
   get 'tournament_matches_status/index'
   get 'event_schedulers/create'
   get 'event_registration_rules/create'
@@ -238,6 +239,8 @@ Rails.application.routes.draw do
       get 'reports/transaction', action: :transaction, controller: :reports
       get 'director/balance', action: :balance, controller: :director
     end
+
+    resources :processing_fees, only: [:index]
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]

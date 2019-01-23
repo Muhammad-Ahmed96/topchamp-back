@@ -31,6 +31,13 @@ Authentication headers example:
         key :required, true
         key :type, :string
       end
+      parameter do
+        key :name, :type
+        key :in, :body
+        key :description, 'User type, director, player, mobile and sysadmin'
+        key :required, true
+        key :type, :string
+      end
       response 200 do
         key :description, 'This route will return a JSON representation of the User model on successful login along with the access-token and client in the header of the response.
 in Header response :
@@ -62,6 +69,10 @@ uid:          zzzzz'
   def create
     # Check
     field = (resource_params.keys.map(&:to_sym) & resource_class.authentication_keys).first
+    if valid_types[:type] != 'mobile' and valid_types[:type] != 'player' and valid_types[:type] != 'director' and
+        valid_types[:type] != 'sysadmin'
+      return render_create_error_bad_type
+    end
 
     @resource = nil
     if field
@@ -70,6 +81,17 @@ uid:          zzzzz'
       @resource = find_resource(field, q_value)
     end
     if @resource && valid_params?(field, q_value) && (!@resource.respond_to?(:active_for_authentication?) || @resource.active_for_authentication?)
+      if valid_types[:type] == 'player' and !@resource.is_player
+        return render_create_error_bad_credentials
+      end
+
+      if valid_types[:type] == 'director' and !@resource.is_director
+        return render_create_error_bad_credentials
+      end
+
+      if valid_types[:type] == 'sysadmin' and !@resource.sysadmin?
+        return render_create_error_bad_credentials
+      end
       if @resource.status.to_s == "Inactive"
         return json_response_error(["Account inactive"], 401)
       end
@@ -82,7 +104,7 @@ uid:          zzzzz'
       else
         valid_password = true
       end
-      if (@resource.respond_to?(:valid_for_authentication?) && !@resource.valid_for_authentication? { valid_password }) || !valid_password
+      if (@resource.respond_to?(:valid_for_authentication?) && !@resource.valid_for_authentication? {valid_password}) || !valid_password
         return render_create_error_bad_credentials
       end
       @client_id, @token = @resource.create_token
@@ -155,7 +177,6 @@ uid:          zzzzz'
   end
 
 
-
   def render_create_success
     json_response_serializer(@resource, UserSerializer)
   end
@@ -169,6 +190,15 @@ uid:          zzzzz'
 
   def valid_params?(key, val)
     key && val
+  end
+
+  def valid_types
+    params.require('type')
+    params.permit('type')
+  end
+
+  def render_create_error_bad_type
+    render_error(401, I18n.t("devise_token_auth.sessions.type_not_found"))
   end
 
 end

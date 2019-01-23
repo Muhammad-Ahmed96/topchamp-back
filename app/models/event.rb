@@ -70,6 +70,8 @@ class Event < ApplicationRecord
   #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
   #validates :visibility, inclusion: {in: Visibility.collection.keys.map(&:to_s)}, :allow_nil => true
+ #
+  after_create :send_email_to_admin
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
@@ -762,6 +764,10 @@ class Event < ApplicationRecord
   def categories
     categories = EventContestCategory.joins(:contest).merge(EventContest.where(:event_id => self.id)).pluck(:category_id)
     Category.where(:id => categories)
+  end
+
+  def send_email_to_admin
+    CreateEventMailer.on_create(self, self.director).deliver
   end
   private
 
