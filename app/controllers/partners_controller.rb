@@ -118,8 +118,8 @@ class PartnersController < ApplicationController
     elsif type == "mixed"
       if player.present?
         not_in << player.partner_mixed_id
-        gender = player.user.gender == "Male" ? "Female" : "Male"
       end
+      gender = @resource.gender == "Male" ? "Female" : "Male"
       category_id = Category.single_mixed_category
     end
     users_in = nil
