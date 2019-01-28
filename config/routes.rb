@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+
   get 'processing_fees/index'
   get 'tournament_matches_status/index'
   get 'event_schedulers/create'
@@ -241,6 +242,15 @@ Rails.application.routes.draw do
     end
 
     resources :processing_fees, only: [:index]
+
+    namespace :public do
+      resources :events, only:[:index, :show] do
+        collection do
+          get :coming_soon
+          get :upcoming
+        end
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :apidocs, only: [:index]
