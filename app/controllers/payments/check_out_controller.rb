@@ -236,7 +236,6 @@ class Payments::CheckOutController < ApplicationController
     #only for test
     #@resource = User.find(params[:user_id])
     event = Event.find(subscribe_params[:event_id])
-    contest_id = subscribe_params[:contest_id]
     brackets = event.available_brackets(player_brackets_params)
     if brackets.length <= 0
       return response_no_enroll_error
@@ -359,14 +358,14 @@ class Payments::CheckOutController < ApplicationController
     paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
                                                              :amount => amount, :tax => number_with_precision(tax_total, precision: 2), :description => "TransactionForSubscribe",
                                                              :event_id => player.event_id, :discount => discounts_total, :authorize_fee => authorize_fee, :app_fee => app_fee,
-                                                             :director_receipt => director_receipt, :account => account, :contest_id => contest_id)
+                                                             :director_receipt => director_receipt, :account => account)
     brackets.each do |item|
       paymentTransaction.details.create!({:amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
                                   :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
-                                  :event_id => player.event_id, :type_payment => "bracket", :contest_id => contest_id})
+                                  :event_id => player.event_id, :type_payment => "bracket", :contest_id => item[:contest_id]})
     end
     paymentTransaction.details.create!({:amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
-                                :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id, :contest_id => contest_id})
+                                :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id})
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
@@ -529,10 +528,9 @@ class Payments::CheckOutController < ApplicationController
   def subscribe_params
     params.required(:event_id)
     params.required(:card_id)
-    params.required(:contest_id)
     params.required(:cvv)
     params.required(:enrolls)
-    params.permit(:event_id, :contest_id, :amount, :tax, :card_id, :cvv, :discount_code, enrolls: [:category_id, :event_bracket_id])
+    params.permit(:event_id, :contest_id, :amount, :tax, :card_id, :cvv, :discount_code, enrolls: [:category_id, :event_bracket_id, :contest_id])
   end
 
   def schedule_params
