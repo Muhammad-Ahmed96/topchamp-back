@@ -763,7 +763,7 @@ class UsersController < ApplicationController
   def resource_params
     # whitelist params
     params.permit(:first_name, :middle_initial, :last_name, :badge_name, :birth_date, :email, :role, :gender,
-                  :profile)
+                  :profile, :is_receive_text)
   end
 
   def resource_profile_params
