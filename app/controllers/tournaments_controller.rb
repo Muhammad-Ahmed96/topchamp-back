@@ -65,10 +65,11 @@ class TournamentsController < ApplicationController
       end
     end
   end
+
   def players_list
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     players = @event.players.joins(:brackets).merge(PlayerBracket.where(:event_bracket_id => players_list_params[:bracket_id])
-    .where(:category_id => players_list_params[:category_id]))
+                                                        .where(:category_id => players_list_params[:category_id]))
     if paginate.to_s == "0"
       json_response_serializer_collection(players.all, PlayerSingleSerializer)
     else
@@ -138,14 +139,15 @@ class TournamentsController < ApplicationController
       end
     end
   end
+
   def teams_list
-      paginate = params[:paginate].nil? ? '1' : params[:paginate]
-      teams = @event.teams.where(:event_bracket_id => players_list_params[:bracket_id])
-        if paginate.to_s == "0"
-        json_response_serializer_collection(teams.all, TeamSerializer)
-      else
-        paginate teams, per_page: 50, root: :data
-      end
+    paginate = params[:paginate].nil? ? '1' : params[:paginate]
+    teams = @event.teams.where(:event_bracket_id => players_list_params[:bracket_id])
+    if paginate.to_s == "0"
+      json_response_serializer_collection(teams.all, TeamSerializer)
+    else
+      paginate teams, per_page: 50, root: :data
+    end
   end
 
   swagger_path '/events/:event_id/tournaments' do
@@ -213,8 +215,9 @@ class TournamentsController < ApplicationController
       end
     end
   end
+
   def create
-    category = EventContestCategory.find( create_params[:category_id])
+    category = EventContestCategory.find(create_params[:category_id])
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => create_params[:bracket_id])
                      .where(:category_id => category.category_id).where(:contest_id => create_params[:contest_id])
                      .where(:event_contest_category_id => category.id).first_or_create!
@@ -224,6 +227,7 @@ class TournamentsController < ApplicationController
 
     json_response_serializer(tournament, TournamentSerializer)
   end
+
   swagger_path '/events/:event_id/tournaments/update_matches' do
     operation :put do
       key :summary, 'Edit matches'
@@ -279,6 +283,7 @@ class TournamentsController < ApplicationController
       end
     end
   end
+
   def update_matches
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:event_contest_category_id => players_list_params[:category_id]).where(:contest_id => players_list_params[:contest_id]).first!
@@ -393,6 +398,7 @@ class TournamentsController < ApplicationController
       end
     end
   end
+
   def index
     authorize Event
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
@@ -427,8 +433,8 @@ class TournamentsController < ApplicationController
 
 
     tournaments = TournamentPolicy::Scope.new(current_user, Tournament).resolve.my_order(column, direction).matches_status_in(matches_status).event_in(event_id).category_in(category_id)
-    .bracket_in(bracket_id).bracket_like(bracket).event_order(order_event, direction).category_order(order_category, direction).bracket_order(order_bracket, direction)
-    .teams_count_in(teams_count).event_like(event).contest_in(contest_id)
+                      .bracket_in(bracket_id).bracket_like(bracket).event_order(order_event, direction).category_order(order_category, direction).bracket_order(order_bracket, direction)
+                      .teams_count_in(teams_count).event_like(event).contest_in(contest_id)
     if paginate.to_s == "0"
       json_response_serializer_collection(tournaments.all, TournamentSerializer)
     else
@@ -488,6 +494,7 @@ class TournamentsController < ApplicationController
       end
     end
   end
+
   def rounds_list
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:event_contest_category_id => players_list_params[:category_id]).first!
@@ -547,16 +554,19 @@ class TournamentsController < ApplicationController
       end
     end
   end
+
   def details
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
                      .where(:event_contest_category_id => players_list_params[:category_id]).first!
     json_response_serializer(tournament, TournamentWithTeamsSerializer)
   end
+
   private
+
   def set_event
     @event = Event.find(params[:event_id])
   end
-  
+
   def players_list_params
     #params.required(:category_id)
     params.required(:bracket_id)
@@ -574,15 +584,17 @@ class TournamentsController < ApplicationController
   def rounds_params
     unless params[:rounds].nil? and !params[:rounds].kind_of?(Array)
       params[:rounds].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches: [:index, :team_a_id, :team_b_id, :seed_team_a, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
       end
     end
   end
 
   def losers_params
-    unless params[:rounds_losers].nil? and !params[:rounds_losers].kind_of?(Array)
-      params[:rounds_losers].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches:[:index, :loser_match_a, :loser_match_b, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
+    if params[:rounds_losers].kind_of?(Array)
+      unless params[:rounds_losers].nil? and !params[:rounds_losers].kind_of?(Array)
+        params[:rounds_losers].map do |p|
+          ActionController::Parameters.new(p.to_unsafe_h).permit(:index, matches: [:index, :loser_match_a, :loser_match_b, :seed_team_b, :match_number, :court, :date, :start_time, :end_time])
+        end
       end
     end
   end
