@@ -116,12 +116,12 @@ class EventContestCategoryBracketDetail < ApplicationRecord
         url = url.gsub "{event_bracket_id}", self.id.to_s
         url = url.gsub "{category_id}", self.category_id.to_s
         url = Invitation.short_url url
-        users = User.joins(:wait_lists).merge(WaitList.where(:category_id => self.category_id).where(:event_bracket_id => self.id)
+        users = User.joins(:wait_lists).merge(WaitList.where(:event_bracket_id => self.id)
                                                   .where(:event_id => event.id)).all
         users.each do |user|
           UnsubscribeMailer.spot_open(user, event, url).deliver
         end
-        EventBracketFree.where(:event_bracket_id => self.id).where(:category_id => self.category_id)
+        EventBracketFree.where(:event_bracket_id => self.id)
             .update_or_create!({:event_bracket_id => self.id, :category_id => self.category_id, :free_at => DateTime.now,
                                 :url => url})
       end

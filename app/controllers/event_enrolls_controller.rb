@@ -80,7 +80,7 @@ class EventEnrollsController < ApplicationController
 
   def user_cancel
     authorize(@event)
-    @event.players.where(:user_id => @resource.id).each do |player|
+    @event.players.where(:user_id => 167).each do |player|
       player.inactivate
       player.unsubscribe_event
       player.destroy
