@@ -215,6 +215,7 @@ en:
               invalid: "Invalid password. Please verify your information."
   events_required: "Event required"
   no_player: "No player found"
+  no_tournament: "No tournament found"
   not_event: "Event required"
   not_param: "Param required"
   only_for_men_event: "This event is only for male members"
