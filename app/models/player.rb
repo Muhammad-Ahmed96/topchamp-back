@@ -219,16 +219,16 @@ class Player < ApplicationRecord
 
   def unsubscribe(category_id, event_bracket_id)
     event = self.event
-    brackets = self.brackets.where(:event_bracket_id => event_bracket_id).where(:category_id => category_id).where(:enroll_status => :enroll).all
+    brackets = self.brackets.where(:event_bracket_id => event_bracket_id).where(:enroll_status => :enroll).all
     brackets.each do |bracket|
       team = Team.joins(:players).merge(Player.where(:id => self.id)).where(:event_id => event.id)
-                 .where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).first
+                 .where(:event_bracket_id => event_bracket_id).first
       if team.present?
         self.teams.destroy(team)
       end
       bracket.destroy
     end
-    teams_ids = Team.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).where(:event_id => event.id).pluck(:id)
+    teams_ids = Team.where(:event_bracket_id => event_bracket_id).where(:event_id => event.id).pluck(:id)
     teams_to_destroy = []
     teams_ids.each do |team_id|
       count = Team.where(:id => team_id).first.players.count
@@ -248,13 +248,13 @@ class Player < ApplicationRecord
     bracket.send_free_mail
 
     tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => event_bracket_id)
-                     .where(:category_id => category_id).first
+                    .first
     if tournament.present?
       tournament.update_internal_data
     end
 
     #sent to refund charges
-    self.payment_transactions.update!({:for_refund => true})
+    self.payment_transactions.update_all({:for_refund => true})
   end
 
   def inactivate
@@ -284,7 +284,7 @@ class Player < ApplicationRecord
   def have_partner?(category_id, event_bracket_id)
     result = false
     #self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
-    self.teams.where(:category_id => category_id).each do |team|
+    self.teams.where(:event_bracket_id => event_bracket_id).each do |team|
       if team.players.count > 1
         result = true
       end
@@ -294,7 +294,7 @@ class Player < ApplicationRecord
 
   def is_partner?(category_id, event_bracket_id)
     result = false
-    self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+    self.teams.where(:event_bracket_id => event_bracket_id).each do |team|
       if team.players.count > 1
         result = true
       end

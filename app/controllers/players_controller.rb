@@ -739,9 +739,9 @@ class PlayersController < ApplicationController
     if player.nil?
       return  json_response_error([t("no_player")], 422)
     end
-    team =  player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).where(:category_id =>  tournaments_list_params[:category_id]).first
+    team =  player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).first
     @tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
-                      .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
+                      .first
     team_id = team.present? ? team.id : 0
     rounds = @tournament.rounds.joins(:matches).merge(Match.where(:team_a_id => team_id).or(Match.where(:team_b_id => team_id)))
     rounds.each do |item|

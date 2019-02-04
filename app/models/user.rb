@@ -435,9 +435,9 @@ class User < ApplicationRecord
 
   def self.create_team(user_root_id, event_id, event_bracket_id, category_id, players_ids)
     count = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-                .where(:category_id => category_id).count
+             .count
     team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-                     .where(:creator_user_id => user_root_id).where(:category_id => category_id).first
+                     .where(:creator_user_id => user_root_id).first
     team_name = 'Team 1'
     if team_exist.present?
       if team_exist.name.nil?
@@ -450,7 +450,7 @@ class User < ApplicationRecord
     end
 
     team = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-               .where(:creator_user_id => user_root_id).where(:category_id => category_id)
+               .where(:creator_user_id => user_root_id)
                .update_or_create!({:name => team_name, :event_id => event_id, :event_bracket_id => event_bracket_id,
                                    :creator_user_id => user_root_id, :category_id => category_id})
     team.player_ids = players_ids
@@ -458,13 +458,13 @@ class User < ApplicationRecord
     players = team.players.where.not(:user_id => user_root_id).all
     players.each do |player|
       team_fetch = Team.joins(:players).merge(Player.where(:id => player.id)).where(:event_id => event_id)
-                       .where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
+                       .where(:event_bracket_id => event_bracket_id)
                        .where.not(:id => team.id).first
       if team_fetch.present?
         player.teams.destroy(team_fetch)
       end
     end
-    teams_ids = Team.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).where(:event_id => event_id).pluck(:id)
+    teams_ids = Team.where(:event_bracket_id => event_bracket_id).where(:event_id => event_id).pluck(:id)
     teams_to_destroy = []
     teams_ids.each do |team_id|
       count = Team.where(:id => team_id).first.players.count
@@ -499,7 +499,7 @@ class User < ApplicationRecord
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
         saveData = {:event_bracket_id => bracket[:event_bracket_id], :category_id => bracket[:category_id], :event_id => event_id}
-        self.wait_lists.where(:event_bracket_id => saveData[:event_bracket_id]).where(:category_id => saveData[:category_id])
+        self.wait_lists.where(:event_bracket_id => saveData[:event_bracket_id])
             .update_or_create!(saveData)
       end
     end
