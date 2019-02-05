@@ -1714,10 +1714,11 @@ class EventsController < ApplicationController
           if !detail.available_for_enroll
             not_in << detail.id
           end
-
           unless detail.brackets.nil?
             detail.brackets.not_in(not_in).each do |detailchild|
-              not_in << detailchild.id
+              if !detailchild.available_for_enroll
+                not_in << detailchild.id
+              end
             end
           end
         end
