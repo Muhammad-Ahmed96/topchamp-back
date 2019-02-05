@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     resources :users, only: [:index, :create, :show, :update, :destroy] do
       collection do
         get :current_enrolls
+        get :my_events
       end
       member do
         put :activate
