@@ -1793,8 +1793,9 @@ class EventsController < ApplicationController
     not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
     #Validate skills
     contests.each do |contest|
-      contest.categories = contest.categories.where(:category_id => event_categories)
-      contest.categories.each do |category|
+      valid_to_add_contest = false
+      categories = contest.categories.where(:category_id => event_categories)
+      categories.each do |category|
         valid_to_add = false
         allow_age_range = category.contest.sport_regulator.allow_age_range
         category.user_age = age
@@ -1844,8 +1845,12 @@ class EventsController < ApplicationController
           end
         end
         if valid_to_add
-          response_data << contest
+          valid_to_add_contest = true
+          contest.categories << category
         end
+      end
+      if valid_to_add_contest
+        response_data << contest
       end
     end
     if response_data.length <= 0
