@@ -76,6 +76,7 @@ Rails.application.routes.draw do
         put :agendas
         get :categories
         get :available_categories
+        get :available_contest
         get :get_registration_fee, :path => :registration_fee
         get :taken_brackets
       end
