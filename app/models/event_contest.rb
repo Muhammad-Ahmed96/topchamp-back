@@ -8,6 +8,8 @@ class EventContest < ApplicationRecord
   belongs_to :sport_regulator, optional: true
   belongs_to :elimination_format, optional: true
   #belongs_to :venue, serializer: VenueSerializer
+  #
+  attr_accessor :filter_categories
 
 
   def validate_to_delete

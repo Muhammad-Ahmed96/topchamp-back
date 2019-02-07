@@ -3,4 +3,8 @@ class EventContestFilterSerializer < ActiveModel::Serializer
              :has_players, :index
 
   has_many :categories, serializer: EventContestFilterCategorySerializer
+
+  def categories
+    object.filter_categories
+  end
 end
