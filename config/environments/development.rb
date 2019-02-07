@@ -52,7 +52,7 @@ Rails.application.configure do
   # routes, locales, etc. This feature depends on the listen gem.
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
 
-  config.action_mailer.asset_host = 'http://topchamp.com'
+  config.action_mailer.asset_host = 'ec2-54-203-30-224.us-west-2.compute.amazonaws.com'
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
       tls: true,
