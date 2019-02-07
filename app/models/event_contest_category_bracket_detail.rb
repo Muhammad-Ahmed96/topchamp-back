@@ -17,6 +17,8 @@ class EventContestCategoryBracketDetail < ApplicationRecord
       if allow_age_range
         where("young_age <= ?", age).where("old_age >= ?", age).or(EventContestCategoryBracketDetail.where(:young_age => nil).where(:old_age => nil))
       else
+        logger.info('age_filter')
+        logger.info(age)
         where("age <= ?", age).or(EventContestCategoryBracketDetail.where(:age => nil))
       end
     end
@@ -62,6 +64,10 @@ class EventContestCategoryBracketDetail < ApplicationRecord
   def available_for_enroll
     result = false
     count = self.get_enroll_count
+    if self.quantity.nil? && self.event_contest_category_bracket_detail_id.nil?
+      result = true
+      return result
+    end
     category_id = self.category_id
     free = EventBracketFree.where(:event_bracket_id => self.id).where(:category_id => category_id).first
     hours = nil

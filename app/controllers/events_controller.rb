@@ -1798,7 +1798,7 @@ class EventsController < ApplicationController
       contest.filter_categories = []
       categories.each do |category|
         valid_to_add = false
-        allow_age_range = category.contest.sport_regulator.allow_age_range
+        allow_age_range = contest.sport_regulator.allow_age_range
         category.user_age = age
         category.user_skill = skill
         category.allow_age_range = allow_age_range
