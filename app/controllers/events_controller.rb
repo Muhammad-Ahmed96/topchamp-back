@@ -1795,6 +1795,7 @@ class EventsController < ApplicationController
     contests.each do |contest|
       valid_to_add_contest = false
       categories = contest.categories.where(:category_id => event_categories)
+      contest.categories = []
       categories.each do |category|
         valid_to_add = false
         allow_age_range = category.contest.sport_regulator.allow_age_range
