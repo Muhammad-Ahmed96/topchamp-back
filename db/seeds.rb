@@ -68,7 +68,7 @@ if Language.count == 0
 end
 
 if Category.count == 0
-  Category.create([{name: 'Men Singles'},{name: "Men's doubles"},{name: 'Women Singles'}, {name: "Women's doubles"}, {name: 'Mixed Double'}])
+  Category.create([{name: "Men's Singles"},{name: "Men's doubles"},{name: "Women's Singles"}, {name: "Women's doubles"}, {name: 'Mixed Doubles'}])
 end
 
 if ScoringOption.count == 0
@@ -241,4 +241,8 @@ if BusinessCategory.count == 0
                            {code: "142",group:"good, man, rec",description:"Wine and Spirits"},
                            {code: "119",group:"tech",description:"Wireless"},
                            {code: "103",group:"art, med, rec",description:"Writing and Editing"}])
+end
+
+if ProcessingFee.count == 0
+  ProcessingFee.create([{title: 'Pass 100% of platform fee to registrants', amount_director: 0, amount_registrant: 100}, {title: 'Director pays registration fee', amount_director: 100, amount_registrant: 0}])
 end

@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   include Swagger::Blocks
-  before_action :authenticate_user!, except: [:sing_up_information]
+  before_action :authenticate_user!, except: [:sing_up_information, :my_events]
   before_action :set_resource, only: [:show, :update, :destroy, :activate, :inactive, :profile, :sing_up_information]
   around_action :transactions_filter, only: [:update, :create]
 # Update password
@@ -758,12 +758,18 @@ class UsersController < ApplicationController
     json_response_serializer(@user, UserSingleSerializer)
   end
 
+  def my_events
+    eventsId = Player.where(:user_id =>  @resource.id).pluck(:event_id)
+    events = Event.where(:id => eventsId)
+    json_response_serializer_collection(events, EventSingleSerializer)
+  end
+
   private
 
   def resource_params
     # whitelist params
     params.permit(:first_name, :middle_initial, :last_name, :badge_name, :birth_date, :email, :role, :gender,
-                  :profile)
+                  :profile, :is_receive_text)
   end
 
   def resource_profile_params

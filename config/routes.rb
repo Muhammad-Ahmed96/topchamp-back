@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+
+  get 'processing_fees/index'
   get 'tournament_matches_status/index'
   get 'event_schedulers/create'
   get 'event_registration_rules/create'
@@ -10,6 +12,7 @@ Rails.application.routes.draw do
     resources :users, only: [:index, :create, :show, :update, :destroy] do
       collection do
         get :current_enrolls
+        get :my_events
       end
       member do
         put :activate
@@ -73,6 +76,7 @@ Rails.application.routes.draw do
         put :agendas
         get :categories
         get :available_categories
+        get :available_contest
         get :get_registration_fee, :path => :registration_fee
         get :taken_brackets
       end
@@ -90,7 +94,11 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :event_schedulers, only: [:create, :index, :show], :path => :schedules
+      resources :event_schedulers, only: [:create, :index, :show, :update], :path => :schedules do
+        collection do
+          get :calendar
+        end
+      end
       resources :event_discounts, only: [], :path => :discounts do
         collection do
           get :validate
@@ -119,6 +127,21 @@ Rails.application.routes.draw do
       end
 
       resources :event_tax, only: [:index], :path => :taxes
+      #Event contest
+      resources :event_contest, only: [:destroy, :index], :path => :contest do
+        member do
+          delete 'change_type',  action: :change_type
+        end
+        resources :event_contest_categories, only: [:destroy, :index], :path => :category do
+          resources :event_contest_category_brackets, only: [:destroy], :path => :brackets do
+            collection do
+              get 'available',  action: :available
+              delete 'details/:id',  action: :destroy_detail
+            end
+          end
+        end
+      end
+
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
@@ -218,6 +241,17 @@ Rails.application.routes.draw do
       get 'reports/:user_id/account', action: :account, controller: :reports
       get 'reports/transaction', action: :transaction, controller: :reports
       get 'director/balance', action: :balance, controller: :director
+    end
+
+    resources :processing_fees, only: [:index]
+
+    namespace :public do
+      resources :events, only:[:index, :show] do
+        collection do
+          get :coming_soon
+          get :upcoming
+        end
+      end
     end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html

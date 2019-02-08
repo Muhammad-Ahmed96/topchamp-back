@@ -1,5 +1,6 @@
 class EventPaymentMethod < ApplicationRecord
   include Swagger::Blocks
+  belongs_to :processing_fee, :optional => true
   validates_numericality_of :enrollment_fee, :bracket_fee
   swagger_schema :EventPaymentMethod do
     property :id do

@@ -1,8 +1,9 @@
 class Tournament < ApplicationRecord
   include Swagger::Blocks
   belongs_to :event
-  belongs_to :bracket, :class_name => "EventBracket", :foreign_key => "event_bracket_id"
-  belongs_to :category
+  belongs_to :contest, :class_name => "EventContest",  :optional => true
+  belongs_to :bracket, :class_name => "EventContestCategoryBracketDetail", :foreign_key => "event_bracket_id"
+  belongs_to :category,  :optional => true
 
   has_many :rounds, -> {order_by_index}, :dependent => :destroy
   has_many :rounds_all, :dependent => :destroy, class_name: 'Round'
@@ -14,10 +15,11 @@ class Tournament < ApplicationRecord
   scope :matches_status_in, lambda {|progress| where matches_status: progress if progress.present?}
   scope :teams_count_in, lambda {|count| where teams_count: count if count.present?}
   scope :event_in, lambda {|search| joins(:event).merge(Event.where id: search) if search.present?}
+  scope :contest_in, lambda {|search| where(contest_id: search) if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where("LOWER(title) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :category_in, lambda {|search| joins(:category).merge(Category.where id: search) if search.present?}
-  scope :bracket_in, lambda {|search| joins(:bracket).merge(EventBracket.where id: search) if search.present?}
-  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventBracket.where("to_char(age,'999') LIKE ? OR to_char(lowest_skill,'9999') like ? OR to_char(highest_skill,'9999') LIKE ? OR to_char(young_age,'9999') LIKE ? OR to_char(old_age,'9999') LIKE ?", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%")) if search.present?}
+  scope :bracket_in, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where id: search) if search.present?}
+  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where("to_char(age,'999') LIKE ? OR to_char(lowest_skill,'9999') like ? OR to_char(highest_skill,'9999') LIKE ? OR to_char(young_age,'9999') LIKE ? OR to_char(old_age,'9999') LIKE ?", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%", "%#{search}%")) if search.present?}
 
   scope :event_order, lambda {|column, direction = "desc"| includes(:event).order("events.#{column} #{direction}") if column.present?}
   scope :category_order, lambda {|column, direction = "desc"| includes(:category).order("categories.#{column} #{direction}") if column.present?}
@@ -192,7 +194,7 @@ class Tournament < ApplicationRecord
 
   def set_winner(match)
     last_winner_team_id = match.team_winner_id
-    elimination_format = self.event.elimination_format
+    elimination_format = self.contest.elimination_format
     winner_team_id = nil
     unless elimination_format.nil?
       #Logic for single elimination
@@ -359,7 +361,7 @@ class Tournament < ApplicationRecord
   end
 
   def verify_complete_status
-    elimination_format = self.event.elimination_format
+    elimination_format = self.contest.elimination_format
     if self.rounds_all.count == self.rounds_all.where(:status => :complete).count
       self.status = :complete
       if elimination_format.slug != 'double'

@@ -58,12 +58,11 @@ class Player < ApplicationRecord
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
         #get bracket to enroll
-        current_bracket = EventBracket.where(:event_id => event.id).where(:id => bracket[:event_bracket_id]).first
+        current_bracket = EventContestCategoryBracketDetail.where(:event_id => event.id).where(:id => bracket[:event_bracket_id]).first
         # check if category exist in event
-        category = self.event.internal_categories.where(:id => bracket[:category_id]).count
-        if current_bracket.present? and category > 0
-          status = current_bracket.get_status(bracket[:category_id])
-          save_data = {:category_id => bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status}
+        if current_bracket.present?
+          status = current_bracket.get_status
+          save_data = {:category_id => current_bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status}
           saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
           if saved_bracket.enroll_status != "enroll"
             saved_bracket.enroll_status = status
@@ -220,16 +219,16 @@ class Player < ApplicationRecord
 
   def unsubscribe(category_id, event_bracket_id)
     event = self.event
-    brackets = self.brackets.where(:event_bracket_id => event_bracket_id).where(:category_id => category_id).where(:enroll_status => :enroll).all
+    brackets = self.brackets.where(:event_bracket_id => event_bracket_id).where(:enroll_status => :enroll).all
     brackets.each do |bracket|
       team = Team.joins(:players).merge(Player.where(:id => self.id)).where(:event_id => event.id)
-                 .where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).first
+                 .where(:event_bracket_id => event_bracket_id).first
       if team.present?
         self.teams.destroy(team)
       end
       bracket.destroy
     end
-    teams_ids = Team.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).where(:event_id => event.id).pluck(:id)
+    teams_ids = Team.where(:event_bracket_id => event_bracket_id).where(:event_id => event.id).pluck(:id)
     teams_to_destroy = []
     teams_ids.each do |team_id|
       count = Team.where(:id => team_id).first.players.count
@@ -240,36 +239,22 @@ class Player < ApplicationRecord
     if teams_to_destroy.length > 0
       Team.where(:id => teams_to_destroy).destroy_all
     end
-    bracket = EventBracket.where(:id => event_bracket_id).first
+    bracket = EventContestCategoryBracketDetail.where(:id => event_bracket_id).first
     category = Category.find(category_id)
     director = User.find(event.creator_user_id)
     registrant = self.user
     UnsubscribeMailer.unsubscribe(bracket, category, director, registrant, event).deliver
 
-    free_spaces = bracket.get_free_count(category_id)
-    if free_spaces.present? and free_spaces == 1
-      url = Rails.configuration.front_new_spot_url.gsub "{event_id}", event.id.to_s
-      url = url.gsub "{event_bracket_id}", bracket.id.to_s
-      url = url.gsub "{category_id}", category.id.to_s
-      url = Invitation.short_url url
-      users = User.joins(:wait_lists).merge(WaitList.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
-                                                .where(:event_id => event.id)).all
-      users.each do |user|
-        UnsubscribeMailer.spot_open(user, event, url).deliver
-      end
-      EventBracketFree.where(:event_bracket_id => bracket.id).where(:category_id => category.id)
-          .update_or_create!({:event_bracket_id => bracket.id, :category_id => category.id, :free_at => DateTime.now,
-                              :url => url})
-    end
+    bracket.send_free_mail
 
     tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => event_bracket_id)
-                     .where(:category_id => category_id).first
+                    .first
     if tournament.present?
       tournament.update_internal_data
     end
 
     #sent to refund charges
-    self.payment_transactions.update!({:for_refund => true})
+    self.payment_transactions.update_all({:for_refund => true})
   end
 
   def inactivate
@@ -299,7 +284,7 @@ class Player < ApplicationRecord
   def have_partner?(category_id, event_bracket_id)
     result = false
     #self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
-    self.teams.where(:category_id => category_id).each do |team|
+    self.teams.where(:event_bracket_id => event_bracket_id).each do |team|
       if team.players.count > 1
         result = true
       end
@@ -309,7 +294,7 @@ class Player < ApplicationRecord
 
   def is_partner?(category_id, event_bracket_id)
     result = false
-    self.teams.where(:event_bracket_id => event_bracket_id, :category_id => category_id).each do |team|
+    self.teams.where(:event_bracket_id => event_bracket_id).each do |team|
       if team.players.count > 1
         result = true
       end

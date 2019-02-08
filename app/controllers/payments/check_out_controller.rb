@@ -362,13 +362,13 @@ class Payments::CheckOutController < ApplicationController
     brackets.each do |item|
       paymentTransaction.details.create!({:amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
                                   :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
-                                  :event_id => player.event_id, :type_payment => "bracket"})
+                                  :event_id => player.event_id, :type_payment => "bracket", :contest_id => item[:contest_id]})
     end
     paymentTransaction.details.create!({:amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
                                 :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id})
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
-        .where(:event_bracket_id => brackets.pluck(:event_bracket_id)).where(:category_id => brackets.pluck(:category_id))
+        .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
         .update(:payment_transaction_id => response.transactionResponse.transId)
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
@@ -530,7 +530,7 @@ class Payments::CheckOutController < ApplicationController
     params.required(:card_id)
     params.required(:cvv)
     params.required(:enrolls)
-    params.permit(:event_id, :amount, :tax, :card_id, :cvv, :discount_code, enrolls: [:category_id, :event_bracket_id])
+    params.permit(:event_id, :contest_id, :amount, :tax, :card_id, :cvv, :discount_code, enrolls: [:category_id, :event_bracket_id, :contest_id])
   end
 
   def schedule_params
@@ -543,7 +543,7 @@ class Payments::CheckOutController < ApplicationController
   def player_brackets_params
     unless params[:enrolls].nil? and !params[:enrolls].kind_of?(Array)
       params[:enrolls].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_id)
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :contest_id, :event_bracket_id)
       end
     end
   end
