@@ -36,6 +36,7 @@ en:
       bad_credentials: "Invalid email or password. Please verify your information."
       not_supported: "Use POST /sign_in to sign in. GET is not supported."
       user_not_found: "User was not found or was not logged in."
+      type_not_found: "Type not found"
     token_validations:
       invalid: "Invalid login credentials"
     registrations:
@@ -214,6 +215,7 @@ en:
               invalid: "Invalid password. Please verify your information."
   events_required: "Event required"
   no_player: "No player found"
+  no_tournament: "No tournament found"
   not_event: "Event required"
   not_param: "Param required"
   only_for_men_event: "This event is only for male members"
@@ -222,6 +224,8 @@ en:
   not_skill_braket: "This event does not have a bracket for your skill"
   not_skill_age_braket: "This event does not have a bracket for your skill/age"
   not_age_skill_braket: "This event does not have a bracket for your age/skill"
+  not_brackets_for_player: "This event does not have a bracket for you"
+  not_possible_delete: "It is not possible to eliminate"
   attendee_types_required: "attendee types required"
   refuse_success: "%{model} decline success"
   not_brackets_to_enrroll: "No brackets to enroll"

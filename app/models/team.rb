@@ -3,8 +3,8 @@ class Team < ApplicationRecord
   acts_as_paranoid
   has_and_belongs_to_many :players
   belongs_to :event
-  belongs_to :bracket, class_name: "EventBracket", foreign_key: "event_bracket_id"
-  belongs_to :category
+  belongs_to :bracket, class_name: "EventContestCategoryBracketDetail", foreign_key: "event_bracket_id"
+  belongs_to :category,  :optional => true
 
 
   def seed(tournament_id)

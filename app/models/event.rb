@@ -17,8 +17,8 @@ class Event < ApplicationRecord
 
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions
-  has_and_belongs_to_many :internal_categories, :join_table => "categories_events", class_name: "Category"
-  has_many :categories, :class_name => "CategoriesEvent"
+  #has_and_belongs_to_many :internal_categories, :join_table => "categories_events", class_name: "Category"
+ # has_many :categories, :class_name => "CategoriesEvent"
   belongs_to :venue, optional: true
   belongs_to :event_type, optional: true
   has_one :payment_information, class_name: 'EventPaymentInformation'
@@ -32,25 +32,26 @@ class Event < ApplicationRecord
   has_one :registration_rule, class_name: 'EventRegistrationRule'
   belongs_to :director, class_name: 'User', :foreign_key => "creator_user_id"
   #has_one :rule, class_name: 'EventRule'
-  belongs_to :sport_regulator, optional: true
-  belongs_to :elimination_format, optional: true
+  #belongs_to :sport_regulator, optional: true
+  #belongs_to :elimination_format, optional: true
   has_many :tournaments
   has_many :teams
   has_many :event_reminders, :class_name => 'UserEventReminder'
+  has_many :contests, :class_name => 'EventContest'
 
 
   has_one :payment_transaction, class_name: 'Payments::PaymentTransaction', :as => :transactionable
 
-  has_many :brackets, -> {only_parent}, class_name: "EventBracket"
-  has_many :internal_brackets, class_name: "EventBracket"
+  #has_many :brackets, -> {only_parent}, class_name: "Event"
+  #has_many :internal_brackets, class_name: "EventBracket"
   has_many :schedules, class_name: "EventSchedule"
 
 
-  belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
-  belongs_to :scoring_option_match_2, foreign_key: "scoring_option_match_2_id", class_name: "ScoringOption", optional: true
+ # belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
+  #belongs_to :scoring_option_match_2, foreign_key: "scoring_option_match_2_id", class_name: "ScoringOption", optional: true
 
 
-  validates :bracket_by, inclusion: {in: Bracket.collection.keys.map(&:to_s)}, :allow_nil => true
+  #validates :bracket_by, inclusion: {in: Bracket.collection.keys.map(&:to_s)}, :allow_nil => true
   accepts_nested_attributes_for :discount_generals
   accepts_nested_attributes_for :discount_personalizeds
 
@@ -58,10 +59,10 @@ class Event < ApplicationRecord
 
   has_attached_file :icon, :path => ":rails_root/public/images/event_icons/:to_param/:style/:basename.:extension",
                     :url => "/images/event_icons/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/event/:style/default_noevent.png"
-  validates_attachment :icon
-  validate :check_dimensions
-  validates_with AttachmentSizeValidator, attributes: :icon, less_than: 2.megabytes
+                    styles: {medium: "300X300>", thumb: "50x50>"}, default_url: "/assets/event/:style/default_noevent.png"
+  #validates_attachment :icon
+  #validate :check_dimensions
+  #validates_with AttachmentSizeValidator, attributes: :icon, less_than: 2.megabytes
   validates_attachment_content_type :icon, content_type: /\Aimage\/.*\z/
 
   validates :title, presence: true
@@ -69,6 +70,8 @@ class Event < ApplicationRecord
   #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
   #validates :visibility, inclusion: {in: Visibility.collection.keys.map(&:to_s)}, :allow_nil => true
+ #
+  after_create :send_email_to_admin
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
@@ -674,10 +677,9 @@ class Event < ApplicationRecord
   def available_brackets(data)
     brackets = []
     data.each do |bracket|
-      current_bracket = EventBracket.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
-      category = self.internal_categories.where(:id => bracket[:category_id]).count
-      if current_bracket.present? and category > 0
-        status = current_bracket.get_status(bracket[:category_id])
+      current_bracket = EventContestCategoryBracketDetail.where(:event_id => self.id).where(:id => bracket[:event_bracket_id]).first
+      if current_bracket.present?
+        status = current_bracket.get_status
         if status == :enroll
           bracket[:enroll_status] = status
           brackets << bracket
@@ -749,6 +751,23 @@ class Event < ApplicationRecord
           body: t("events.reminder_notification", event_title: self.title), sound: 'default'}}
       response = fcm.send_to_topic("user_chanel_#{reminder.user_id}", options)
     end
+  end
+
+  def internal_category_ids(ignore_ids = nil)
+    query = self.contests.joins(:categories)
+    unless ignore_ids.nil?
+      query = query.merge(EventContestCategory.where.not(:category_id => ignore_ids))
+    end
+    query.pluck('event_contest_categories.category_id')
+  end
+  #get categories
+  def categories
+    categories = EventContestCategory.joins(:contest).merge(EventContest.where(:event_id => self.id)).pluck(:category_id)
+    Category.where(:id => categories)
+  end
+
+  def send_email_to_admin
+    CreateEventMailer.on_create(self, self.director).deliver
   end
   private
 

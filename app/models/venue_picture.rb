@@ -3,10 +3,10 @@ class VenuePicture < ApplicationRecord
   belongs_to :venue
   has_attached_file :picture, :path => ":rails_root/public/images/venue/:to_param/:style/:basename.:extension",
                     :url => "/images/venue/:to_param/:style/:basename.:extension",
-                    styles: {normal: "800X450", medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/missing.png"
-  validates_attachment :picture
-  validate :check_dimensions
-  validates_with AttachmentSizeValidator, attributes: :picture, less_than: 2.megabytes
+                    styles: {medium: "300X300>", thumb: "50x50>"}, default_url: "/assets/missing.png"
+  #validates_attachment :picture
+  #validate :check_dimensions
+  #validates_with AttachmentSizeValidator, attributes: :picture, less_than: 2.megabytes
   validates_attachment_content_type :picture, content_type: /\Aimage\/.*\z/
 
   swagger_schema :VenuePicture do

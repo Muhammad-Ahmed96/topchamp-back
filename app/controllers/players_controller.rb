@@ -734,14 +734,16 @@ class PlayersController < ApplicationController
     end
   end
   def rounds
-
-    player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first
+    player = Player.where(user_id: 167).where(event_id: tournaments_list_params[:event_id]).first
     if player.nil?
       return  json_response_error([t("no_player")], 422)
     end
-    team =  player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).where(:category_id =>  tournaments_list_params[:category_id]).first
+    team =  player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).first
     @tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
-                      .where(:category_id => tournaments_list_params[:category_id]).first_or_create!
+                      .first
+    if @tournament.nil?
+      return  json_response_error([t("no_tournament")], 422)
+    end
     team_id = team.present? ? team.id : 0
     rounds = @tournament.rounds.joins(:matches).merge(Match.where(:team_a_id => team_id).or(Match.where(:team_b_id => team_id)))
     rounds.each do |item|

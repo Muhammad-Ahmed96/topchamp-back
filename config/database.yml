@@ -27,15 +27,15 @@ development:
 #  database: top_champ_production
 #  username: deploy
 #  password: password
-#  host: ec2-54-203-30-224.us-west-2.compute.amazonaws.com
+#  host: ec2-34-211-229-184.us-west-2.compute.amazonaws.com
 #qa
 #  database: top_champ_production
 #  username: deploy
 #  password: password
-#  host: ec2-54-68-230-26.us-west-2.compute.amazonaws.com
+#  host: ec2-34-215-184-35.us-west-2.compute.amazonaws.com
 
 #local
-  database: topchamp_development
+  database: top_champ_development_contest #topchamp_development
   username: daniel
   password: password
   host: localhost

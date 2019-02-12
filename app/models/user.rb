@@ -21,15 +21,15 @@ class User < ApplicationRecord
 
   has_attached_file :profile, :path => ":rails_root/public/images/user/:to_param/:style/:basename.:extension",
                     :url => "/images/user/:to_param/:style/:basename.:extension",
-                    styles: {medium: "100X100>", thumb: "50x50>"}, default_url: "/assets/user/:style/avatar_profile.png"
+                    styles: {medium: "300X300>", thumb: "50x50>"}, default_url: "/assets/user/:style/avatar_profile.png"
 
   # authenticate :resend_limit, if: :new_record?
   #authenticate :valid_pin, unless: :new_record?
   after_initialize :set_random_pin!, if: :new_record?
   after_initialize :set_random_membership_id!, if: :new_record?
-  validates_attachment :profile
-  validate :check_dimensions
-  validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
+  #validates_attachment :profile
+  #validate :check_dimensions
+  #validates_with AttachmentSizeValidator, attributes: :profile, less_than: 2.megabytes
   validates_attachment_content_type :profile, content_type: /\Aimage\/.*\z/
 
   validates :first_name, length: {maximum: 50}, presence: true
@@ -90,6 +90,15 @@ class User < ApplicationRecord
 
   def is_director
     count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
+    if count > 0
+      return true
+    else
+      return false
+    end
+  end
+
+  def is_player
+    count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.player_id).count
     if count > 0
       return true
     else
@@ -378,24 +387,26 @@ class User < ApplicationRecord
   def self.create_teams(brackets, user_root_id, event_id, parent_root = false)
     #ckeck partner brackets
     brackets.each do |item|
-      category_type = ""
-      if [item[:category_id].to_i].included_in? Category.doubles_categories
-        category_type = "partner_double"
-      elsif [item[:category_id].to_i].included_in? Category.mixed_categories
-        category_type = "partner_mixed"
+      exist = EventContestCategoryBracketDetail.where(:id => item[:event_bracket_id]).first
+      unless exist.nil?
+        category_type = ""
+        if [item[:category_id].to_i].included_in? Category.doubles_categories
+          category_type = "partner_double"
+        elsif [item[:category_id].to_i].included_in? Category.mixed_categories
+          category_type = "partner_mixed"
+        end
+        invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
+                         .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
+        if invitation.present?
+          result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
+                                       parent_root)
+        else
+          #if [item[:category_id].to_i].included_in? Category.single_categories
+          player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
+          self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
+          #end
+        end
       end
-      invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
-                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
-      if invitation.present?
-        result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
-                                     parent_root)
-      else
-        #if [item[:category_id].to_i].included_in? Category.single_categories
-        player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
-        self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
-        #end
-      end
-
     end
   end
 
@@ -423,10 +434,10 @@ class User < ApplicationRecord
 
 
   def self.create_team(user_root_id, event_id, event_bracket_id, category_id, players_ids)
-    count =  Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-                 .where(:category_id => category_id).count
+    count = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
+             .count
     team_exist = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-                     .where(:creator_user_id => user_root_id).where(:category_id => category_id).first
+                     .where(:creator_user_id => user_root_id).first
     team_name = 'Team 1'
     if team_exist.present?
       if team_exist.name.nil?
@@ -439,7 +450,7 @@ class User < ApplicationRecord
     end
 
     team = Team.where(event_id: event_id).where(event_bracket_id: event_bracket_id)
-               .where(:creator_user_id => user_root_id).where(:category_id => category_id)
+               .where(:creator_user_id => user_root_id)
                .update_or_create!({:name => team_name, :event_id => event_id, :event_bracket_id => event_bracket_id,
                                    :creator_user_id => user_root_id, :category_id => category_id})
     team.player_ids = players_ids
@@ -447,13 +458,13 @@ class User < ApplicationRecord
     players = team.players.where.not(:user_id => user_root_id).all
     players.each do |player|
       team_fetch = Team.joins(:players).merge(Player.where(:id => player.id)).where(:event_id => event_id)
-                       .where(:category_id => category_id).where(:event_bracket_id => event_bracket_id)
+                       .where(:event_bracket_id => event_bracket_id)
                        .where.not(:id => team.id).first
       if team_fetch.present?
         player.teams.destroy(team_fetch)
       end
     end
-    teams_ids = Team.where(:category_id => category_id).where(:event_bracket_id => event_bracket_id).where(:event_id => event_id).pluck(:id)
+    teams_ids = Team.where(:event_bracket_id => event_bracket_id).where(:event_id => event_id).pluck(:id)
     teams_to_destroy = []
     teams_ids.each do |team_id|
       count = Team.where(:id => team_id).first.players.count
@@ -477,16 +488,18 @@ class User < ApplicationRecord
   end
 
   def skill_level
+    level = 0
     if self.association_information.present?
-      self.association_information.raking
+      level = self.association_information.raking
     end
+    level
   end
 
   def sync_wait_list(data, event_id)
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
         saveData = {:event_bracket_id => bracket[:event_bracket_id], :category_id => bracket[:category_id], :event_id => event_id}
-        self.wait_lists.where(:event_bracket_id => saveData[:event_bracket_id]).where(:category_id => saveData[:category_id])
+        self.wait_lists.where(:event_bracket_id => saveData[:event_bracket_id])
             .update_or_create!(saveData)
       end
     end
@@ -498,7 +511,7 @@ class User < ApplicationRecord
       data.each do |discount|
         discount.delete(:id)
         discount = EventPersonalizedDiscount.where(:email => discount[:email]).where(:code => discount[:code])
-            .update_or_create!(discount)
+                       .update_or_create!(discount)
         deleteIds << discount.id
       end
     end
@@ -516,6 +529,13 @@ class User < ApplicationRecord
       errors.add(:image, "Maximun width must be #{required_width}px") unless dimensions.width <= required_width
       errors.add(:image, "Maximun height must be #{required_height}px") unless dimensions.height <= required_height
     end
+  end
+
+  protected
+
+  def get_contest
+    contest_id = PlayerBracket.joins(:player).merge(Player.where(:user_id => self.id)).pluck(:contest_id)
+    EventContest.where(:id => contest_id)
   end
 
 end

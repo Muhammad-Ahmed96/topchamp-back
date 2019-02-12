@@ -3,7 +3,7 @@ class WaitList < ApplicationRecord
   acts_as_paranoid
   belongs_to :user
   belongs_to :event
-  belongs_to :bracket,:class_name => "EventBracket", foreign_key: :event_bracket_id
+  belongs_to :bracket,:class_name => "EventContestCategoryBracketDetail", foreign_key: :event_bracket_id
   belongs_to :category
   swagger_schema :WaitLis do
       property :category do
