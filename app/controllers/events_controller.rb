@@ -1778,6 +1778,13 @@ class EventsController < ApplicationController
     #subsrcibed categories
     in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
     #Validate gender
+    genderCategoeies = []
+    if gender == "Female"
+      genderCategoeies = Category.women_categories
+    elsif  gender == "Male"
+      genderCategoeies = Category.men_categories
+    end
+
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
     elsif @event.only_for_women and gender == "Male"
@@ -1794,7 +1801,7 @@ class EventsController < ApplicationController
     #Validate skills
     contests.each do |contest|
       valid_to_add_contest = false
-      categories = contest.categories.where(:category_id => event_categories)
+      categories = contest.categories.where(:category_id => event_categories).where(:category_id => genderCategoeies)
       contest.filter_categories = []
       categories.each do |category|
         valid_to_add = false
