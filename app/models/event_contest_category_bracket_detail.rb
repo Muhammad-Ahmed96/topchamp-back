@@ -17,8 +17,6 @@ class EventContestCategoryBracketDetail < ApplicationRecord
       if allow_age_range
         where("young_age <= ?", age).where("old_age >= ?", age).or(EventContestCategoryBracketDetail.where(:young_age => nil).where(:old_age => nil))
       else
-        logger.info('age_filter')
-        logger.info(age)
         where("age <= ?", age).or(EventContestCategoryBracketDetail.where(:age => nil))
       end
     end
