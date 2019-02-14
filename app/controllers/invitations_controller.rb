@@ -757,11 +757,18 @@ class InvitationsController < ApplicationController
   def partner
     to_user = User.find(partner_params[:partner_id])
     event = Event.find(partner_params[:event_id])
-    player = Player.where(user_id: @resource.id).where(event_id: event.id).first
+    # player = Player.where(user_id: @resource.id).where(event_id: event.id).first
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
     selector = [1, 0, "1", "0"].include?(partner_params[:for_registered]) ? partner_params[:for_registered] : nil
     #set brackets
     category_id = 0
+    email = nil
+    unless to_user.nil?
+      email = to_user.email
+    end
+    if partner_params[:email].present?
+      email = partner_params[:email]
+    end
     if type == "partner_mixed"
       category_id = Category.single_mixed_category
     elsif type == "partner_double"
@@ -774,8 +781,8 @@ class InvitationsController < ApplicationController
       end
       category_ids = Category.doubles_categories
     end
-    brackets = player.brackets.where(:category_id => category_id).all
-    if brackets.count <= 0
+    bracket = EventContestCategoryBracketDetail.where(:id => partner_params[:bracket_id])
+    if bracket.nil?
       return response_no_category
     end
     unless selector.present?
@@ -793,10 +800,11 @@ class InvitationsController < ApplicationController
     elsif selector.to_s == "0"
       my_url = Rails.configuration.front_partner_choose_url
     end
-
-    if to_user.present? and player.present?
+    brackets = []
+    if email.present?
+      brackets << bracket
       my_url = my_url.gsub '{event_id}', event.id.to_s
-      data = {:event_id => partner_params[:event_id], :email => to_user.email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
+      data = {:event_id => partner_params[:event_id], :email => email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
       @invitation = Invitation.get_invitation(data, @resource.id, type)
       my_url = my_url.gsub '{invitation_type}', @invitation.invitation_type
       @invitation.url = Invitation.short_url((my_url.gsub '{id}', @invitation.id.to_s))
@@ -809,7 +817,7 @@ class InvitationsController < ApplicationController
         end
       end
     else
-      return json_response_error([t("no_player")], 422)
+      return json_response_error([t("no_email")], 422)
     end
     json_response_success(t("created_success", model: Invitation.model_name.human), true)
   end
@@ -905,7 +913,8 @@ class InvitationsController < ApplicationController
   def partner_params
     params.required(:for_registered)
     params.required(:event_id)
-    params.permit(:event_id, :partner_id, :type, :url, :for_registered)
+    params.required(:bracket_id)
+    params.permit(:event_id, :partner_id, :type, :url, :for_registered, :email, :bracket_id)
   end
 
   def response_no_event
