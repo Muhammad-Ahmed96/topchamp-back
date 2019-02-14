@@ -782,7 +782,7 @@ class InvitationsController < ApplicationController
       end
       category_ids = Category.doubles_categories
     end
-    bracket = EventContestCategoryBracketDetail.where(:id => partner_params[:bracket_id])
+    bracket = EventContestCategoryBracketDetail.where(:id => partner_params[:bracket_id]).first
     if bracket.nil?
       return response_no_category
     end
@@ -803,6 +803,8 @@ class InvitationsController < ApplicationController
     end
     brackets = []
     if email.present?
+      puts 'segue'
+      puts bracket.inspect
       brackets << bracket
       my_url = my_url.gsub '{event_id}', event.id.to_s
       data = {:event_id => partner_params[:event_id], :email => email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
@@ -812,9 +814,9 @@ class InvitationsController < ApplicationController
       @invitation.save!
       @invitation.send_mail(true)
       brackets.each do |item|
-        saved = @invitation.brackets.where(:event_bracket_id => item.event_bracket_id, :category_id => category_id).first
+        saved = @invitation.brackets.where(:event_bracket_id => item.id, :category_id => category_id).first
         if saved.nil?
-          @invitation.brackets.create!({:event_bracket_id => item.event_bracket_id, :category_id => category_id})
+          @invitation.brackets.create!({:event_bracket_id => item.id, :category_id => category_id})
         end
       end
     else
