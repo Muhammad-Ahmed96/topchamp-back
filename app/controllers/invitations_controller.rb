@@ -803,8 +803,6 @@ class InvitationsController < ApplicationController
     end
     brackets = []
     if email.present?
-      puts 'segue'
-      puts bracket.inspect
       brackets << bracket
       my_url = my_url.gsub '{event_id}', event.id.to_s
       data = {:event_id => partner_params[:event_id], :email => email, :url => partner_params[:url], attendee_types: [AttendeeType.player_id]}
