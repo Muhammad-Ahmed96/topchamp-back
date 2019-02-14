@@ -755,7 +755,6 @@ class InvitationsController < ApplicationController
   end
 
   def partner
-    to_user = User.find(partner_params[:partner_id])
     event = Event.find(partner_params[:event_id])
     # player = Player.where(user_id: @resource.id).where(event_id: event.id).first
     type = ["partner_mixed", "partner_double"].include?(partner_params[:type]) ? partner_params[:type] : nil
@@ -763,11 +762,13 @@ class InvitationsController < ApplicationController
     #set brackets
     category_id = 0
     email = nil
-    unless to_user.nil?
-      email = to_user.email
-    end
     if partner_params[:email].present?
       email = partner_params[:email]
+    else
+      to_user = User.find(partner_params[:partner_id])
+      unless to_user.nil?
+        email = to_user.email
+      end
     end
     if type == "partner_mixed"
       category_id = Category.single_mixed_category
