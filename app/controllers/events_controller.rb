@@ -1687,13 +1687,19 @@ class EventsController < ApplicationController
     #subsrcibed categories
     in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
     #Validate gender
+    genderCategories = []
+    if gender == "Female"
+      genderCategories = Category.women_categories
+    elsif  gender == "Male"
+      genderCategories = Category.men_categories
+    end
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
     elsif @event.only_for_women and gender == "Male"
       return response_message_error(t("only_for_women_event"), 1)
     end
     event_categories = @event.internal_category_ids(in_categories_id)
-    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => @event.id)).where(:category_id => event_categories)
+    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => @event.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
     categories = categories.where(:event_contest_id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
     #Validate categories
     if categories.length <= 0
