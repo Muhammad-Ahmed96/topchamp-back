@@ -234,7 +234,7 @@ class Payments::CheckOutController < ApplicationController
 
   def subscribe
     #only for test
-    #@resource = User.find(params[:user_id])
+    # @resource = User.find(params[:user_id])
     event = Event.find(subscribe_params[:event_id])
     brackets = event.available_brackets(player_brackets_params)
     if brackets.length <= 0
