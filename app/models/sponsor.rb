@@ -33,7 +33,8 @@ class Sponsor < ApplicationRecord
   scope :brand_like, lambda {|search| where ["LOWER(brand) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :product_like, lambda {|search| where ["LOWER(product) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :franchise_brand_like, lambda {|search| where ["LOWER(franchise_brand) LIKE LOWER(?)", "%#{search}%"] if search.present?}
-  scope :business_category_like, lambda {|search| where ["LOWER(business_category) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :business_category_like, lambda {|search| joins(:business_category).merge(BusinessCategory.where ["LOWER(business_categories.description) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :business_category_order, lambda {|column, direction = "desc"| includes(:business_category).order("business_categories.#{column} #{direction}") if column.present?}
   scope :city_like, lambda {|search| where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :state_like, lambda {|search| where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"] if search.present?}
 

@@ -120,9 +120,14 @@ class SponsorsController < ApplicationController
     city = params[:city]
     status = params[:status]
     geography = params[:geography]
+    columnBusiness = nil
+    if column == 'business_category'
+      columnBusiness = 'description'
+      column = nil
+    end
     sponsors =  Sponsor.my_order(column, direction).in_status(status).in_geography(geography).company_name_like(company_name)
                  .brand_like(brand).product_like(product).franchise_brand_like(franchise_brand).business_category_like(business_category)
-                 .state_like(state).city_like(city)
+                 .state_like(state).city_like(city).business_category_order(columnBusiness, direction)
 
     if paginate.to_s == "0"
       json_response_serializer_collection(sponsors.all, Sponsor)

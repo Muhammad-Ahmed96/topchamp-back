@@ -13,6 +13,8 @@ Rails.application.routes.draw do
       collection do
         get :current_enrolls
         get :my_events
+        post :import_users
+        post :set_teams
       end
       member do
         put :activate

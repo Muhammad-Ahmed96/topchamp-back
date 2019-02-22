@@ -1,3 +1,5 @@
+require 'action_view'
+include ActionView::Helpers::NumberHelper
 class UsersController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!, except: [:sing_up_information, :my_events]
@@ -172,10 +174,10 @@ class UsersController < ApplicationController
       column = nil
     end
 
-    users =  User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
-                 .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
-                 .email_like(email).last_sign_in_at_like(last_sign_in_at).state_like(state).city_like(city)
-                 .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction)
+    users = User.my_order(column, direction).search(search).in_role(role).birth_date_in(birth_date)
+                .in_status(status).first_name_like(first_name).last_name_like(last_name).gender_like(gender)
+                .email_like(email).last_sign_in_at_like(last_sign_in_at).state_like(state).city_like(city)
+                .sport_in(sport_id).contact_information_order(column_contact_information, direction).sports_order(column_sports, direction)
     if paginate.to_s == "0"
       json_response_serializer_collection(users.all, UserSerializer)
     else
@@ -700,6 +702,7 @@ class UsersController < ApplicationController
     events = Event.joins(:players).merge(Player.where(:user_id => @resource.id)).all
     json_response_serializer_collection(events, EventWithDirectorSerializer)
   end
+
   swagger_path '/users/:id/sing_up_information' do
     operation :put do
       key :summary, 'Sing up information of user'
@@ -744,6 +747,7 @@ class UsersController < ApplicationController
       end
     end
   end
+
   def sing_up_information
     if @user.active_for_authentication?
       return json_response_error([t("is_already_active")], 422)
@@ -759,9 +763,202 @@ class UsersController < ApplicationController
   end
 
   def my_events
-    eventsId = Player.where(:user_id =>  @resource.id).pluck(:event_id)
+    eventsId = Player.where(:user_id => @resource.id).pluck(:event_id)
     events = Event.where(:id => eventsId)
     json_response_serializer_collection(events, EventSingleSerializer)
+  end
+
+  def import_users
+    spreadsheet = open_spreadsheet
+    header = spreadsheet.row(1)
+    event = Event.find(params[:event])
+    contest = params[:contest]
+    category = params[:category]
+    bracket = params[:bracket]
+    fees = EventFee.first
+    now = Date.today
+    last = nil
+    (2..spreadsheet.last_row).map do |i|
+      row = Hash[[header, spreadsheet.row(i)].transpose]
+      email = row["Email"].gsub(/\s+/, "").downcase
+      if email.blank?
+        email = Faker::Internet.email
+      end
+      item = User.find_by_email(email) || User.new
+      item.uid  = email
+      item.email  = email
+      item.first_name  = row['First Name']
+      item.last_name  = row['Last Name']
+      item.gender  = row['Sex'] === 'F' ? 'Female' : row['Sex'] === 'M' ? 'Male' : nil
+      birth = Date.strptime(row['Birthdate'], '%m/%d/%Y') rescue nil
+      item.birth_date  = birth.nil? ? birth : Date.strptime(row['Birthdate'], '%m/%d/%Y')
+      item.status = :Active
+      item.confirm
+      item.role = "Member"
+      item.save!
+      data = { :raking => row['Skill']}
+      item.create_association_information! data
+
+      #invite
+      if last.present?
+        data = {:event_id => event.id, :email => email, :url => nil, attendee_types: [AttendeeType.player_id]}
+        invitation = Invitation.get_invitation(data, last, 'partner_mixed')
+        invitation.status = :accepted
+        invitation.save!
+        saved = invitation.brackets.where(:event_bracket_id => bracket, :category_id => category).first
+        if saved.nil?
+          invitation.brackets.create!({:event_bracket_id => bracket, :category_id => category, :accepted => true})
+        end
+        last = nil
+      else
+        last = item.id
+      end
+
+      self.subscribe(event, item, fees, [{:category_id => category, :contest_id => contest, :event_bracket_id => bracket}])
+    end
+    return json_response_success(t("success"), true)
+  end
+
+
+  def set_teams
+    spreadsheet = open_spreadsheet
+    event = Event.find(params[:event])
+    header = spreadsheet.row(1)
+    (2..spreadsheet.last_row).map do |i|
+      row = Hash[[header, spreadsheet.row(i)].transpose]
+      email = row["Email"].gsub(/\s+/, "").downcase
+      item = User.find_by_email(email)
+      unless item.nil?
+        player = Player.where(user_id: item.id).where(event_id: event.id).first
+        unless player.nil?
+          player.set_teams false
+        end
+      end
+    end
+    return json_response_success(t("success"), true)
+  end
+
+
+  def open_spreadsheet
+    file = params[:file]
+    case File.extname(file.original_filename)
+    when ".csv" then
+      Csv.new(file.path, nil, :ignore)
+    when ".xls" then
+      Roo::Excel.new(file.path, nil, :ignore)
+    when ".xlsx" then
+      Roo::Excelx.new(file.path)
+    else
+      raise "Unknown file type: #{file.original_filename}"
+    end
+  end
+
+
+  def subscribe(event, user, fees, bracketsParams)
+    #only for test
+    brackets = event.available_brackets(bracketsParams)
+    if brackets.length <= 0
+      return false
+    end
+    discount_code = '0000'
+    config = Payments::ItemsConfig.get_bracket
+    items = []
+    amount = 0
+    tax_total = 0
+    discounts_total = 0
+    tax_for_registration = 0
+    tax_for_bracket = 0
+    enroll_fee = event.registration_fee
+    bracket_fee = event.payment_method.present? ? event.payment_method.bracket_fee : 0
+    #aply discounts
+    #event_discount = event.get_discount
+    personalized_discount = event.discount_personalizeds.where(:code => discount_code).where(:email => user.email).first
+    general_discount = event.discount_generals.where(:code => discount_code).first
+
+    #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
+    #todo discount
+    #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
+
+    if personalized_discount.present?
+      discounts_total = ((personalized_discount.discount * enroll_fee) / 100)
+      enroll_fee = enroll_fee - discounts_total
+      # bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
+    elsif general_discount.present? and general_discount.limited > general_discount.applied
+      discounts_total = ((general_discount.discount * enroll_fee) / 100)
+      enroll_fee = enroll_fee - discounts_total
+      #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+      general_discount.applied = general_discount.applied + 1
+      general_discount.save!(:validate => false)
+    end
+    #only for test
+    #enroll_fee = 1
+    #bracket_fee = 1
+    #first item event fee
+    item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: enroll_fee,
+            taxable: true}
+    items << item
+    brackets.each do |bracket|
+      if bracket[:enroll_status] == :enroll
+        item = {id: "#{config[:id]}-#{bracket[:event_bracket_id]}", name: "Bracket-#{bracket[:event_bracket_id]}", description: "Subscribe to Bracket-#{bracket[:event_bracket_id]}", quantity: 1, unit_price: bracket_fee,
+                taxable: true}
+        amount += bracket_fee
+        items << item
+      end
+    end
+    amount += enroll_fee
+    #set tax of event
+    tax = nil
+    #todo review process
+    if event.tax.present?
+      if event.tax.is_percent
+        tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = ((event.tax.tax * enroll_fee) / 100)
+        tax_for_bracket = ((event.tax.tax * bracket_fee) / 100)
+      else
+        tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = event.tax.tax / (1 + (brackets.length))
+        tax_for_bracket = event.tax.tax / (1 + (brackets.length))
+      end
+
+    end
+    if tax.present?
+      tax_total = tax[:amount]
+      amount = amount + tax_total
+    end
+     response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+    #save bracket on player
+    player = Player.where(user_id: user.id).where(event_id: event.id).first_or_create!
+    player.sync_brackets!(brackets, true)
+    app_fee = 0.0
+    amount = amount.to_f
+    if fees.present?
+      if fees.is_transaction_fee_percent
+        app_fee =  ((fees.transaction_fee * amount) / 100)
+      else
+        app_fee = fees.transaction_fee
+      end
+    end
+    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+    account = amount - authorize_fee
+
+    director_receipt = amount - (authorize_fee + app_fee)
+
+    paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => user.id,
+                                                             :amount => amount, :tax => number_with_precision(tax_total, precision: 2), :description => "TransactionForSubscribe",
+                                                             :event_id => player.event_id, :discount => discounts_total, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                             :director_receipt => director_receipt, :account => account)
+    brackets.each do |item|
+      paymentTransaction.details.create!({:amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
+                                          :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
+                                          :event_id => player.event_id, :type_payment => "bracket", :contest_id => item[:contest_id]})
+    end
+    paymentTransaction.details.create!({:amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
+                                        :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id})
+
+    player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
+        .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
+        .update(:payment_transaction_id => response.transactionResponse.transId)
+    player.set_teams false
   end
 
   private

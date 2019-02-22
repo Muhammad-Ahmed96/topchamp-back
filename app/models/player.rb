@@ -93,8 +93,8 @@ class Player < ApplicationRecord
     end
   end
 
-  def set_teams
-    User.create_teams(self.brackets_enroll, self.user_id, event.id, true)
+  def set_teams(mainRoot = true)
+    User.create_teams(self.brackets_enroll, self.user_id, event.id, mainRoot)
   end
 
   def set_paid(data, reference)
