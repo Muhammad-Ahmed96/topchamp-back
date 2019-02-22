@@ -1,7 +1,7 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_resource, only: [:update, :destroy, :resend_mail]
+  before_action :set_resource, only: [:update, :destroy, :resend_mail, :brackets]
   around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll, :partner]
   swagger_path '/invitations' do
     operation :get do
@@ -823,6 +823,98 @@ class InvitationsController < ApplicationController
     json_response_success(t("created_success", model: Invitation.model_name.human), true)
   end
 
+
+  def brackets
+    @event = Event.find(@invitation.event_id)
+    response_data = []
+    user = @resource
+    player = Player.where(user_id: user.id).where(event_id: @event.id).first
+    gender = user.gender
+    age = user.age
+    skill = user.skill_level
+    #subsrcibed categories
+    in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
+    #Validate gender
+    genderCategories = []
+    if gender == "Female"
+      genderCategories = Category.women_categories
+    elsif  gender == "Male"
+      genderCategories = Category.men_categories
+    end
+    if @event.only_for_men and gender == "Female"
+      return response_message_error(t("only_for_men_event"), 0)
+    elsif @event.only_for_women and gender == "Male"
+      return response_message_error(t("only_for_women_event"), 1)
+    end
+    event_categories = @event.internal_category_ids(in_categories_id)
+    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => @event.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
+    #Validate categories
+    if categories.length <= 0
+      return response_message_error(t("not_brackets_for_player"), 2)
+    end
+    not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
+    #Validate skills
+    only_brackets = @invitation.brackets.pluck(:event_bracket_id)
+    categories.each do |category|
+      valid_to_add = false
+      allow_age_range = category.contest.sport_regulator.allow_age_range
+      category.user_age = age
+      category.user_skill = skill
+      category.allow_age_range = allow_age_range
+      category.ignore_brackets = not_in
+      category.only_brackets = only_brackets
+      category.brackets.each do |bracket|
+        bracket.only_brackets = only_brackets
+        bracket.details.where(:id => only_brackets).not_in(not_in).each do |detail|
+          if !detail.available_for_enroll
+            not_in << detail.id
+          end
+          unless detail.brackets.nil?
+            detail.brackets.not_in(not_in).each do |detailchild|
+              if !detailchild.available_for_enroll
+                not_in << detailchild.id
+              end
+            end
+          end
+        end
+        type = bracket.bracket_type
+        case type
+        when 'age'
+          details = bracket.details.where(:id => only_brackets).age_filter(age, allow_age_range).not_in(not_in)
+          if details.length > 0
+            valid_to_add = true
+          end
+        when 'skill'
+          details = bracket.details.where(:id => only_brackets).skill_filter(skill).not_in(not_in)
+          if details.length > 0
+            valid_to_add = true
+          end
+        when 'skill_age'
+          bracket.details.where(:id => only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
+            if detail.brackets.where(:id => only_brackets).age_filter(age, allow_age_range).not_in(not_in).length > 0
+              valid_to_add = true
+            end
+          end
+        when 'age_skill'
+          bracket.details.where(:id => only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
+            if detail.brackets.where(:id => only_brackets).skill_filter(skill).not_in(not_in).length > 0
+              valid_to_add = true
+            end
+          end
+        end
+        if valid_to_add
+          break
+        end
+      end
+      if valid_to_add
+        response_data << category
+      end
+    end
+    if response_data.length <= 0
+      return response_message_error(t("not_brackets_for_player"), 2)
+    end
+    json_response_serializer_collection(response_data, EventContestFilterCategorySerializer)
+  end
   private
 
   def save(type)
@@ -936,4 +1028,9 @@ class InvitationsController < ApplicationController
   def index_partners_params
     params.required(:event_id)
   end
+
+  def response_message_error(message, code)
+    json_response_error(message, 422, code)
+  end
+
 end
