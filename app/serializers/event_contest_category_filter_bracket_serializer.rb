@@ -8,11 +8,14 @@ class EventContestCategoryFilterBracketSerializer < ActiveModel::Serializer
     age = object.user_age
     allow_age_range = object.allow_age_range
     skill = object.user_skill
+    only_brackets = object.only_brackets raise nil
     case type
     when 'age', 'age_skill'
       details = object.details.age_filter(age, allow_age_range).not_in( object.ignore_brackets)
+      details = details.where(:id => only_brackets) if only_brackets
     when 'skill_age', 'skill'
-      details = object.details.skill_filter(skill).not_in( object.ignore_brackets)
+      details = object.details.age_filter(age, allow_age_range).not_in( object.ignore_brackets)
+      details = details.where(:id => only_brackets) if only_brackets
     end
     details.each do |item|
       item.bracket_type = object.bracket_type
@@ -20,6 +23,7 @@ class EventContestCategoryFilterBracketSerializer < ActiveModel::Serializer
       item.allow_age_range = object.allow_age_range
       item.user_skill = object.user_skill
       item.ignore_brackets = object.ignore_brackets
+      item.only_brackets = object.only_brackets
     end
     details
   end

@@ -168,6 +168,7 @@ Rails.application.routes.draw do
         post :resend_mail
         post :enroll
         post :refuse
+        get :brackets
       end
     end
     resources :participants, only: [:index, :show] do
