@@ -15,7 +15,7 @@ class EventContestFilterCategorySerializer < ActiveModel::Serializer
     allow_age_range = object.allow_age_range
     age = object.user_age
     skill = object.user_skill
-    only_brackets = object.only_brackets raise nil
+    only_brackets = object.only_brackets
     object.brackets.each do |bracket|
       valid_to_add = false
       type = bracket.bracket_type

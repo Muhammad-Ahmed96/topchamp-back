@@ -9,7 +9,7 @@ class EventContestCategoryBracketDetailFilterSerializer < ActiveModel::Serialize
     age = object.user_age
     allow_age_range = object.allow_age_range
     skill = object.user_skill
-    only_brackets = object.only_brackets raise nil
+    only_brackets = object.only_brackets
     case type
     when 'age', 'skill'
       brackets = []
