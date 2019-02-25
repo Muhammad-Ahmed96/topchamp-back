@@ -891,13 +891,13 @@ class InvitationsController < ApplicationController
             valid_to_add = true
           end
         when 'skill_age'
-          bracket.details.where(:id => only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
+          bracket.details.skill_filter(skill).not_in(not_in).each do |detail|
             if detail.brackets.where(:id => only_brackets).age_filter(age, allow_age_range).not_in(not_in).length > 0
               valid_to_add = true
             end
           end
         when 'age_skill'
-          bracket.details.where(:id => only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
+          bracket.details.age_filter(age, allow_age_range).not_in(not_in).each do |detail|
             if detail.brackets.where(:id => only_brackets).skill_filter(skill).not_in(not_in).length > 0
               valid_to_add = true
             end
