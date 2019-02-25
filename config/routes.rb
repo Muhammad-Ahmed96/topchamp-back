@@ -13,6 +13,8 @@ Rails.application.routes.draw do
       collection do
         get :current_enrolls
         get :my_events
+        post :import_users
+        post :set_teams
       end
       member do
         put :activate
@@ -166,6 +168,7 @@ Rails.application.routes.draw do
         post :resend_mail
         post :enroll
         post :refuse
+        get :brackets
       end
     end
     resources :participants, only: [:index, :show] do

@@ -11,18 +11,19 @@ class EventContestCategoryBracketDetail < ApplicationRecord
   attr_accessor :allow_age_range
   attr_accessor :bracket_type
   attr_accessor :ignore_brackets
+  attr_accessor :only_brackets
 
   scope :age_filter, lambda {|age, allow_age_range|
     if age.present?
       if allow_age_range
-        where("young_age <= ?", age).where("old_age >= ?", age).or(EventContestCategoryBracketDetail.where(:young_age => nil).where(:old_age => nil))
+        where("event_contest_category_bracket_details.young_age <= ?", age).where("event_contest_category_bracket_details.old_age >= ?", age).or(EventContestCategoryBracketDetail.where(:young_age => nil).where(:old_age => nil))
       else
-        where("age <= ?", age).or(EventContestCategoryBracketDetail.where(:age => nil))
+        where("event_contest_category_bracket_details.age <= ?", age).or(EventContestCategoryBracketDetail.where(:age => nil))
       end
     end
   }
 
-  scope :skill_filter, lambda {|skill| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill).or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
+  scope :skill_filter, lambda {|skill| where("event_contest_category_bracket_details.lowest_skill <= ?", skill).where("event_contest_category_bracket_details.highest_skill >= ?", skill).or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
   scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
   scope :start_date_between, lambda {|start_date, end_date| where("start_date >= ? AND start_date <= ?", start_date, end_date ) if start_date.present? and end_date.present?}
 
