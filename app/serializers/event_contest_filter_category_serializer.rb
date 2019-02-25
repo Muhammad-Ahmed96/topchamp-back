@@ -49,7 +49,6 @@ class EventContestFilterCategorySerializer < ActiveModel::Serializer
         end
       when 'skill_age'
         details = bracket.details.skill_filter(skill).not_in(bracket.ignore_brackets)
-        details = details.where(:id => only_brackets) if only_brackets
         details.each do |detail|
           bc  = detail.brackets.age_filter(age, allow_age_range).not_in(bracket.ignore_brackets)
           bc = bc.where(:id => only_brackets) if only_brackets
@@ -60,7 +59,6 @@ class EventContestFilterCategorySerializer < ActiveModel::Serializer
         end
       when 'age_skill'
         details = bracket.details.age_filter(age, allow_age_range).not_in(bracket.ignore_brackets)
-        details = details.where(:id => only_brackets) if only_brackets
         details.each do |detail|
           bc = detail.brackets.skill_filter(skill).not_in(bracket.ignore_brackets)
           bc = bc.where(:id => only_brackets) if only_brackets
