@@ -1,7 +1,7 @@
 class InvitationsController < ApplicationController
   include Swagger::Blocks
   before_action :authenticate_user!
-  before_action :set_resource, only: [:update, :destroy, :resend_mail, :brackets]
+  before_action :set_resource, only: [:update, :destroy, :resend_mail]
   around_action :transactions_filter, only: [:event, :date, :sing_up, :enroll, :partner]
   swagger_path '/invitations' do
     operation :get do
@@ -825,6 +825,7 @@ class InvitationsController < ApplicationController
 
 
   def brackets
+    @invitation = Invitation.find(params[:id])
     @event = Event.find(@invitation.event_id)
     response_data = []
     user = @resource
