@@ -24,10 +24,10 @@ default: &default
 development:
   <<: *default
   #Dev
-  database: top_champ_production
+  database: top_champ_production_contest
   username: deploy
   password: password
-  host: ec2-34-211-229-184.us-west-2.compute.amazonaws.com
+  host: ec2-54-200-72-86.us-west-2.compute.amazonaws.com
 #qa
 #  database: top_champ_production
 #  username: deploy

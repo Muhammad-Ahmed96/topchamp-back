@@ -1693,11 +1693,13 @@ class EventsController < ApplicationController
     elsif  gender == "Male"
       genderCategories = Category.men_categories
     end
+=begin
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
     elsif @event.only_for_women and gender == "Male"
       return response_message_error(t("only_for_women_event"), 1)
     end
+=end
     event_categories = @event.internal_category_ids(in_categories_id)
     categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => @event.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
     categories = categories.where(:event_contest_id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
@@ -1791,14 +1793,16 @@ class EventsController < ApplicationController
       genderCategoeies = Category.men_categories
     end
 
+=begin
     if @event.only_for_men and gender == "Female"
       return response_message_error(t("only_for_men_event"), 0)
     elsif @event.only_for_women and gender == "Male"
       return response_message_error(t("only_for_women_event"), 1)
     end
+=end
     event_categories = @event.internal_category_ids(in_categories_id)
     contests = @event.contests
-    contests = contest.where(:id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
+    contests = contests.where(:id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
     #Validate categories
     if contests.length <= 0
       return response_message_error(t("not_brackets_for_player"), 2)
