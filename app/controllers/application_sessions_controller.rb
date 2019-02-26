@@ -81,7 +81,7 @@ uid:          zzzzz'
       @resource = find_resource(field, q_value)
     end
     if @resource && valid_params?(field, q_value) && (!@resource.respond_to?(:active_for_authentication?) || @resource.active_for_authentication?)
-      if valid_types[:type] == 'player' and (!@resource.member? and !@resource.is_player)
+      if valid_types[:type] == 'player' and (!@resource.member?)
         return render_create_error_bad_credentials
       end
 
