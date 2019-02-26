@@ -825,7 +825,7 @@ class InvitationsController < ApplicationController
 
 
   def brackets
-    @invitation = Invitation.find(params[:id])
+    @invitation = Invitation.where(:user_id => @resource.id).or(Invitation.where(:sender_id => @resource.id)).!first
     @event = Event.find(@invitation.event_id)
     response_data = []
     user = @resource
