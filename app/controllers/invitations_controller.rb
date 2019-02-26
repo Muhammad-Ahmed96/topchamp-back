@@ -545,39 +545,46 @@ class InvitationsController < ApplicationController
         if @invitation.invitation_type == "partner_mixed" or @invitation.invitation_type == "partner_double"
           #ckeck partner brackets
           @invitation.brackets.where(:category_id => category_id).each do |item|
+            bracket = item.bracket
+            type = nil
             result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
             if result == false
               @invitation.status = :pending_confirmation
               @invitation.save!
               return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
             end
-            case event.bracket_by
+            if bracket.parent_bracket.present?
+              type = bracket.parent_bracket.contest_bracket.bracket_type
+            else
+              type = bracket.contest_bracket.bracket_type
+            end
+            case type
             when "age"
-              if item.age.present?
-                @bracket_description = "Age: #{item.age}"
+              if bracket.age.present?
+                @bracket_description = "Age: #{bracket.age}"
               else
-                @bracket_description = "Young age: #{item.young_age}, Old age: #{item.old_age}"
+                @bracket_description = "Young age: #{bracket.young_age}, Old age: #{bracket.old_age}"
               end
             when "skill"
-              @bracket_description = "Lowest skill: #{item.lowest_skill}, Highest skill: #{item.highest_skill}"
+              @bracket_description = "Lowest skill: #{bracket.lowest_skill}, Highest skill: #{bracket.highest_skill}"
             when "skill_age"
-              main_bracket =  item.brackets.where(:id => item.event_bracket_id).first
+              main_bracket =  bracket.parent_bracket
               if main_bracket.nil?
-                main_bracket = item
+                main_bracket = bracket
               end
-              if item.age.present?
-                age = "Age: #{item.age}"
+              if bracket.age.present?
+                age = "Age: #{bracket.age}"
               else
-                age = "Young age: #{item.young_age}, Old age: #{item.old_age}"
+                age = "Young age: #{bracket.young_age}, Old age: #{bracket.old_age}"
               end
               @bracket_description = "Lowest skill: #{main_bracket.lowest_skill}, Highest skill: #{main_bracket.highest_skill} [#{age}]"
             when "age_skill"
-              main_bracket =  item.brackets.where(:id => item.event_bracket_id).first
+              main_bracket =  bracket.parent_bracket
               if main_bracket.nil?
-                main_bracket = item
+                main_bracket = bracket
               end
-              skill = "Lowest skill: #{item.lowest_skill}, Highest skill: #{item.highest_skill}"
-              if item.age.present?
+              skill = "Lowest skill: #{bracket.lowest_skill}, Highest skill: #{bracket.highest_skill}"
+              if bracket.age.present?
                 @bracket_description = "Age: #{main_bracket.age} [#{skill}]"
               else
                 @bracket_description = "Young age: #{main_bracket.young_age}, Old age: #{main_bracket.old_age} [#{skill}]"

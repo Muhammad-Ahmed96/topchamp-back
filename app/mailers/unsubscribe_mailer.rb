@@ -5,8 +5,13 @@ class UnsubscribeMailer < ApplicationMailer
     @director = director
     @registrant = registrant
     @bracket_description = ""
-
-    case event.bracket_by
+    type = nil
+    if bracket.parent_bracket.present?
+      type = bracket.parent_bracket.contest_bracket.bracket_type
+    else
+      type = bracket.contest_bracket.bracket_type
+    end
+    case type
     when "age"
       if @bracket.age.present?
         @bracket_description = "Age: #{@bracket.age}"
@@ -16,7 +21,7 @@ class UnsubscribeMailer < ApplicationMailer
     when "skill"
       @bracket_description = "Lowest skill: #{@bracket.lowest_skill}, Highest skill: #{@bracket.highest_skill}"
     when "skill_age"
-     main_bracket =  @bracket.brackets.where(:id => @bracket.event_bracket_id).first
+     main_bracket =  @bracket.parent_bracket
      if main_bracket.nil?
        main_bracket = @bracket
      end
@@ -27,7 +32,7 @@ class UnsubscribeMailer < ApplicationMailer
       end
       @bracket_description = "Lowest skill: #{main_bracket.lowest_skill}, Highest skill: #{main_bracket.highest_skill} [#{age}]"
     when "age_skill"
-      main_bracket =  @bracket.brackets.where(:id => @bracket.event_bracket_id).first
+      main_bracket =  @bracket.parent_bracket
       if main_bracket.nil?
         main_bracket = @bracket
       end
