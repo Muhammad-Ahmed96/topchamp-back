@@ -144,8 +144,7 @@ class Tournament < ApplicationRecord
     matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
     matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Round.where(:round_type => :winners)).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
     teams_ids = matchs_a + matchs_b
-    count = Team.where(:id => teams_ids).where(:event_id => self.event_id).where(:category_id => self.category_id)
-                .where(:event_bracket_id => self.event_bracket_id).count
+    count = Team.where(:id => teams_ids).where(:event_bracket_id => self.event_bracket_id).count
     return count
   end
 
