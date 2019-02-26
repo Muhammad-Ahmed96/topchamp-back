@@ -4,6 +4,8 @@ class EventContestCategoryBracketDetail < ApplicationRecord
   belongs_to :contest, class_name: 'EventContest', :optional => true
   belongs_to :contest_bracket, class_name: 'EventContestCategoryBracket', :foreign_key => 'event_contest_category_bracket_id',
              :optional => true
+  belongs_to :parent_bracket, class_name: 'EventContestCategoryBracketDetail', :foreign_key => 'event_contest_category_bracket_detail_id',
+             :optional => true
   has_many :brackets, class_name: "EventContestCategoryBracketDetail", :dependent => :destroy
   attr_accessor :status
   attr_accessor :user_age
