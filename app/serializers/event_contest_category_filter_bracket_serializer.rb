@@ -17,7 +17,7 @@ class EventContestCategoryFilterBracketSerializer < ActiveModel::Serializer
       dt2.event_contest_category_bracket_detail_id = event_contest_category_bracket_details.id').where("dt2.id = ? OR event_contest_category_bracket_details.id = ?", only_brackets, only_brackets)
       end
     when 'skill_age', 'skill'
-      details = object.details.skill_filter(age).not_in(object.ignore_brackets)
+      details = object.details.skill_filter(skill).not_in(object.ignore_brackets)
       if only_brackets
         details = details.joins('LEFT OUTER JOIN event_contest_category_bracket_details dt2 ON
       dt2.event_contest_category_bracket_detail_id = event_contest_category_bracket_details.id').where("dt2.id = ? OR event_contest_category_bracket_details.id = ?", only_brackets, only_brackets)
