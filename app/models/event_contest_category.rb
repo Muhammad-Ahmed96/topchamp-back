@@ -9,6 +9,7 @@ class EventContestCategory < ApplicationRecord
   attr_accessor :allow_age_range
   attr_accessor :ignore_brackets
   attr_accessor :only_brackets
+  attr_accessor :filter_brackets
 
   def validate_to_delete
     message = nil
