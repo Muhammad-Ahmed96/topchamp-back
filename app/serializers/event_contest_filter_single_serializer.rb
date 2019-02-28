@@ -10,4 +10,10 @@ class EventContestFilterSingleSerializer < ActiveModel::Serializer
   def venue
     object.event.venue
   end
+
+  has_many :categories, serializer: EventContestCategorySerializer
+
+  def categories
+    object.filter_categories
+  end
 end
