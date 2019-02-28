@@ -11,4 +11,8 @@ class EventContestFilterSerializer < ActiveModel::Serializer
   def categories
     object.filter_categories
   end
+
+  def venue
+    object.event.venue
+  end
 end
