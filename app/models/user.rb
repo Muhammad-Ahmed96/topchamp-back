@@ -51,6 +51,7 @@ class User < ApplicationRecord
   scope :last_name_like, lambda {|search| where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :gender_like, lambda {|search| where ["LOWER(gender) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :email_like, lambda {|search| where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :age_like, lambda {|search| where ["EXTRACT(YEAR FROM age(timestamp '#{Time.now.to_s}',users.birth_date))  = LOWER(?)", "%#{search}%"] if search.present?}
   scope :last_sign_in_at_in, lambda {|search| where last_sign_in_at: search.beginning_of_day..search.end_of_day if search.present?}
   scope :last_sign_in_at_like, lambda {|search| where("LOWER(concat(trim(to_char(last_sign_in_at, 'Month')),',',to_char(last_sign_in_at, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
   scope :state_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"]) if search.present?}

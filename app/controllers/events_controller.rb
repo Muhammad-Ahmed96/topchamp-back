@@ -1874,7 +1874,12 @@ class EventsController < ApplicationController
     if response_data.length <= 0
       return response_message_error(t("not_brackets_for_player"), 2)
     end
-    json_response_serializer_collection(response_data, EventContestFilterSerializer)
+    if available_categories_params[:only_contest].present? and available_categories_params[:only_contest].to_s == '1'
+      json_response_serializer_collection(response_data, EventContestFilterSingleSerializer)
+    else
+      json_response_serializer_collection(response_data, EventContestFilterSerializer)
+    end
+
   end
 
 
@@ -2205,6 +2210,6 @@ class EventsController < ApplicationController
   end
 
   def available_categories_params
-    params.permit('player_id', 'user_id', 'contest_id')
+    params.permit('player_id', 'user_id', 'contest_id', 'only_contest')
   end
 end
