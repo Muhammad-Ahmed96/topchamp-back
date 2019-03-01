@@ -689,7 +689,7 @@ class Event < ApplicationRecord
     brackets
   end
 
-  def available_categories(user, player, contest_id)
+  def available_categories(user, player, contest_id, only_brackets = nil)
     response_data = []
     gender = user.gender
     age = user.age
@@ -732,19 +732,19 @@ class Event < ApplicationRecord
         type = bracket.bracket_type
         case type
         when 'age'
-          bracket.filter_details = bracket.details.age_filter(age, allow_age_range).not_in(not_in).all
+          bracket.filter_details = bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
         when 'skill'
-          bracket.filter_details = bracket.details.skill_filter(skill).not_in(not_in).all
+          bracket.filter_details = bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
         when 'skill_age'
-           bracket.details.skill_filter(skill).not_in(not_in).each do |detail|
-            detail.filter_brackets = detail.brackets.age_filter(age, allow_age_range).not_in(not_in).all
+           bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
           end
         when 'age_skill'
-           bracket.details.age_filter(age, allow_age_range).not_in(not_in).each do |detail|
-            detail.filter_brackets = detail.brackets.skill_filter(skill).not_in(not_in).all
+           bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
