@@ -94,7 +94,7 @@ Rails.application.configure do
       password:             'Password01',
       authentication:       :login  }
   config.hours_bracket = 8
-  config.front_url = "http://topchampdev.tk:444"
+  config.front_url = "http://topchampdev1-1.tk:444"
   config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
   config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
   config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"
