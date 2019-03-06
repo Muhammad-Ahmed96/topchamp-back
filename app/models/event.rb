@@ -689,6 +689,78 @@ class Event < ApplicationRecord
     brackets
   end
 
+  def available_categories(user, player, contest_id, only_brackets = nil)
+    response_data = []
+    gender = user.gender
+    age = user.age
+    skill = user.skill_level
+    #subsrcibed categories
+    in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
+    #Validate gender
+    genderCategories = []
+    if gender == "Female"
+      genderCategories = Category.women_categories
+    elsif  gender == "Male"
+      genderCategories = Category.men_categories
+    end
+    event_categories = self.internal_category_ids(in_categories_id)
+    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => self.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
+    categories = categories.where(:event_contest_id => contest_id) if contest_id.present?
+    #Validate categories
+    if categories.length <= 0
+      return []
+    end
+    not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
+    #Validate skills
+    categories.each do |category|
+      category.filter_brackets = []
+      allow_age_range = category.contest.sport_regulator.allow_age_range
+      category.brackets.each do |bracket|
+        bracket.filter_details = []
+        bracket.details.not_in(not_in).each do |detail|
+          if !detail.available_for_enroll
+            not_in << detail.id
+          end
+          unless detail.brackets.nil?
+            detail.brackets.not_in(not_in).each do |detailchild|
+              if !detailchild.available_for_enroll
+                not_in << detailchild.id
+              end
+            end
+          end
+        end
+        type = bracket.bracket_type
+        case type
+        when 'age'
+          bracket.filter_details = bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
+        when 'skill'
+          bracket.filter_details = bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
+        when 'skill_age'
+           bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
+            if detail.filter_brackets.length > 0
+              bracket.filter_details << detail
+            end
+          end
+        when 'age_skill'
+           bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
+            if detail.filter_brackets.length > 0
+              bracket.filter_details << detail
+            end
+          end
+        end
+        if bracket.filter_details.length > 0
+          category.filter_brackets << bracket
+        end
+      end
+      if category.filter_brackets.length > 0
+        response_data << category
+      end
+    end
+    return response_data
+  end
+
   def get_discount
     discount = nil
     discounts = self.discount

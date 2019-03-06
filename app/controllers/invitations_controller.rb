@@ -208,15 +208,15 @@ class InvitationsController < ApplicationController
     end
 
     #check if category is paid
-   # player = Player.where(user_id: @resource.id).where(event_id: event_id).first
-   #  categories_ids = player.present? ? player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id) : []
-   #  if categories_ids.included_in? Category.doubles_categories
-   #    invitatin_type << "partner_double"
-   #  end
-   #
-   #  if categories_ids.included_in? Category.mixed_categories
-   #    invitatin_type << "partner_mixed"
-   #  end
+    # player = Player.where(user_id: @resource.id).where(event_id: event_id).first
+    #  categories_ids = player.present? ? player.brackets.where.not(:payment_transaction_id => nil).distinct.pluck(:category_id) : []
+    #  if categories_ids.included_in? Category.doubles_categories
+    #    invitatin_type << "partner_double"
+    #  end
+    #
+    #  if categories_ids.included_in? Category.mixed_categories
+    #    invitatin_type << "partner_mixed"
+    #  end
     #end check if category is paid
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
     invitations = Invitation.my_order(column, direction).event_like(event)
@@ -500,7 +500,7 @@ class InvitationsController < ApplicationController
           player = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
           if player.present?
             @invitation.brackets.where(:category_id => category_id).each do |item|
-              if player.have_partner?(category_id,  item.event_bracket_id)
+              if player.have_partner?(category_id, item.event_bracket_id)
                 @invitation.status = "declined"
                 @invitation.save!(:validate => false)
                 return json_response_error([t("player.partner.validation.already_partner")], 422)
@@ -513,7 +513,7 @@ class InvitationsController < ApplicationController
           player_sender = Player.where(user_id: @invitation.sender_id).where(event_id: event.id).first
           if player_sender.present?
             @invitation.brackets.where(:category_id => category_id).each do |item|
-              if player_sender.have_partner?(category_id,  item.event_bracket_id)
+              if player_sender.have_partner?(category_id, item.event_bracket_id)
                 @invitation.status = "declined"
                 @invitation.save!(:validate => false)
                 return json_response_error([t("player.partner.validation.already_partner_sender")], 422)
@@ -568,7 +568,7 @@ class InvitationsController < ApplicationController
             when "skill"
               @bracket_description = "Lowest skill: #{bracket.lowest_skill}, Highest skill: #{bracket.highest_skill}"
             when "skill_age"
-              main_bracket =  bracket.parent_bracket
+              main_bracket = bracket.parent_bracket
               if main_bracket.nil?
                 main_bracket = bracket
               end
@@ -579,7 +579,7 @@ class InvitationsController < ApplicationController
               end
               @bracket_description = "Lowest skill: #{main_bracket.lowest_skill}, Highest skill: #{main_bracket.highest_skill} [#{age}]"
             when "age_skill"
-              main_bracket =  bracket.parent_bracket
+              main_bracket = bracket.parent_bracket
               if main_bracket.nil?
                 main_bracket = bracket
               end
@@ -595,7 +595,7 @@ class InvitationsController < ApplicationController
           topic = "user_chanel_#{@invitation.sender_id}"
           user_to = @invitation.user
           #topic = 'user_chanel_3'
-          options = {data: {type:"accept_invitation", id: @invitation.id}, collapse_key: "invitation", notification: {
+          options = {data: {type: "accept_invitation", id: @invitation.id}, collapse_key: "invitation", notification: {
               body: "#{user_to.first_name}, #{user_to.last_name}, has accepted your invitation on Tournament #{event.title} and Bracket #{@bracket_description}", sound: 'default'}}
           send_push_topic(topic, options)
         end
@@ -771,10 +771,15 @@ class InvitationsController < ApplicationController
     email = nil
     if partner_params[:email].present?
       email = partner_params[:email]
+      to_user = User.where(:email => email).first
+      unless to_user.nil?
+        to_user.sync_invitation
+      end
     else
       to_user = User.find(partner_params[:partner_id])
       unless to_user.nil?
         email = to_user.email
+        to_user.sync_invitation
       end
     end
     if type == "partner_mixed"
@@ -832,97 +837,20 @@ class InvitationsController < ApplicationController
 
 
   def brackets
-    @invitation = Invitation.where(:user_id => @resource.id).or(Invitation.where(:sender_id => @resource.id)).first!
-    @event = Event.find(@invitation.event_id)
-    response_data = []
-    user = @resource
-    player = Player.where(user_id: user.id).where(event_id: @event.id).first
-    gender = user.gender
-    age = user.age
-    skill = user.skill_level
-    #subsrcibed categories
-    in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
-    #Validate gender
-    genderCategories = []
-    if gender == "Female"
-      genderCategories = Category.women_categories
-    elsif  gender == "Male"
-      genderCategories = Category.men_categories
-    end
-    if @event.only_for_men and gender == "Female"
-      return response_message_error(t("only_for_men_event"), 0)
-    elsif @event.only_for_women and gender == "Male"
-      return response_message_error(t("only_for_women_event"), 1)
-    end
-    event_categories = @event.internal_category_ids(in_categories_id)
-    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => @event.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
-    #Validate categories
-    if categories.length <= 0
-      return response_message_error(t("not_brackets_for_player"), 2)
-    end
-    not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
-    #Validate skills
+    @invitation = Invitation.where(:id => params[:id]).first!
     only_brackets = @invitation.brackets.pluck(:event_bracket_id)
-    categories.each do |category|
-      valid_to_add = false
-      allow_age_range = category.contest.sport_regulator.allow_age_range
-      category.user_age = age
-      category.user_skill = skill
-      category.allow_age_range = allow_age_range
-      category.ignore_brackets = not_in
-      category.only_brackets = only_brackets
-      category.brackets.each do |bracket|
-        bracket.only_brackets = only_brackets
-        bracket.details.where(:id => only_brackets).not_in(not_in).each do |detail|
-          if !detail.available_for_enroll
-            not_in << detail.id
-          end
-          unless detail.brackets.nil?
-            detail.brackets.not_in(not_in).each do |detailchild|
-              if !detailchild.available_for_enroll
-                not_in << detailchild.id
-              end
-            end
-          end
-        end
-        type = bracket.bracket_type
-        case type
-        when 'age'
-          details = bracket.details.where(:id => only_brackets).age_filter(age, allow_age_range).not_in(not_in)
-          if details.length > 0
-            valid_to_add = true
-          end
-        when 'skill'
-          details = bracket.details.where(:id => only_brackets).skill_filter(skill).not_in(not_in)
-          if details.length > 0
-            valid_to_add = true
-          end
-        when 'skill_age'
-          bracket.details.skill_filter(skill).not_in(not_in).each do |detail|
-            if detail.brackets.where(:id => only_brackets).age_filter(age, allow_age_range).not_in(not_in).length > 0
-              valid_to_add = true
-            end
-          end
-        when 'age_skill'
-          bracket.details.age_filter(age, allow_age_range).not_in(not_in).each do |detail|
-            if detail.brackets.where(:id => only_brackets).skill_filter(skill).not_in(not_in).length > 0
-              valid_to_add = true
-            end
-          end
-        end
-        if valid_to_add
-          break
-        end
-      end
-      if valid_to_add
-        response_data << category
-      end
-    end
+    contest_id = EventContestCategoryBracketDetail.where(:id => only_brackets).pluck(:contest_id)
+    @event = Event.find(@invitation.event_id)
+    user = @resource
+    user.sync_invitation
+    player = Player.where(user_id: user.id).where(event_id: @event.id).first
+    response_data = @event.available_categories(user, player, contest_id, only_brackets)
     if response_data.length <= 0
       return response_message_error(t("not_brackets_for_player"), 2)
     end
     json_response_serializer_collection(response_data, EventContestFilterCategorySerializer)
   end
+
   private
 
   def save(type)
@@ -1029,6 +957,7 @@ class InvitationsController < ApplicationController
   def response_no_type
     json_response_error([t("not_type")], 422)
   end
+
   def response_no_category
     json_response_error([t("not_subscribe_to_category")], 422)
   end
