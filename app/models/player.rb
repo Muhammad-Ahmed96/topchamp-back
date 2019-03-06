@@ -24,6 +24,7 @@ class Player < ApplicationRecord
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :last_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :email_like, lambda {|search| joins(:user).merge(User.where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :age_like, lambda {|search| joins(:user).merge(User.where [" EXTRACT(YEAR FROM age(timestamp '#{Time.now.to_s}',users.birth_date)) = ?", "#{search}"]) if search.present?}
   scope :skill_level_like, lambda {|search| joins(user: [:association_information]).merge(AssociationInformation.where ["LOWER(raking) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
 
   scope :sport_in, lambda {|search| joins(event: [:sports]).merge(Sport.where id: search) if search.present?}
@@ -36,6 +37,7 @@ class Player < ApplicationRecord
   scope :first_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :last_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :email_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
+  scope :age_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(event: [:sports]).order("sports.#{column} #{direction}") if column.present?}
   scope :skill_level_order, lambda {|column, direction = "desc"| includes(user: [:association_information]).order("association_informations.#{column} #{direction}") if column.present?}
   scope :categories_order, lambda {|column, direction = "desc"| joins(brackets: [:category]).order("categories.#{column} #{direction}") if column.present?}
@@ -93,8 +95,8 @@ class Player < ApplicationRecord
     end
   end
 
-  def set_teams
-    User.create_teams(self.brackets_enroll, self.user_id, event.id, true)
+  def set_teams(mainRoot = true)
+    User.create_teams(self.brackets_enroll, self.user_id, event.id, mainRoot)
   end
 
   def set_paid(data, reference)

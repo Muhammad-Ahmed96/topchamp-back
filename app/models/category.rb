@@ -3,11 +3,11 @@ class Category < ApplicationRecord
 
 
   def self.men_categories
-    [1,2, 5]
+    [1,2,5]
   end
 
   def self.women_categories
-    [3,4, 5]
+    [3,4,5]
   end
 
   def self.mixed_categories

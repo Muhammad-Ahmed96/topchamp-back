@@ -119,7 +119,7 @@ class ParticipantsController < ApplicationController
       column = nil
     end
     attendee_type_column = nil
-    if column.to_s == "attendee_type"
+    if column.to_s == "attendee_type" or column.to_s == "attendee_type_id" or column.to_s == "name"
       attendee_type_column = "name"
       column = nil
     end

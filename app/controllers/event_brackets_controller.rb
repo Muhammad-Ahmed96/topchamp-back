@@ -59,7 +59,7 @@ class EventBracketsController < ApplicationController
   private
   def index_params
     params.required(:category_id)
-    params.permit(:category_id)
+    params.permit(:category_id, :contest_id)
   end
   def set_resource
     @event = Event.find(params[:event_id])

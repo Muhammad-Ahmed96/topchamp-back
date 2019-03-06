@@ -51,6 +51,7 @@ class User < ApplicationRecord
   scope :last_name_like, lambda {|search| where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :gender_like, lambda {|search| where ["LOWER(gender) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :email_like, lambda {|search| where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :age_like, lambda {|search| where ["EXTRACT(YEAR FROM age(timestamp '#{Time.now.to_s}',users.birth_date))  = LOWER(?)", "%#{search}%"] if search.present?}
   scope :last_sign_in_at_in, lambda {|search| where last_sign_in_at: search.beginning_of_day..search.end_of_day if search.present?}
   scope :last_sign_in_at_like, lambda {|search| where("LOWER(concat(trim(to_char(last_sign_in_at, 'Month')),',',to_char(last_sign_in_at, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
   scope :state_like, lambda {|search| joins(:contact_information).merge(ContactInformation.where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
@@ -397,13 +398,15 @@ class User < ApplicationRecord
         end
         invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
                          .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
+        puts "segue"
+        puts category_type
         if invitation.present?
-          result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id],
+          result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id].to_i,
                                        parent_root)
         else
           #if [item[:category_id].to_i].included_in? Category.single_categories
           player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
-          self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id], [player.id])
+          self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id].to_i, [player.id])
           #end
         end
       end
@@ -462,19 +465,12 @@ class User < ApplicationRecord
                        .where.not(:id => team.id).first
       if team_fetch.present?
         player.teams.destroy(team_fetch)
+        player.save
       end
     end
-    teams_ids = Team.where(:event_bracket_id => event_bracket_id).where(:event_id => event_id).pluck(:id)
-    teams_to_destroy = []
-    teams_ids.each do |team_id|
-      count = Team.where(:id => team_id).first.players.count
-      if count == 0
-        teams_to_destroy << team_id
-      end
-    end
-    if teams_to_destroy.length > 0
-      Team.where(:id => teams_to_destroy).destroy_all
-    end
+    delete = Team.where(:event_bracket_id => event_bracket_id).where(:event_id => event_id)
+                .left_outer_joins(:players).merge(Player.having('Count(players.id) = 0').group('teams.id')).destroy_all
+
   end
 
 
@@ -516,6 +512,10 @@ class User < ApplicationRecord
       end
     end
     EventPersonalizedDiscount.where.not(id: deleteIds).destroy_all
+  end
+
+  def sync_invitation
+    Invitation.where(:email => self.email).where(:user_id => nil).update_all({:user_id => self.id})
   end
 
   private

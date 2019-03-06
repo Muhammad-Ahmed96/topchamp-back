@@ -423,6 +423,17 @@ class EventsController < ApplicationController
     end
     events = Event.upcoming.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
                  .in_status("Active").state_like(state).city_like(city).in_visibility("Public").only_directors(director_id)
+    if director_id.nil?
+      availiableEvents = []
+      user = @resource
+      Event.upcoming.sport_in(sport_id).title_like(title).in_status("Active").state_like(state).city_like(city).in_visibility("Public").each do |event|
+        player = Player.where(user_id: user.id).where(event_id: event.id).first
+        if event.available_categories(user, player, nil).length > 0
+          availiableEvents << event.id
+        end
+      end
+      events = events.where(:id => availiableEvents)
+    end
     if paginate.to_s == "0"
       json_response_serializer_collection(events.all, EventSerializer)
     else
@@ -1673,7 +1684,7 @@ class EventsController < ApplicationController
 
   def available_categories
     @event = Event.find(params[:id])
-    response_data = []
+    user = nil
     if available_categories_params[:player_id].present?
       player = Player.find(available_categories_params[:player_id])
       user = player.user
@@ -1681,80 +1692,7 @@ class EventsController < ApplicationController
       user = @resource
       player = Player.where(user_id: user.id).where(event_id: @event.id).first
     end
-    gender = user.gender
-    age = user.age
-    skill = user.skill_level
-    #subsrcibed categories
-    in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
-    #Validate gender
-    if @event.only_for_men and gender == "Female"
-      return response_message_error(t("only_for_men_event"), 0)
-    elsif @event.only_for_women and gender == "Male"
-      return response_message_error(t("only_for_women_event"), 1)
-    end
-    event_categories = @event.internal_category_ids(in_categories_id)
-    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => @event.id)).where(:category_id => event_categories)
-    categories = categories.where(:event_contest_id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
-    #Validate categories
-    if categories.length <= 0
-      return response_message_error(t("not_brackets_for_player"), 2)
-    end
-    not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
-    #Validate skills
-
-    categories.each do |category|
-      valid_to_add = false
-      allow_age_range = category.contest.sport_regulator.allow_age_range
-      category.user_age = age
-      category.user_skill = skill
-      category.allow_age_range = allow_age_range
-      category.ignore_brackets = not_in
-      category.brackets.each do |bracket|
-        bracket.details.not_in(not_in).each do |detail|
-          if !detail.available_for_enroll
-            not_in << detail.id
-          end
-          unless detail.brackets.nil?
-            detail.brackets.not_in(not_in).each do |detailchild|
-              if !detailchild.available_for_enroll
-                not_in << detailchild.id
-              end
-            end
-          end
-        end
-        type = bracket.bracket_type
-        case type
-        when 'age'
-          details = bracket.details.age_filter(age, allow_age_range).not_in(not_in)
-          if details.length > 0
-            valid_to_add = true
-          end
-        when 'skill'
-          details = bracket.details.skill_filter(skill).not_in(not_in)
-          if details.length > 0
-            valid_to_add = true
-          end
-        when 'skill_age'
-          bracket.details.skill_filter(skill).not_in(not_in).each do |detail|
-            if detail.brackets.age_filter(age, allow_age_range).not_in(not_in).length > 0
-              valid_to_add = true
-            end
-          end
-        when 'age_skill'
-          bracket.details.age_filter(age, allow_age_range).not_in(not_in).each do |detail|
-            if detail.brackets.skill_filter(skill).not_in(not_in).length > 0
-              valid_to_add = true
-            end
-          end
-        end
-        if valid_to_add
-          break
-        end
-      end
-      if valid_to_add
-        response_data << category
-      end
-    end
+    response_data = @event.available_categories(user, player, available_categories_params[:contest_id])
     if response_data.length <= 0
       return response_message_error(t("not_brackets_for_player"), 2)
     end
@@ -1772,99 +1710,28 @@ class EventsController < ApplicationController
       user = @resource
       player = Player.where(user_id: user.id).where(event_id: @event.id).first
     end
-    gender = user.gender
-    age = user.age
-    skill = user.skill_level
-    #subsrcibed categories
-    in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
-    #Validate gender
-    genderCategoeies = []
-    if gender == "Female"
-      genderCategoeies = Category.women_categories
-    elsif  gender == "Male"
-      genderCategoeies = Category.men_categories
-    end
-
-    if @event.only_for_men and gender == "Female"
-      return response_message_error(t("only_for_men_event"), 0)
-    elsif @event.only_for_women and gender == "Male"
-      return response_message_error(t("only_for_women_event"), 1)
-    end
-    event_categories = @event.internal_category_ids(in_categories_id)
     contests = @event.contests
-    contests = contest.where(:id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
+    contests = contests.where(:id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
     #Validate categories
     if contests.length <= 0
       return response_message_error(t("not_brackets_for_player"), 2)
     end
-    not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
     #Validate skills
     contests.each do |contest|
-      valid_to_add_contest = false
-      categories = contest.categories.where(:category_id => event_categories).where(:category_id => genderCategoeies)
-      contest.filter_categories = []
-      categories.each do |category|
-        valid_to_add = false
-        allow_age_range = contest.sport_regulator.allow_age_range
-        category.user_age = age
-        category.user_skill = skill
-        category.allow_age_range = allow_age_range
-        category.ignore_brackets = not_in
-        category.brackets.each do |bracket|
-          bracket.details.not_in(not_in).each do |detail|
-            if !detail.available_for_enroll
-              not_in << detail.id
-            end
-            unless detail.brackets.nil?
-              detail.brackets.not_in(not_in).each do |detailchild|
-                if !detailchild.available_for_enroll
-                  not_in << detailchild.id
-                end
-              end
-            end
-          end
-          type = bracket.bracket_type
-          case type
-          when 'age'
-            details = bracket.details.age_filter(age, allow_age_range).not_in(not_in)
-            if details.length > 0
-              valid_to_add = true
-            end
-          when 'skill'
-            details = bracket.details.skill_filter(skill).not_in(not_in)
-            if details.length > 0
-              valid_to_add = true
-            end
-          when 'skill_age'
-            bracket.details.skill_filter(skill).not_in(not_in).each do |detail|
-              if detail.brackets.age_filter(age, allow_age_range).not_in(not_in).length > 0
-                valid_to_add = true
-              end
-            end
-          when 'age_skill'
-            bracket.details.age_filter(age, allow_age_range).not_in(not_in).each do |detail|
-              if detail.brackets.skill_filter(skill).not_in(not_in).length > 0
-                valid_to_add = true
-              end
-            end
-          end
-          if valid_to_add
-            break
-          end
-        end
-        if valid_to_add
-          valid_to_add_contest = true
-          contest.filter_categories << category
-        end
-      end
-      if valid_to_add_contest
+      contest.filter_categories = @event.available_categories(user, player, contest.id)
+      if contest.filter_categories.length > 0
         response_data << contest
       end
     end
     if response_data.length <= 0
       return response_message_error(t("not_brackets_for_player"), 2)
     end
-    json_response_serializer_collection(response_data, EventContestFilterSerializer)
+    if available_categories_params[:only_contest].present? and available_categories_params[:only_contest].to_s == '1'
+      json_response_serializer_collection(response_data, EventContestFilterSingleSerializer)
+    else
+      json_response_serializer_collection(response_data, EventContestFilterSerializer)
+    end
+
   end
 
 
@@ -2195,6 +2062,6 @@ class EventsController < ApplicationController
   end
 
   def available_categories_params
-    params.permit('player_id', 'user_id', 'contest_id')
+    params.permit('player_id', 'user_id', 'contest_id', 'only_contest')
   end
 end
