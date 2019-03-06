@@ -771,10 +771,15 @@ class InvitationsController < ApplicationController
     email = nil
     if partner_params[:email].present?
       email = partner_params[:email]
+      to_user = User.where(:email => email).first
+      unless to_user.nil?
+        to_user.sync_invitation
+      end
     else
       to_user = User.find(partner_params[:partner_id])
       unless to_user.nil?
         email = to_user.email
+        to_user.sync_invitation
       end
     end
     if type == "partner_mixed"
@@ -837,6 +842,7 @@ class InvitationsController < ApplicationController
     contest_id = EventContestCategoryBracketDetail.where(:id => only_brackets).pluck(:contest_id)
     @event = Event.find(@invitation.event_id)
     user = @resource
+    user.sync_invitation
     player = Player.where(user_id: user.id).where(event_id: @event.id).first
     response_data = @event.available_categories(user, player, contest_id, only_brackets)
     if response_data.length <= 0
