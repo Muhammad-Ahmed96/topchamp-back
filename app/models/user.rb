@@ -514,6 +514,10 @@ class User < ApplicationRecord
     EventPersonalizedDiscount.where.not(id: deleteIds).destroy_all
   end
 
+  def sync_invitation
+    Invitation.where(:email => self.email).where(:user_id => nil).update_all({:user_id => self.id})
+  end
+
   private
 
   def check_dimensions
