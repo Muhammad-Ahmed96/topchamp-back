@@ -832,7 +832,7 @@ class InvitationsController < ApplicationController
 
 
   def brackets
-    @invitation = Invitation.where(:id => params[:id]).where(:user_id => @resource.id).or(Invitation.where(:sender_id => @resource.id)).first!
+    @invitation = Invitation.where(:id => params[:id]).first!
     only_brackets = @invitation.brackets.pluck(:event_bracket_id)
     contest_id = EventContestCategoryBracketDetail.where(:id => only_brackets).pluck(:contest_id)
     @event = Event.find(@invitation.event_id)
