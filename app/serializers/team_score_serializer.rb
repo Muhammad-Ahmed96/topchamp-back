@@ -5,7 +5,7 @@ class TeamScoreSerializer < ActiveModel::Serializer
   def scores
     scores = []
     if instance_options[:match_id].present?
-    scores = Score.joins(set: [match: [round: [tournament: :event ]]])
+    scores = Score.joins(set: [match: [round: [tournament: :event ]]]).order(:match_set_id).order(:id)
                  .merge(MatchSet.where(:match_id => instance_options[:match_id])).where(:team_id => object.id).all
       end
   end
