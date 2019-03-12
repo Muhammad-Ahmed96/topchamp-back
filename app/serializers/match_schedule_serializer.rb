@@ -1,5 +1,5 @@
 class MatchScheduleSerializer < ActiveModel::Serializer
-  attributes :id,:title, :date, :contest_index
+  attributes :id,:title, :date, :contest_index, :referee
 
   has_one :bracket, serializer: EventContestCategoryBracketDetailSerializer
   has_one :category, serializer: CategorySerializer

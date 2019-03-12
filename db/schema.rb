@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_23_202640) do
+ActiveRecord::Schema.define(version: 2019_03_12_230355) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -492,6 +492,7 @@ ActiveRecord::Schema.define(version: 2019_01_23_202640) do
     t.string "end_time"
     t.integer "loser_match_a"
     t.integer "loser_match_b"
+    t.string "referee"
   end
 
   create_table "medical_informations", force: :cascade do |t|

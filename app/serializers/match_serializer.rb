@@ -6,7 +6,7 @@ class MatchSerializer < ActiveModel::Serializer
     end
   end
   attributes :id, :index, :round_id, :team_a_id, :team_b_id,:status, :seed_team_a, :seed_team_b, :match_number,
-             :court, :date, :start_time, :end_time, :team_winner_id
+             :court, :date, :start_time, :end_time, :team_winner_id, :referee
   belongs_to :team_a, serializer: TeamScoreSerializer
   belongs_to :team_b, serializer: TeamScoreSerializer
 
