@@ -7,6 +7,7 @@ class TournamentWithTeamsSerializer < ActiveModel::Serializer
              :contest_id, :event_contest_category_id
 
   belongs_to :event, :serializer => EventSingleSerializer
+  belongs_to :contest, :serializer => EventContestSingleSerializer
   belongs_to :bracket, :serializer => EventBracketParentSerializer
   belongs_to :category, :serializer => CategorySerializer
   has_many :rounds, :serializer => RoundSingleSerializer
