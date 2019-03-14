@@ -341,6 +341,8 @@ class UsersController < ApplicationController
     if !params[:medical_information].nil?
       resource.create_medical_information! medical_information_params
     end
+    resource.role = :Director
+    resource.save
     resource.sync_invitation
     json_response_success(t("created_success", model: User.model_name.human), true)
   end

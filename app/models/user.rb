@@ -90,11 +90,15 @@ class User < ApplicationRecord
   end
 
   def is_director
-    count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
-    if count > 0
+    if self.director?
       return true
     else
-      return false
+      count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
+      if count > 0
+        return true
+      else
+        return false
+      end
     end
   end
 
