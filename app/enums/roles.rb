@@ -22,7 +22,5 @@ end
 # class Roles::Customer < Roles
 # end
 
-=begin
 class Roles::Director < Roles
 end
-=end
