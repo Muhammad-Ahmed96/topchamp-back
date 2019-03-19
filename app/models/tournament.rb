@@ -347,8 +347,6 @@ class Tournament < ApplicationRecord
         team.save!(:validate => false)
       end
     end
-    logger.info 'segue'
-    logger.info self.winner_team_id
   end
 
   def get_index_match(match_index)
