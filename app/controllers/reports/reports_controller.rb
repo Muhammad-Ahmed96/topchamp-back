@@ -42,7 +42,8 @@ class Reports::ReportsController < ApplicationController
                 .select('users.id AS user_id,concat(users.first_name,\' \', users.last_name) AS player_name,pym.payment_transaction_id ,' +
                                                'ROUND(SUM(pym.authorize_fee::NUMERIC), 2) AS authorize_fee,'+
                             ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee, ' +
-                            'ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt, ROUND(SUM(pym.amount::NUMERIC), 2) AS amount')
+                            'ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt, ROUND(SUM(pym.amount::NUMERIC), 2) AS amount' + '
+                pym.event_id As event_id')
                 .group("users.id", 'pym.payment_transaction_id')
 
     unless player_name.nil?
