@@ -41,7 +41,8 @@ class Reports::ReportsController < ApplicationController
     .where("pym.event_id IN (?) AND pym.for_refund = true AND pym.amount > pym.refund_total", my_events_ids)
                 .select('users.id AS user_id,concat(users.first_name,\' \', users.last_name) AS player_name,pym.payment_transaction_id ,' +
                                                'ROUND(SUM(pym.authorize_fee::NUMERIC), 2) AS authorize_fee,'+
-                            ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee,ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt')
+                            ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee, ' +
+                            'ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt, ROUND(SUM(pym.amount::NUMERIC), 2) AS amount')
                 .group("users.id", 'pym.payment_transaction_id')
 
     unless player_name.nil?
