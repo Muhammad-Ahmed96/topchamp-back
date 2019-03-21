@@ -63,9 +63,6 @@ class Payments::RefundsController < ApplicationController
       card_number = transaction.transaction.payment.creditCard.cardNumber.to_s
       expiration_date = transaction.transaction.payment.creditCard.expirationDate.to_s
     end
-    unless credit_card_prams['amount'].numeric?
-      return response_no_numeric
-    end
 
     unless credit_card_prams['amount'].to_f > 0
       return response_more_than
