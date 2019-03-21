@@ -202,7 +202,7 @@ class ScoresController < ApplicationController
     params.require(:match_id)
     params.require(:scores_a)
     params.require(:scores_b)
-    params.require(:referee)
+   # params.require(:referee)
     params.permit(:match_id, :referee, scores_a: [:number_set, :score, :time_out], scores_b: [:number_set, :score, :time_out])
   end
 end
