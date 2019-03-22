@@ -322,7 +322,6 @@ class Tournament < ApplicationRecord
           match.round.verify_complete_final_status
         end
       end
-      self.verify_complete_status
     end
     #save general scores of teams
     #rest last team match won
@@ -347,6 +346,7 @@ class Tournament < ApplicationRecord
         team.save!(:validate => false)
       end
     end
+    self.verify_complete_status
   end
 
   def get_index_match(match_index)
