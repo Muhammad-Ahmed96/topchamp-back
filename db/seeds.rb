@@ -49,13 +49,13 @@ if AgendaType.count == 0
 end
 if Region.count == 0
   Region.create([{name: 'Atlantic', base: 'USA', territory: 'New York, Vermont, New Hampshire, Massachusetts, Rhode Island, Connecticut'},
-                 {name: 'Mid-Atlantic', base: 'USA', territory: 'Pennsylvania, New Jersey, Delaware, Maryland, West Virginia, Kentucky, Tennessee, south Caroline, North Carolina'},
+                 {name: 'Mid-Atlantic', base: 'USA', territory: 'Pennsylvania, New Jersey, Delaware, Maryland, West Virginia, Kentucky, Tennessee, South Carolina, North Carolina'},
                  {name: 'Great Lakes', base: 'USA', territory: 'Ohio, Indiana, Michigan'},
                  {name: 'Atlantic-South', base: 'USA', territory: 'Mississippi, Georgia, Alabama, Florida'},
                  {name: 'Mid-South', base: 'USA', territory: 'Texas, Louisiana, Arkansas, Oklahoma'},
                  {name: 'Southwest', base: 'USA', territory: 'Arizona and New Mexico'},
                  {name: 'Mountain', base: 'USA', territory: 'Nevada, Utah'},
-                 {name: 'West', base: 'USA', territory: 'Califorina, Hawaii'},
+                 {name: 'West', base: 'USA', territory: 'California, Hawaii'},
                  {name: 'Pacific Northwest', base: 'USA', territory: 'Washington, Oregon, Idaho'},
                  {name: 'Great Plains', base: 'USA', territory: 'Montana, Wyoming, Colorado, North Dakota, South Dakota, Nebraska and Kansas'},
                  {name: 'Middle States', base: 'USA', territory: 'Minnesota, Iowa, Missouri, Wisconsin, Illinois'},
