@@ -43,7 +43,7 @@ class Reports::ReportsController < ApplicationController
                                                'ROUND(SUM(pym.authorize_fee::NUMERIC), 2) AS authorize_fee,'+
                             ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee, ' +
                             'ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt, ROUND(SUM(pym.amount::NUMERIC), 2) AS amount,' +
-                            ' pym.event_id AS event_id')
+                            ' pym.event_id AS event_id, SUM(pym.refund_total::NUMERIC) AS refund_total, (SUM(pym.amount::NUMERIC) - SUM(pym.refund_total::NUMERIC)) AS available_refund')
                 .group("users.id", 'pym.payment_transaction_id', 'pym.event_id')
 
     unless player_name.nil?
