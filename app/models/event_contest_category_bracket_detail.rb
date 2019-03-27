@@ -65,6 +65,10 @@ class EventContestCategoryBracketDetail < ApplicationRecord
     return self.get_status
   end
 
+  def for_show?
+    return (self.status == :waiting_list or self.status == :enroll)
+  end
+
   def available_for_enroll
     result = false
     count = self.get_enroll_count

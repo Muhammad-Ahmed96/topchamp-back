@@ -41,8 +41,10 @@ class Reports::ReportsController < ApplicationController
     .where("pym.event_id IN (?) AND pym.for_refund = true AND pym.amount > pym.refund_total", my_events_ids)
                 .select('users.id AS user_id,concat(users.first_name,\' \', users.last_name) AS player_name,pym.payment_transaction_id ,' +
                                                'ROUND(SUM(pym.authorize_fee::NUMERIC), 2) AS authorize_fee,'+
-                            ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee,ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt')
-                .group("users.id", 'pym.payment_transaction_id')
+                            ' ROUND(SUM(pym.account::NUMERIC), 2) AS top_champ_account, ROUND(SUM(pym.app_fee::NUMERIC), 2) AS top_champ_fee, ' +
+                            'ROUND(SUM(pym.director_receipt::NUMERIC), 2) AS director_receipt, ROUND(SUM(pym.amount::NUMERIC), 2) AS amount,' +
+                            ' pym.event_id AS event_id, SUM(pym.refund_total::NUMERIC) AS refund_total, (SUM(pym.amount::NUMERIC) - SUM(pym.refund_total::NUMERIC)) AS available_refund')
+                .group("users.id", 'pym.payment_transaction_id', 'pym.event_id')
 
     unless player_name.nil?
       items = items.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{player_name}%")

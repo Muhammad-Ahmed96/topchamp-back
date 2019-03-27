@@ -402,8 +402,6 @@ class User < ApplicationRecord
         end
         invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
                          .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
-        puts "segue"
-        puts category_type
         if invitation.present?
           result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id].to_i,
                                        parent_root)

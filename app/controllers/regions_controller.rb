@@ -38,9 +38,9 @@ class RegionsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :territoy
+        key :name, :territory
         key :in, :query
-        key :description, 'Territoy to filter'
+        key :description, 'Territory to filter'
         key :required, false
         key :type, :string
       end
@@ -79,8 +79,8 @@ class RegionsController < ApplicationController
 
     name = params[:name].strip unless params[:name].nil?
     base = params[:base].strip unless params[:base].nil?
-    territoy = params[:territoy].strip unless params[:territoy].nil?
-    paginate Region.my_order(column, direction).name_like(name).base_like(base).territoy_like(territoy), per_page: 50, root: :data
+    territory = params[:territory].strip unless params[:territory].nil?
+    paginate Region.my_order(column, direction).name_like(name).base_like(base).territory_like(territory), per_page: 50, root: :data
   end
 =begin
   swagger_path '/regions' do
@@ -103,7 +103,7 @@ class RegionsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :territoy
+        key :name, :territory
         key :in, :body
         key :required, true
         key :type, :string
@@ -188,7 +188,7 @@ class RegionsController < ApplicationController
         key :type, :string
       end
       parameter do
-        key :name, :territoy
+        key :name, :territory
         key :in, :body
         key :required, true
         key :type, :string
@@ -256,7 +256,7 @@ class RegionsController < ApplicationController
 
   def resource_params
     # whitelist params
-    params.permit(:name, :base, :territoy)
+    params.permit(:name, :base, :territory)
   end
   def set_resource
     @region = Region.find(params[:id])

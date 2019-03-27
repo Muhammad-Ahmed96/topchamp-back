@@ -72,10 +72,8 @@ class ScoresController < ApplicationController
         data = {:score => item[:score], :time_out => item[:time_out],
                 :team_id => match.team_a_id}
         score = set.scores.where(:team_id => data[:team_id]).update_or_create!(data)
-        match.update!({:referee => score_save_params[:referee]})
       end
     end
-
     if score_save_params[:scores_b].kind_of?(Array)
       score_save_params[:scores_b].each do |item|
         data = {:number => item[:number_set]}
@@ -86,11 +84,10 @@ class ScoresController < ApplicationController
       end
     end
 
-
+    match.update!({:referee => score_save_params[:referee]})
     round = match.round
     tournament = round.tournament
     tournament.set_winner(match)
-
     json_response_success("Score saved", true)
   end
 
@@ -202,7 +199,7 @@ class ScoresController < ApplicationController
     params.require(:match_id)
     params.require(:scores_a)
     params.require(:scores_b)
-    params.require(:referee)
+   # params.require(:referee)
     params.permit(:match_id, :referee, scores_a: [:number_set, :score, :time_out], scores_b: [:number_set, :score, :time_out])
   end
 end

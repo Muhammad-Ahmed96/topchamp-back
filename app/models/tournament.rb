@@ -322,7 +322,6 @@ class Tournament < ApplicationRecord
           match.round.verify_complete_final_status
         end
       end
-      self.verify_complete_status
     end
     #save general scores of teams
     #rest last team match won
@@ -347,7 +346,7 @@ class Tournament < ApplicationRecord
         team.save!(:validate => false)
       end
     end
-
+    self.verify_complete_status
   end
 
   def get_index_match(match_index)
@@ -389,7 +388,7 @@ class Tournament < ApplicationRecord
     matchs_a = Match.where.not(:team_a_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_a_id)
     matchs_b = Match.where.not(:team_b_id => nil).joins(round: :tournament).merge(Tournament.where(:id => self.id)).distinct.pluck(:team_b_id)
     teams_ids = matchs_a + matchs_b
-    winner_team = Team.where(:id => teams_ids).order(match_won: :asc).order(general_score: :asc).first
+    winner_team = Team.where(:id => teams_ids).order(match_won: :desc).order(general_score: :desc).first
     if winner_team.present?
       self.winner_team_id = winner_team.id
       self.save!(:validate => false)

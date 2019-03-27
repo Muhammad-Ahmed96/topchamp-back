@@ -741,7 +741,7 @@ class PlayersController < ApplicationController
     end
   end
   def rounds
-    player = Player.where(user_id: 167).where(event_id: tournaments_list_params[:event_id]).first
+    player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first
     if player.nil?
       return  json_response_error([t("no_player")], 422)
     end
