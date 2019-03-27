@@ -718,12 +718,12 @@ class Event < ApplicationRecord
       category.brackets.each do |bracket|
         bracket.filter_details = []
         bracket.details.not_in(not_in).each do |detail|
-          if !detail.available_for_enroll
+          if !detail.for_show?
             not_in << detail.id
           end
           unless detail.brackets.nil?
             detail.brackets.not_in(not_in).each do |detailchild|
-              if !detailchild.available_for_enroll
+              if !detailchild.for_show?
                 not_in << detailchild.id
               end
             end

@@ -60,11 +60,10 @@ class Payments::RefundsController < ApplicationController
     expiration_date = credit_card_prams[:expiration_date]
     unless credit_card_prams[:payment_transaction_id].nil?
       transaction = Payments::TransactionConnection.get_details(credit_card_prams[:payment_transaction_id])
-      card_number = transaction.transaction.payment.creditCard.cardNumber.to_s
-      expiration_date = transaction.transaction.payment.creditCard.expirationDate.to_s
-    end
-    unless credit_card_prams['amount'].numeric?
-      return response_no_numeric
+      if card_number.nil? and expiration_date.nil?
+        card_number = transaction.transaction.payment.creditCard.cardNumber.to_s
+        expiration_date = transaction.transaction.payment.creditCard.expirationDate.to_s
+      end
     end
 
     unless credit_card_prams['amount'].to_f > 0
@@ -81,7 +80,11 @@ class Payments::RefundsController < ApplicationController
       end
     else
       if response.transactionResponse != nil && response.transactionResponse.errors != nil
-        return json_response_error([response.transactionResponse.errors.errors[0].errorText], 422, response.transactionResponse.errors.errors[0].errorCode)
+        msg = response.transactionResponse.errors.errors[0].errorText
+        if msg.to_s == "The credit card number is invalid."
+          msg = 'Please enter a valid number.'
+        end
+        return json_response_error([msg], 423, response.transactionResponse.errors.errors[0].errorCode)
       else
         return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
       end
@@ -97,14 +100,13 @@ class Payments::RefundsController < ApplicationController
       reference_id = payment.id
     end
 
-    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * (amount - app_fee)) / 100) + Rails.configuration.authorize[:extra_charges]
+    authorize_fee = ((Rails.configuration.authorize[:transaction_fee] * (amount - app_fee)) / 100) + Rails.configuration.authorize[:extra_charges]
 
     total_dir = amount + authorize_fee
     Payments::RefundTransaction.create!({:payment_transaction_id => response.transactionResponse.transId, :amount => amount, :type_refund => 'credit_card',
-                                         :card_number => card_number, :expiration_date => expiration_date,:reference_id => reference_id,
+                                         :card_number => card_number, :expiration_date => expiration_date, :reference_id => reference_id,
                                          :from_user_id => user.id, :to_user_id => credit_card_prams[:user_id], :status => 'aproved',
-                                         :app_fee => app_fee,:authorize_fee => authorize_fee,:total => total_dir, :event_id => credit_card_prams[:event_id]})
-
+                                         :app_fee => app_fee, :authorize_fee => authorize_fee, :total => total_dir, :event_id => credit_card_prams[:event_id]})
 
 
     json_response_data({:transaction => response.transactionResponse.transId})
@@ -200,14 +202,14 @@ class Payments::RefundsController < ApplicationController
         return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
       end
     end
-    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * (amount - app_fee)) / 100) + Rails.configuration.authorize[:extra_charges]
+    authorize_fee = ((Rails.configuration.authorize[:transaction_fee] * (amount - app_fee)) / 100) + Rails.configuration.authorize[:extra_charges]
 
     total_dir = amount + authorize_fee
     Payments::RefundTransaction.create!({:payment_transaction_id => response.transactionResponse.transId, :amount => amount, :type_refund => 'bank_account',
                                          :routing_number => bank_account_prams[:routing_number], :account_number => bank_account_prams[:account_number],
                                          :name_on_account => bank_account_prams[:name_on_account], :bank_name => bank_account_prams[:bank_name],
-                                         :account_type => 'businessChecking', :e_check_type => 'CCD',:app_fee => app_fee,:authorize_fee => authorize_fee,:total => total_dir,
-                                         :from_user_id => user.id, :to_user_id => bank_account_prams[:user_id],  :event_id => bank_account_prams[:event_id]})
+                                         :account_type => 'businessChecking', :e_check_type => 'CCD', :app_fee => app_fee, :authorize_fee => authorize_fee, :total => total_dir,
+                                         :from_user_id => user.id, :to_user_id => bank_account_prams[:user_id], :event_id => bank_account_prams[:event_id]})
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 
