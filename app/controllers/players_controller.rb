@@ -134,6 +134,8 @@ class PlayersController < ApplicationController
     sport = params[:sport_id]
     bracket = params[:bracket]
     skill_level = params[:skill_level]
+    birth_date = params[:birth_date]
+    gender = params[:gender]
     status = params[:status]
     role = params[:role]
     age = params[:age]
@@ -186,16 +188,22 @@ class PlayersController < ApplicationController
     end
 
     age_column = nil
-    if column.to_s == "age"
+    if column.to_s == "age" or column.to_s == "birth_date"
       age_column = "birth_date"
       column = nil
     end
 
+    gender_column = nil
+    if column.to_s == "gender"
+      gender_column = "gender"
+      column = nil
+    end
+
     players = PlayerPolicy::Scope.new(current_user, Player).resolve.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
-                  .email_like(email).category_in(category).bracket_in(bracket).skill_level_like(skill_level)
-                  .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction)
+                  .email_like(email).category_in(category).bracket_in(bracket).skill_level_like(skill_level).birth_date_like(birth_date)
+                  .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction).gender_like(gender)
                   .last_name_order(last_name_column, direction).email_order(email_column, direction).sport_in(sport)
-                  .sports_order(sports_column, direction).categories_order(category_column, direction)
+                  .sports_order(sports_column, direction).categories_order(category_column, direction).gender_order(gender_column, direction)
                   .role_in(role).skill_level_order(skill_level_column, direction).age_order(age_column, direction).age_like(age)
     if paginate.to_s == "0"
       json_response_serializer_collection(players.all, PlayerSerializer)
