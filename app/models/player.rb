@@ -25,7 +25,9 @@ class Player < ApplicationRecord
   scope :last_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :email_like, lambda {|search| joins(:user).merge(User.where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :age_like, lambda {|search| joins(:user).merge(User.where [" EXTRACT(YEAR FROM age(timestamp '#{Time.now.to_s}',users.birth_date)) = ?", "#{search}"]) if search.present?}
+  scope :birth_date_like, lambda {|search| joins(:user).merge(User.where("LOWER(concat(trim(to_char(users.birth_date, 'Month')),',',to_char(users.birth_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :skill_level_like, lambda {|search| joins(user: [:association_information]).merge(AssociationInformation.where ["LOWER(raking) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :gender_like, lambda {|search| joins(:user).merge(User.where ["LOWER(gender) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
 
   scope :sport_in, lambda {|search| joins(event: [:sports]).merge(Sport.where id: search) if search.present?}
   scope :role_in, lambda {|search| joins(:user).merge(User.where role: search) if search.present?}
@@ -36,6 +38,7 @@ class Player < ApplicationRecord
   scope :event_order, lambda {|column, direction = "desc"| joins(:event).order("events.#{column} #{direction}") if column.present?}
   scope :first_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :last_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
+  scope :gender_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :email_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :age_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(event: [:sports]).order("sports.#{column} #{direction}") if column.present?}
