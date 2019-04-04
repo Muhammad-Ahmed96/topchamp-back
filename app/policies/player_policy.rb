@@ -37,6 +37,10 @@ class PlayerPolicy < ApplicationPolicy
     user.sysadmin? || user.agent? || user.director? || user.member?
   end
 
+  def update_brackets?
+    user.is_director(record.event_id) || user.sysadmin?
+  end
+
   class Scope < Scope
     def resolve
       if user.sysadmin? || user.agent?

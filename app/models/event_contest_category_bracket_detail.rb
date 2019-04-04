@@ -15,6 +15,8 @@ class EventContestCategoryBracketDetail < ApplicationRecord
   attr_accessor :ignore_brackets
   attr_accessor :only_brackets
   attr_accessor :filter_brackets
+  attr_accessor :current
+  attr_accessor :partner
 
 
   scope :age_filter, lambda {|age, allow_age_range|

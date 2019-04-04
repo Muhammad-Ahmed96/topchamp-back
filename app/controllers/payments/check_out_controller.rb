@@ -234,7 +234,7 @@ class Payments::CheckOutController < ApplicationController
 
   def subscribe
     #only for test
-    # @resource = User.find(params[:user_id])
+    #@resource = User.find(params[:user_id])
     event = Event.find(subscribe_params[:event_id])
     brackets = event.available_brackets(player_brackets_params)
     if brackets.length <= 0
@@ -335,7 +335,7 @@ class Payments::CheckOutController < ApplicationController
     end
     # end Comment on test
     #only for test
-    # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+    #response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
@@ -370,6 +370,20 @@ class Payments::CheckOutController < ApplicationController
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
         .update(:payment_transaction_id => response.transactionResponse.transId)
+
+    player.brackets do |bracket|
+      category_type = ""
+      if [bracket[:category_id].to_i].included_in? Category.doubles_categories
+        category_type = "partner_double"
+      elsif [bracket[:category_id].to_i].included_in? Category.mixed_categories
+        category_type = "partner_mixed"
+      end
+      invitation = Invitation.where(:event_id => player.event_id).where(:user_id => player.user_id).where(:status => :accepted).where(:invitation_type => category_type)
+                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket[:event_bracket_id])).first
+      if invitation.present?
+        bracket.update({:is_root => false, :partner_id => invitation.sender_id})
+      end
+    end
     player.set_teams
     json_response_data({:transaction => response.transactionResponse.transId})
   end

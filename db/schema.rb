@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_03_12_230355) do
+ActiveRecord::Schema.define(version: 2019_04_04_074057) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -98,6 +98,7 @@ ActiveRecord::Schema.define(version: 2019_03_12_230355) do
     t.integer "team_b_id"
     t.integer "team_winner_id"
     t.integer "user_id"
+    t.float "score"
     t.datetime "date_at"
     t.string "signature_file_name"
     t.string "signature_content_type"
@@ -428,6 +429,17 @@ ActiveRecord::Schema.define(version: 2019_03_12_230355) do
     t.index ["sport_id"], name: "index_events_sports_on_sport_id"
   end
 
+  create_table "external_users", force: :cascade do |t|
+    t.string "first_name"
+    t.string "last_name"
+    t.string "email"
+    t.string "gender"
+    t.float "skill_level"
+    t.date "birth_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "invitation_brackets", force: :cascade do |t|
     t.bigint "invitation_id"
     t.bigint "event_bracket_id"
@@ -566,6 +578,8 @@ ActiveRecord::Schema.define(version: 2019_03_12_230355) do
     t.bigint "event_bracket_id"
     t.string "payment_transaction_id"
     t.datetime "deleted_at"
+    t.integer "partner_id"
+    t.boolean "is_root", default: false
     t.index ["deleted_at"], name: "index_player_brackets_on_deleted_at"
   end
 
@@ -879,12 +893,12 @@ ActiveRecord::Schema.define(version: 2019_03_12_230355) do
     t.date "availability_date_start"
     t.date "availability_date_end"
     t.string "availability_time_zone"
-    t.text "restrictions"
-    t.boolean "is_insurance_requirements"
+    t.string "restrictions"
+    t.boolean "is_insurance_requirements", default: false
     t.text "insurance_requirements"
-    t.boolean "is_decorations"
+    t.boolean "is_decorations", default: false
     t.text "decorations"
-    t.boolean "is_vehicles"
+    t.boolean "is_vehicles", default: false
     t.integer "vehicles"
     t.string "status", default: "Active"
     t.datetime "created_at", null: false
