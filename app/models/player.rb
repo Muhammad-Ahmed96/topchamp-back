@@ -19,6 +19,7 @@ class Player < ApplicationRecord
   validates_attachment_content_type :signature, content_type: /\Aimage\/.*\z/
 
   scope :status_in, lambda {|status| where status: status if status.present?}
+  scope :event_in, lambda {|event| where event_id: event if event.present?}
   #scope :skill_level_like, lambda {|search| where ["to_char(skill_level,'9999999999') LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
