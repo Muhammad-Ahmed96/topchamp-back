@@ -75,6 +75,7 @@ class Event < ApplicationRecord
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :not_in, lambda {|id| where.not id: id if id}
   scope :only_directors, lambda {|id| joins(participants: [:attendee_types]).merge(Participant.where :user_id => id).merge(AttendeeType.where :id => AttendeeType.director_id) if id.present?}
   scope :only_creator, lambda {|id| where(:creator_user_id => id) if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
