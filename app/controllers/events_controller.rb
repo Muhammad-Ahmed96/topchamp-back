@@ -123,6 +123,8 @@ class EventsController < ApplicationController
     title = params[:title]
     start_date = params[:start_date]
     status = params[:status]
+    only_not_subscribe = params[:only_not_subscribe]
+    to_subscribe_user = params[:to_subscribe_user]
     visibility = params[:visibility]
 
 
@@ -142,7 +144,12 @@ class EventsController < ApplicationController
       column_venue = column
       column = nil
     end
-    events = EventPolicy::Scope.new(current_user, Event).resolve.my_order(column, direction).venue_order(column_venue, direction).sport_in(sport_id).sports_order(column_sports, direction).title_like(title)
+    not_event = nil;
+    if only_not_subscribe.present? && only_not_subscribe.to_s == "1"
+      not_event = User.find(to_subscribe_user).players.pluck(:event_id)
+    end
+    events = EventPolicy::Scope.new(current_user, Event).resolve.my_order(column, direction).venue_order(column_venue, direction)
+                 .sport_in(sport_id).sports_order(column_sports, direction).title_like(title).not_in(not_event)
                  .start_date_like(start_date).in_status(status).state_like(state).city_like(city).in_visibility(visibility)
 
     if paginate.to_s == "0"

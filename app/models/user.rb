@@ -46,6 +46,7 @@ class User < ApplicationRecord
   scope :in_status, lambda {|status| where status: status if status.present?}
   scope :in_role, lambda {|role| where role: role if role.present?}
   scope :birth_date_in, lambda {|birth_date| where birth_date: birth_date if birth_date.present?}
+  scope :birth_date_like, lambda {|search| where("LOWER(concat(trim(to_char(birth_date, 'Month')),',',to_char(birth_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
   scope :search, lambda {|search| where ["LOWER(first_name) LIKE LOWER(?) OR LOWER(last_name) like LOWER(?)", "%#{search}%", "%#{search}%"] if search.present?}
   scope :first_name_like, lambda {|search| where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :last_name_like, lambda {|search| where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"] if search.present?}
@@ -89,12 +90,13 @@ class User < ApplicationRecord
     self.try(:role) == "Customer"
   end
 
-  def is_director
+  def is_director(event = nil)
     if self.director?
       return true
     else
-      count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id).count
-      if count > 0
+      query = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.director_id)
+      query = query.where(:event_id => event) if event
+      if query.count > 0
         return true
       else
         return false
@@ -394,16 +396,10 @@ class User < ApplicationRecord
     brackets.each do |item|
       exist = EventContestCategoryBracketDetail.where(:id => item[:event_bracket_id]).first
       unless exist.nil?
-        category_type = ""
-        if [item[:category_id].to_i].included_in? Category.doubles_categories
-          category_type = "partner_double"
-        elsif [item[:category_id].to_i].included_in? Category.mixed_categories
-          category_type = "partner_mixed"
-        end
-        invitation = Invitation.where(:event_id => event_id).where(:user_id => user_root_id).where(:status => :accepted).where(:invitation_type => category_type)
-                         .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => item[:event_bracket_id])).first
-        if invitation.present?
-          result = self.create_partner(invitation.sender_id, event_id, invitation.user_id, item[:event_bracket_id], item[:category_id].to_i,
+        if item.partner_id.present?
+          root_id = item.is_root ? item.partner_id : user_root_id
+          partner_id = item.is_root ? user_root_id : item.partner_id
+          result = self.create_partner(partner_id, event_id, root_id, item[:event_bracket_id], item[:category_id].to_i,
                                        parent_root)
         else
           #if [item[:category_id].to_i].included_in? Category.single_categories
@@ -433,7 +429,17 @@ class User < ApplicationRecord
     if partner_player.nil?
       return false
     end
+    old_team = player.teams.where(:event_bracket_id => event_bracket_id).first
+    old_player = nil
+    if old_team.present?
+      old_player = old_team.players.where.not(:id => player.id)
+    end
     self.create_team(user_root_id, event_id, event_bracket_id, category_id, [player.id, partner_player.id])
+    if old_player.present?
+      self.create_team(old_player.id, event_id, event_bracket_id, category_id, [old_player.id])
+    end
+    player.brackets.where(:event_bracket_id => event_bracket_id).update({:is_root => true, :partner_id => partner_player.user_id})
+    partner_player.brackets.where(:event_bracket_id => event_bracket_id).update({:is_root => false, :partner_id => player.user_id})
     return true
   end
 

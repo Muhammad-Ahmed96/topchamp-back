@@ -10,15 +10,15 @@ class Event < ApplicationRecord
   acts_as_paranoid
 
   attr_accessor :reminder
- # attr_accessor :gross_income
- # attr_accessor :net_income
+  # attr_accessor :gross_income
+  # attr_accessor :net_income
   #attr_accessor :refund
   #attr_accessor :balance
 
   has_and_belongs_to_many :sports
   has_and_belongs_to_many :regions
   #has_and_belongs_to_many :internal_categories, :join_table => "categories_events", class_name: "Category"
- # has_many :categories, :class_name => "CategoriesEvent"
+  # has_many :categories, :class_name => "CategoriesEvent"
   belongs_to :venue, optional: true
   belongs_to :event_type, optional: true
   has_one :payment_information, class_name: 'EventPaymentInformation'
@@ -47,7 +47,7 @@ class Event < ApplicationRecord
   has_many :schedules, class_name: "EventSchedule"
 
 
- # belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
+  # belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
   #belongs_to :scoring_option_match_2, foreign_key: "scoring_option_match_2_id", class_name: "ScoringOption", optional: true
 
 
@@ -70,11 +70,12 @@ class Event < ApplicationRecord
   #validates :event_type_id, presence: true
   validates :description, length: {maximum: 1000}
   #validates :visibility, inclusion: {in: Visibility.collection.keys.map(&:to_s)}, :allow_nil => true
- #
+  #
   after_create :send_email_to_admin
 
 
   scope :in_status, lambda {|status| where status: status if status.present?}
+  scope :not_in, lambda {|id| where.not id: id if id}
   scope :only_directors, lambda {|id| joins(participants: [:attendee_types]).merge(Participant.where :user_id => id).merge(AttendeeType.where :id => AttendeeType.director_id) if id.present?}
   scope :only_creator, lambda {|id| where(:creator_user_id => id) if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
@@ -689,18 +690,18 @@ class Event < ApplicationRecord
     brackets
   end
 
-  def available_categories(user, player, contest_id, only_brackets = nil)
+  def available_categories(user, player, contest_id, only_brackets = nil, include = false)
     response_data = []
     gender = user.gender
     age = user.age
     skill = user.skill_level
     #subsrcibed categories
-    in_categories_id = player.present? ? player.brackets.pluck(:category_id) : []
+    in_categories_id = player.present? && include == false ? player.brackets.pluck(:category_id) : []
     #Validate gender
     genderCategories = []
     if gender == "Female"
       genderCategories = Category.women_categories
-    elsif  gender == "Male"
+    elsif gender == "Male"
       genderCategories = Category.men_categories
     end
     event_categories = self.internal_category_ids(in_categories_id)
@@ -710,7 +711,12 @@ class Event < ApplicationRecord
     if categories.length <= 0
       return []
     end
+    except = []
     not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
+    if include
+      except = not_in
+      not_in = []
+    end
     #Validate skills
     categories.each do |category|
       category.filter_brackets = []
@@ -718,13 +724,17 @@ class Event < ApplicationRecord
       category.brackets.each do |bracket|
         bracket.filter_details = []
         bracket.details.not_in(not_in).each do |detail|
-          if !detail.for_show?
-            not_in << detail.id
+          if !except.include?(detail.id)
+            if !detail.for_show?
+              not_in << detail.id
+            end
           end
           unless detail.brackets.nil?
             detail.brackets.not_in(not_in).each do |detailchild|
-              if !detailchild.for_show?
-                not_in << detailchild.id
+              if !except.include?(detail.id)
+                if !detailchild.for_show?
+                  not_in << detailchild.id
+                end
               end
             end
           end
@@ -736,19 +746,25 @@ class Event < ApplicationRecord
         when 'skill'
           bracket.filter_details = bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
         when 'skill_age'
-           bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
+          bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
             detail.filter_brackets = detail.brackets.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
           end
         when 'age_skill'
-           bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
+          bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
             detail.filter_brackets = detail.brackets.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
           end
+        end
+        if include
+         bracket.filter_details.map {|item|
+           item.current = except.include?(item.id)
+           item.partner = player.partner(item.id)
+         }
         end
         if bracket.filter_details.length > 0
           category.filter_brackets << bracket
@@ -802,7 +818,7 @@ class Event < ApplicationRecord
     #return  enroll_fee - ((discount * enroll_fee) / 100)
   end
 
-#get if current user reminder event
+  #get if current user reminder event
   def reminder
     reminder = false
     user = Current.user
@@ -819,7 +835,7 @@ class Event < ApplicationRecord
     event_reminders = self.event_reminders.where(:reminder => true).all
     event_reminders.each do |reminder|
       fcm = FCM.new(Rails.configuration.fcm_api_key)
-      options = {data: {type:"event_reminder", id: self.id}, collapse_key: "updated_event", notification: {
+      options = {data: {type: "event_reminder", id: self.id}, collapse_key: "updated_event", notification: {
           body: t("events.reminder_notification", event_title: self.title), sound: 'default'}}
       response = fcm.send_to_topic("user_chanel_#{reminder.user_id}", options)
     end
@@ -832,6 +848,7 @@ class Event < ApplicationRecord
     end
     query.pluck('event_contest_categories.category_id')
   end
+
   #get categories
   def categories
     categories = EventContestCategory.joins(:contest).merge(EventContest.where(:event_id => self.id)).pluck(:category_id)
@@ -841,6 +858,7 @@ class Event < ApplicationRecord
   def send_email_to_admin
     CreateEventMailer.on_create(self, self.director).deliver
   end
+
   private
 
   #validate a url

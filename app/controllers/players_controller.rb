@@ -127,6 +127,7 @@ class PlayersController < ApplicationController
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
 
     event_title = params[:event_title]
+    event = params[:event_id]
     first_name = params[:first_name]
     last_name = params[:last_name]
     email = params[:email]
@@ -134,6 +135,8 @@ class PlayersController < ApplicationController
     sport = params[:sport_id]
     bracket = params[:bracket]
     skill_level = params[:skill_level]
+    birth_date = params[:birth_date]
+    gender = params[:gender]
     status = params[:status]
     role = params[:role]
     age = params[:age]
@@ -186,16 +189,22 @@ class PlayersController < ApplicationController
     end
 
     age_column = nil
-    if column.to_s == "age"
+    if column.to_s == "age" or column.to_s == "birth_date"
       age_column = "birth_date"
       column = nil
     end
 
+    gender_column = nil
+    if column.to_s == "gender"
+      gender_column = "gender"
+      column = nil
+    end
+
     players = PlayerPolicy::Scope.new(current_user, Player).resolve.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
-                  .email_like(email).category_in(category).bracket_in(bracket).skill_level_like(skill_level)
-                  .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction)
+                  .email_like(email).category_in(category).bracket_in(bracket).skill_level_like(skill_level).birth_date_like(birth_date).event_in(event)
+                  .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction).gender_like(gender)
                   .last_name_order(last_name_column, direction).email_order(email_column, direction).sport_in(sport)
-                  .sports_order(sports_column, direction).categories_order(category_column, direction)
+                  .sports_order(sports_column, direction).categories_order(category_column, direction).gender_order(gender_column, direction)
                   .role_in(role).skill_level_order(skill_level_column, direction).age_order(age_column, direction).age_like(age)
     if paginate.to_s == "0"
       json_response_serializer_collection(players.all, PlayerSerializer)
@@ -340,16 +349,15 @@ class PlayersController < ApplicationController
     event = @player.event
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
-    @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
-        .where(:category_id  => brackets.pluck(:category_id)).update(:payment_transaction_id =>  "000")
+    # @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
+    #    .update(:payment_transaction_id => "000")
     enrolls_old.each do |item|
       enroll = @player.brackets.where(:enroll_status => :enroll).where(:event_bracket_id => item.event_bracket_id)
-                   .where(:category_id  => item.category_id).first
+                   .first
       if enroll.nil?
-        @player.unsubscribe(item.category_id, item.event_bracket_id)
+        @player.unsubscribe(nil, item.event_bracket_id)
       end
-      tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item.event_bracket_id)
-                       .where(:category_id => item.category_id).first
+      tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item.event_bracket_id).first
       if tournament.present?
         tournament.update_internal_data
       end
@@ -516,6 +524,7 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def enrolled
     json_response_serializer_collection(@player.brackets_enroll, PlayerBracketSingleSerializer)
   end
@@ -558,13 +567,11 @@ class PlayersController < ApplicationController
       end
     end
   end
-  def signature
-   # player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first_or_create!
-    #todo not create default user
 
+  def signature
     player = Player.where(user_id: @resource.id).where(event_id: signature_param[:event_id]).first
     if player.nil?
-      return  json_response_error([t("no_player")], 422)
+      return json_response_error([t("no_player")], 422)
     end
     player.signature = signature_param[:signature]
     player.save!(:validate => false)
@@ -617,6 +624,7 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def get_schedules
     title = params[:title]
     player = Player.where(user_id: @resource.id).where(event_id: schedules_param[:event_id]).first
@@ -676,12 +684,13 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def validate_partner
     player = Player.where(user_id: @resource.id).where(event_id: validate_partner_params[:event_id]).first
     if player.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
-    result = player.validate_partner(validate_partner_params[:partner_id],  @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
+    result = player.validate_partner(validate_partner_params[:partner_id], @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
     if result != true
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
@@ -740,16 +749,17 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def rounds
     player = Player.where(user_id: @resource.id).where(event_id: tournaments_list_params[:event_id]).first
     if player.nil?
-      return  json_response_error([t("no_player")], 422)
+      return json_response_error([t("no_player")], 422)
     end
-    team =  player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).first
+    team = player.teams.where(:event_bracket_id => tournaments_list_params[:event_bracket_id]).first
     @tournament = Tournament.where(:event_id => player.event_id).where(:event_bracket_id => tournaments_list_params[:event_bracket_id])
                       .first
     if @tournament.nil?
-      return  json_response_error([t("no_tournament")], 422)
+      return json_response_error([t("no_tournament")], 422)
     end
     team_id = team.present? ? team.id : 0
     rounds = @tournament.rounds.joins(:matches).merge(Match.where(:team_a_id => team_id).or(Match.where(:team_b_id => team_id)))
@@ -758,6 +768,7 @@ class PlayersController < ApplicationController
     end
     json_response_serializer_collection(rounds, RoundMyMatchesSerializer)
   end
+
   swagger_path '/players/categories' do
     operation :get do
       key :summary, 'Get categories list player tournaments'
@@ -796,13 +807,14 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def categories
     player = Player.where(user_id: @resource.id).where(event_id: categories_params[:event_id]).first
     if player.nil?
-      return  json_response_error([t("no_player")], 422)
+      return json_response_error([t("no_player")], 422)
     end
     in_categories_id = player.brackets_enroll.pluck(:category_id)
-    json_response_serializer_collection(Category.where(:id => in_categories_id ).all, CategorySerializer)
+    json_response_serializer_collection(Category.where(:id => in_categories_id).all, CategorySerializer)
   end
 
   swagger_path '/players/brackets' do
@@ -850,14 +862,16 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def brackets
     player = Player.where(user_id: @resource.id).where(event_id: brackets_list_params[:event_id]).first
     if player.nil?
-      return  json_response_error([t("no_player")], 422)
+      return json_response_error([t("no_player")], 422)
     end
     brackets = player.brackets_enroll.where(:category_id => brackets_list_params[:category_id])
     json_response_serializer_collection(brackets, PlayerBracketSingleSerializer)
   end
+
   swagger_path '/players/rival_info' do
     operation :get do
       key :summary, 'Get rival info'
@@ -896,9 +910,40 @@ class PlayersController < ApplicationController
       end
     end
   end
+
   def rival_info
     players = Player.joins(:teams).merge(Team.where(:id => rival_params[:team_id]))
     json_response_serializer_collection(players, RivalInfoSerializer)
+  end
+
+
+  def available_brackets
+    player = Player.find(params[:id])
+    user = player.user
+    event = Event.find(player.event_id)
+    response_data = []
+    contests = event.contests
+    #contests = contests.where(:id => available_categories_params[:contest_id]) if available_categories_params[:contest_id].present?
+    #Validate categories
+    if contests.length <= 0
+      return response_message_error(t("not_brackets_for_player"), 2)
+    end
+    #Validate skills
+    contests.each do |contest|
+      contest.filter_categories = event.available_categories(user, player, contest.id, nil, true)
+      if contest.filter_categories.length > 0
+        response_data << contest
+      end
+    end
+    if response_data.length <= 0
+      return response_message_error(t("not_brackets_for_player"), 2)
+    end
+    json_response_serializer_collection(response_data, EventContestFilterSerializer)
+  end
+
+
+  def update_brackets
+    authorize Player.find(params[:id])
   end
 
   private
@@ -919,7 +964,7 @@ class PlayersController < ApplicationController
   def player_brackets_params
     unless params[:enrolls].nil? and !params[:enrolls].kind_of?(Array)
       params[:enrolls].map do |p|
-        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_id)
+        ActionController::Parameters.new(p.to_unsafe_h).permit(:category_id, :event_bracket_id, :partner_id)
       end
     end
   end
@@ -949,6 +994,7 @@ class PlayersController < ApplicationController
     params.required(:category_id)
     params.permit(:partner_id, :event_id, :bracket_id, :category_id)
   end
+
   def tournaments_list_params
     # whitelist params
     params.required(:event_id)
@@ -974,5 +1020,9 @@ class PlayersController < ApplicationController
     #params.required(:match_id)
     params.required(:team_id)
     params.permit(:match_id, :team_id)
+  end
+
+  def response_message_error(message, code)
+    json_response_error(message, 422, code)
   end
 end

@@ -197,6 +197,8 @@ Rails.application.routes.draw do
         put :inactive
         #get :wait_list
         get :enrolled
+        get :available_brackets
+        put :update_brackets
       end
     end
     resources :business_categories, only: [:index]

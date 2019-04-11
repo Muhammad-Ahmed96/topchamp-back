@@ -19,13 +19,16 @@ class Player < ApplicationRecord
   validates_attachment_content_type :signature, content_type: /\Aimage\/.*\z/
 
   scope :status_in, lambda {|status| where status: status if status.present?}
+  scope :event_in, lambda {|event| where event_id: event if event.present?}
   #scope :skill_level_like, lambda {|search| where ["to_char(skill_level,'9999999999') LIKE LOWER(?)", "%#{search}%"] if search.present?}
   scope :event_like, lambda {|search| joins(:event).merge(Event.where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :first_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(first_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :last_name_like, lambda {|search| joins(:user).merge(User.where ["LOWER(last_name) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :email_like, lambda {|search| joins(:user).merge(User.where ["LOWER(email) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :age_like, lambda {|search| joins(:user).merge(User.where [" EXTRACT(YEAR FROM age(timestamp '#{Time.now.to_s}',users.birth_date)) = ?", "#{search}"]) if search.present?}
+  scope :birth_date_like, lambda {|search| joins(:user).merge(User.where("LOWER(concat(trim(to_char(users.birth_date, 'Month')),',',to_char(users.birth_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :skill_level_like, lambda {|search| joins(user: [:association_information]).merge(AssociationInformation.where ["LOWER(raking) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
+  scope :gender_like, lambda {|search| joins(:user).merge(User.where ["LOWER(gender) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
 
   scope :sport_in, lambda {|search| joins(event: [:sports]).merge(Sport.where id: search) if search.present?}
   scope :role_in, lambda {|search| joins(:user).merge(User.where role: search) if search.present?}
@@ -36,6 +39,7 @@ class Player < ApplicationRecord
   scope :event_order, lambda {|column, direction = "desc"| joins(:event).order("events.#{column} #{direction}") if column.present?}
   scope :first_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :last_name_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
+  scope :gender_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :email_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :age_order, lambda {|column, direction = "desc"| joins(:user).order("users.#{column} #{direction}") if column.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(event: [:sports]).order("sports.#{column} #{direction}") if column.present?}
@@ -64,7 +68,9 @@ class Player < ApplicationRecord
         # check if category exist in event
         if current_bracket.present?
           status = current_bracket.get_status
-          save_data = {:category_id => current_bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status}
+          partner_id = bracket[:partner_id].present? ? bracket[:partner_id] : nil
+          save_data = {:category_id => current_bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status,
+          :partner_id => partner_id}
           saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
           if saved_bracket.enroll_status != "enroll"
             saved_bracket.enroll_status = status
@@ -72,14 +78,14 @@ class Player < ApplicationRecord
           end
           brackets_ids << saved_bracket.id
           #save schedule on player
-          shedules = event.schedules.where(:category_id => bracket[:category_id]).where(:agenda_type_id => AgendaType.competition_id).pluck(:id)
+          shedules = event.schedules.where(:category_id => current_bracket.category_id).where(:agenda_type_id => AgendaType.competition_id).pluck(:id)
           schedules_ids = schedules_ids + shedules
           if any_one == false and shedules.length > 0
             any_one = true
           end
           #delete of wait list
           if saved_bracket.enroll_status == "enroll"
-            WaitList.where(:event_bracket_id => bracket[:event_bracket_id]).where(:category_id => bracket[:category_id])
+            WaitList.where(:event_bracket_id => bracket[:event_bracket_id])
                 .where(:user_id => user.id).where(:event_id => event.id).destroy_all
           end
         end
@@ -242,7 +248,7 @@ class Player < ApplicationRecord
       Team.where(:id => teams_to_destroy).destroy_all
     end
     bracket = EventContestCategoryBracketDetail.where(:id => event_bracket_id).first
-    category = Category.find(category_id)
+    category = Category.find(bracket.category_id)
     director = User.find(event.creator_user_id)
     registrant = self.user
     UnsubscribeMailer.unsubscribe(bracket, category, director, registrant, event).deliver
@@ -302,6 +308,15 @@ class Player < ApplicationRecord
       end
     end
     return result
+  end
+
+
+  def partner(event_bracket_id)
+    partner = nil
+    if team = self.teams.where(:event_bracket_id => event_bracket_id).first
+      partner = team.players.where.not(:id => self.id).first
+    end
+    return partner
   end
   private
 
