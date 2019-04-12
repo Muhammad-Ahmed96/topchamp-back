@@ -105,7 +105,7 @@ class User < ApplicationRecord
   end
 
   def is_player
-    count = self.participants.joins(:attendee_types).merge(AttendeeType.where :id => AttendeeType.player_id).count
+    count = self.players.count
     if count > 0
       return true
     else
