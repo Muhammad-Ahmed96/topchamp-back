@@ -97,7 +97,7 @@ class ApplicationRegistrationsController < ::DeviseTokenAuth::RegistrationsContr
         @resource.skip_confirmation_notification!
       end
       @resource.status = :Inactive
-      @resource.role = :Director
+      @resource.role = :Member
       if @resource.save
         if !params[:contact_information].nil?
           @resource.create_contact_information! contact_information_params
