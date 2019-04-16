@@ -9,15 +9,48 @@ class TeamsController < ApplicationController
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
 
     in_id = params[:id]
-    contest_index = params[:contest_index]
-    category_in = params[:category_in]
-    category_like = params[:category]
+    contest_index = params[:contest]
+    category_in = params[:category]
+    category_like = params[:category_like]
     player_1_like = params[:player_1]
     player_2_like = params[:player_2]
     bracket_like = params[:bracket]
 
+    contest_order = nil
+    if column == 'contest'
+      contest_order = 'contest_index'
+      column = nil
+    end
+
+    categories_order = nil
+    if column == 'category'
+      categories_order = 'name'
+      column = nil
+    end
+
+    player_1_order = nil
+    if column == 'player_1'
+      player_1_order = 'first_name'
+      column = nil
+    end
+
+    player_2_order = nil
+    if column == 'player_2'
+      player_2_order = 'first_name'
+      column = nil
+    end
+
+    bracket_order = nil
+    if column == 'bracket'
+      bracket_order = 'bracket'
+      column = nil
+    end
+
     teams = @event.teams.in_id(in_id).contest_index(contest_index).category_in(category_in).category_like(category_like)
     .player_1_like(player_1_like).player_2_like(player_2_like).bracket_like(bracket_like)
+    .my_order(column, direction).categories_order(categories_order, direction).contest_order(contest_order, direction)
+                .contest_order(contest_order, direction).player_1_order(player_1_order, direction).player_2_order(player_2_order, direction)
+                .bracket_order(bracket_order, direction)
     if paginate.to_s == "0"
       json_response_serializer_collection(teams.all, TeamListSerializer)
     else
