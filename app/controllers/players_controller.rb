@@ -946,6 +946,40 @@ class PlayersController < ApplicationController
     authorize Player.find(params[:id])
   end
 
+  def my_contest
+    player = Player.where(user_id: 110).where(event_id: categories_params[:event_id]).first
+    if player.nil?
+      return json_response_error([t("no_player")], 422)
+    end
+    brackets_ids = []
+    details_ids = []
+    player.brackets_enroll.all.each do |item|
+      details_ids.push(item.event_bracket_id)
+      unless item.bracket.nil?
+        if item.bracket.event_contest_category_bracket_id.present?
+          brackets_ids.push(item.bracket.event_contest_category_bracket_id)
+        else
+          brackets_idspush(item.bracket.parent_bracket.event_contest_category_bracket_id)
+        end
+      end
+    end
+    contest = EventContest.joins(:categories => [:brackets]).merge(EventContestCategoryBracket.where(:id => brackets_ids))
+                  .where(:event_id => categories_params[:event_id]).all
+    contest.each do |item|
+      item.filter_categories = EventContestCategory.joins(:brackets).merge(EventContestCategoryBracket.where(:id => brackets_ids)).all
+      item.filter_categories.each do |category|
+        category.filter_brackets = category.brackets.where(:id => brackets_ids).all
+        category.filter_brackets.each do |bracket|
+          bracket.filter_details = bracket.details.where(:id => details_ids).all
+          bracket.filter_details.each do |detail|
+            detail.filter_brackets = detail.brackets.where(:id => details_ids).all
+          end
+        end
+      end
+    end
+    json_response_serializer_collection(contest, EventContestFilterSerializer)
+  end
+
   private
 
   def create_params
