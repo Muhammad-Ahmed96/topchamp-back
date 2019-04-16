@@ -788,7 +788,7 @@ ActiveRecord::Schema.define(version: 2019_04_04_074057) do
 
   create_table "user_event_reminders", force: :cascade do |t|
     t.integer "user_id"
-    t.integer "event_id"
+    t.integer bracket_id"event_id"
     t.boolean "reminder", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
