@@ -81,6 +81,8 @@ Rails.application.routes.draw do
         get :available_contest
         get :get_registration_fee, :path => :registration_fee
         get :taken_brackets
+        get :players_bracket
+        get :tournament_brackets
       end
       #Deleted  :create path
       resources :event_enrolls,only: [:index], :path => :enrolls do
@@ -106,7 +108,7 @@ Rails.application.routes.draw do
           get :validate
         end
       end
-
+      resources :teams, only: [:index, :destroy, :create]
       resources :tournaments, only: [:create]do
         collection do
           get :players_list, :path => :players
@@ -143,7 +145,6 @@ Rails.application.routes.draw do
           end
         end
       end
-
     end
     get 'events_validate_url', to: 'events#validate_url'
     resources :visibility, only: [:index]
