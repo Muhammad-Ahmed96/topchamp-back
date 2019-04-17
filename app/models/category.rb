@@ -16,7 +16,7 @@ class Category < ApplicationRecord
 
 
   def self.doubles_categories
-    [2,4]
+    [2,4, 5]
   end
 
   def self.single_categories
