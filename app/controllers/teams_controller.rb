@@ -14,7 +14,8 @@ class TeamsController < ApplicationController
     category_like = params[:category_like]
     player_1_like = params[:player_1]
     player_2_like = params[:player_2]
-    bracket_like = params[:bracket]
+    bracket_like = params[:bracket_like]
+    bracket_in = params[:bracket]
 
     contest_order = nil
     if column == 'contest'
@@ -51,7 +52,7 @@ class TeamsController < ApplicationController
     end
 
     teams = @event.teams.in_id(in_id).contest_index(contest_index).category_in(categories_ids).category_like(category_like)
-    .player_1_like(player_1_like).player_2_like(player_2_like).bracket_like(bracket_like)
+    .player_1_like(player_1_like).player_2_like(player_2_like).bracket_in(bracket_in)
     .my_order(column, direction).categories_order(categories_order, direction).contest_order(contest_order, direction)
                 .contest_order(contest_order, direction).player_1_order(player_1_order, direction).player_2_order(player_2_order, direction)
                 .bracket_order(bracket_order, direction)
@@ -97,7 +98,7 @@ class TeamsController < ApplicationController
   end
 
   def set_resource
-     @team = Event.find(params[:event_id]).teams.where(:id => params[:id]).first!
+     @team = policy_scope(Event).find(params[:event_id]).teams.where(:id => params[:id]).first!
     #@team = Event.find(params[:event_id]).teams.where(:id => params[:id]).first!
   end
 
