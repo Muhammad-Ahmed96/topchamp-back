@@ -7,7 +7,7 @@ class TeamsController < ApplicationController
     column = params[:column].nil? ? 'id' : params[:column]
     direction = params[:direction].nil? ? 'asc' : params[:direction]
     paginate = params[:paginate].nil? ? '1' : params[:paginate]
-
+    categories_ids = Category.doubles_categories
     in_id = params[:id]
     contest_index = params[:contest]
     category_in = params[:category]
@@ -46,7 +46,11 @@ class TeamsController < ApplicationController
       column = nil
     end
 
-    teams = @event.teams.in_id(in_id).contest_index(contest_index).category_in(category_in).category_like(category_like)
+    if category_in.present?
+      categories_ids << category_in
+    end
+
+    teams = @event.teams.in_id(in_id).contest_index(contest_index).category_in(categories_ids).category_like(category_like)
     .player_1_like(player_1_like).player_2_like(player_2_like).bracket_like(bracket_like)
     .my_order(column, direction).categories_order(categories_order, direction).contest_order(contest_order, direction)
                 .contest_order(contest_order, direction).player_1_order(player_1_order, direction).player_2_order(player_2_order, direction)
