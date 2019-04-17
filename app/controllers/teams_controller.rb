@@ -88,13 +88,13 @@ class TeamsController < ApplicationController
 
   private
   def set_event
-    # @event =  policy_scope(Event).find(params[:event_id])
-    @event =  Event.find(params[:event_id])
+    @event =  policy_scope(Event).find(params[:event_id])
+    #@event =  Event.find(params[:event_id])
   end
 
   def set_resource
-    # @team = Event.find(params[:event_id]).teams.where(:id => params[:id]).first!
-    @team = Event.find(params[:event_id]).teams.where(:id => params[:id]).first!
+     @team = Event.find(params[:event_id]).teams.where(:id => params[:id]).first!
+    #@team = Event.find(params[:event_id]).teams.where(:id => params[:id]).first!
   end
 
   def create_params
