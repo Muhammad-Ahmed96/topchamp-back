@@ -46,8 +46,8 @@ class TeamsController < ApplicationController
       column = nil
     end
 
-    if category_in.present?
-      categories_ids << category_in
+    if category_in.present? and categories_ids.include? category_in.to_i
+      categories_ids = category_in
     end
 
     teams = @event.teams.in_id(in_id).contest_index(contest_index).category_in(categories_ids).category_like(category_like)
