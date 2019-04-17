@@ -18,7 +18,7 @@ class TeamsController < ApplicationController
 
     contest_order = nil
     if column == 'contest'
-      contest_order = 'contest_index'
+      contest_order = '  index'
       column = nil
     end
 
