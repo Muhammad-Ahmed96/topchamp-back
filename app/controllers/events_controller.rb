@@ -1916,10 +1916,14 @@ class EventsController < ApplicationController
   end
 
   def tournament_brackets
+=begin
     response = []
     tournaments = Tournament.where(event_contest_category_id: params[:event_contest_category_id]).all
     brackets_ids = tournaments.pluck(:event_bracket_id)
-    brackets = EventContestCategoryBracketDetail.where(:id => brackets_ids).all
+=end
+    brackets = EventContestCategoryBracketDetail.joins(:contest_bracket)
+                   .merge(EventContestCategoryBracket.where(:event_contest_category_id =>  params[:event_contest_category_id])).all
+=begin
     brackets.each do |item|
       if item.event_contest_category_bracket_id.present?
         response << item
@@ -1934,7 +1938,8 @@ class EventsController < ApplicationController
         end
       end
     end
-    json_response_serializer_collection(response, EventContestCategoryBracketDetailSerializer)
+=end
+    json_response_serializer_collection(brackets, EventContestCategoryBracketDetailSerializer)
   end
 
   private
