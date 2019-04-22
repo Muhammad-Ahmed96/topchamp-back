@@ -51,11 +51,12 @@ class TeamsController < ApplicationController
       categories_ids = category_in
     end
 
-    teams = @event.teams.in_id(in_id).contest_index(contest_index).category_in(categories_ids).category_like(category_like)
+    teams = @event.teams.joins(:players).in_id(in_id).contest_index(contest_index).category_in(categories_ids).category_like(category_like)
     .player_1_like(player_1_like).player_2_like(player_2_like).bracket_in(bracket_in).bracket_like(bracket_like)
     .my_order(column, direction).categories_order(categories_order, direction).contest_order(contest_order, direction)
                 .contest_order(contest_order, direction).player_1_order(player_1_order, direction).player_2_order(player_2_order, direction)
-                .bracket_order(bracket_order, direction)
+                .bracket_order(bracket_order, direction).group('teams.id').having('COUNT(players_teams.team_id) > 1')
+
     if paginate.to_s == "0"
       json_response_serializer_collection(teams.all, TeamListSerializer)
     else
