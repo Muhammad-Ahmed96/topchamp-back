@@ -1,7 +1,9 @@
 class Team < ApplicationRecord
   include Swagger::Blocks
   acts_as_paranoid
-  has_and_belongs_to_many :players
+  has_and_belongs_to_many :players,-> {order('created_at DESC')}
+  has_and_belongs_to_many :players1, -> {order('created_at DESC').limit(0)  }, class_name:'Player'
+  has_and_belongs_to_many :players2, -> { order('created_at DESC').limit(0).offset(2)  }, class_name:'Player'
   belongs_to :event
   belongs_to :bracket, class_name: "EventContestCategoryBracketDetail", foreign_key: "event_bracket_id"
   belongs_to :category,  :optional => true
@@ -10,8 +12,8 @@ class Team < ApplicationRecord
   scope :contest_index, lambda {|index| joins(:bracket => [:contest]).merge(EventContest.where(:index => index)) if index}
   scope :category_in, lambda {|id| where(:category_id => id) if id}
   scope :category_like, lambda {|search| joins(:category).merge(Category.where("name LIKE LOWER(?)", "%#{search}%")) if search.present?}
-  scope :player_1_like, lambda {|search| joins(:players => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
-  scope :player_2_like, lambda {|search| joins(:players => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
+  scope :player_1_like, lambda {|search| joins(:players1 => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
+  scope :player_2_like, lambda {|search| joins(:players2 => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :bracket_like, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.age, event_contest_category_bracket_details.young_age, ' - ', event_contest_category_bracket_details.old_age)) LIKE LOWER(?)", "%#{search}%")
                                   .or(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.lowest_skill,' - ', event_contest_category_bracket_details.highest_skill)) LIKE LOWER(?)", "%#{search}%"))) if  search.present?
   }
@@ -21,8 +23,8 @@ class Team < ApplicationRecord
 
   scope :categories_order, lambda {|column, direction = "desc"| joins(:category).order("categories.#{column} #{direction}") if column.present?}
   scope :contest_order, lambda {|column, direction = "desc"| joins(:bracket => [:contest]).order("event_contests.#{column} #{direction}")if column.present?}
-  scope :player_1_order, lambda {|column, direction = "desc"| joins(:players => :user).order("users.first_name #{direction}").order("users.last_name #{direction}")if column.present?}
-  scope :player_2_order, lambda {|column, direction = "desc"| joins(:players => :user).order("users.first_name #{direction}").order("users.last_name #{direction}")if column.present?}
+  scope :player_1_order, lambda {|column, direction = "desc"| joins(:players1 => :user).order("users.first_name #{direction}").order("users.last_name #{direction}")if column.present?}
+  scope :player_2_order, lambda {|column, direction = "desc"| joins(:players2 => :user).order("users.first_name #{direction}").order("users.last_name #{direction}")if column.present?}
   scope :bracket_order, lambda {|column, direction = "desc"| joins(:bracket).order("event_contest_category_bracket_details.age #{direction}").order("event_contest_category_bracket_details.young_age #{direction}")
                                                                  .order("event_contest_category_bracket_details.old_age #{direction}").order("event_contest_category_bracket_details.lowest_skill #{direction}")
                                                                  .order("event_contest_category_bracket_details.highest_skill #{direction}") if column.present?}
