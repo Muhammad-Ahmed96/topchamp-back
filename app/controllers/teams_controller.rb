@@ -73,8 +73,13 @@ class TeamsController < ApplicationController
     bracket_player.is_root = true
     bracket_player.partner_id = player2.user_id
     bracket_player.save!
-    User.create_teams([bracket_player], player1.user_id, @event_id)
-    json_response_success(t("created_success", model: Player.model_name.human), true)
+    result = User.create_teams([bracket_player], player1.user_id, @event_id, false, true)
+    if result
+      json_response_success(t("created_success", model: Team.model_name.human), true)
+    else
+      json_response_error(['Failed create'], 422)
+    end
+
   end
 
   def destroy
