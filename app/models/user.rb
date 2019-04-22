@@ -391,7 +391,8 @@ class User < ApplicationRecord
 
   end
 
-  def self.create_teams(brackets, user_root_id, event_id, parent_root = false)
+  def self.create_teams(brackets, user_root_id, event_id, parent_root = false, force_team = false)
+    result = false
     #ckeck partner brackets
     brackets.each do |item|
       exist = EventContestCategoryBracketDetail.where(:id => item[:event_bracket_id]).first
@@ -400,18 +401,20 @@ class User < ApplicationRecord
           root_id = item.is_root ? item.partner_id : user_root_id
           partner_id = item.is_root ? user_root_id : item.partner_id
           result = self.create_partner(partner_id, event_id, root_id, item[:event_bracket_id], item[:category_id].to_i,
-                                       parent_root)
+                                       parent_root, force_team)
         else
           #if [item[:category_id].to_i].included_in? Category.single_categories
           player = Player.where(user_id: user_root_id).where(event_id: event_id).first_or_create!
           self.create_team(user_root_id, event_id, item[:event_bracket_id], item[:category_id].to_i, [player.id])
           #end
+          result = true
         end
       end
     end
+    result
   end
 
-  def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id, partner_main = false)
+  def self.create_partner(user_root_id, event_id, partner_id, event_bracket_id, category_id, partner_main = false, force_team = false)
     user_id_main = partner_main ? partner_id : user_root_id
     user_id_partner = partner_main ? user_root_id : partner_id
     player = Player.where(user_id: user_id_main).where(event_id: event_id).first
@@ -419,7 +422,13 @@ class User < ApplicationRecord
     if player.nil?
       return false
     end
-    result = player.validate_partner(user_id_partner, user_id_main, event_bracket_id, category_id)
+    result = false
+    if !force_team
+      result = player.validate_partner(user_id_partner, user_id_main, event_bracket_id, category_id)
+    else
+      result = force_team
+    end
+
     if result != true
       if partner_main
         self.create_team(user_id_main, event_id, event_bracket_id, category_id, [player.id])
