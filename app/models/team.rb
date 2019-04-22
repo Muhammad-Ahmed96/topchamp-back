@@ -13,6 +13,7 @@ class Team < ApplicationRecord
   scope :category_in, lambda {|id| where(:category_id => id) if id}
   scope :category_like, lambda {|search| joins(:category).merge(Category.where("name LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :player_1_like, lambda {|search| joins(:players1 => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
+  #scope :player_1_like, lambda {|search| joins(:player1 => [:player => :user]).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :player_2_like, lambda {|search| joins(:players2 => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :bracket_like, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.age, event_contest_category_bracket_details.young_age, ' - ', event_contest_category_bracket_details.old_age)) LIKE LOWER(?)", "%#{search}%")
                                   .or(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.lowest_skill,' - ', event_contest_category_bracket_details.highest_skill)) LIKE LOWER(?)", "%#{search}%"))) if  search.present?
@@ -43,6 +44,12 @@ class Team < ApplicationRecord
       end
     end
     return seed
+  end
+
+  def is_in_tournament?
+    tournament = Tournament.where(:event_id => self.event_id).where(:event_bracket_id => self.event_bracket_id)
+                     .first
+    tournament.present? ? true : false
   end
 
   swagger_schema :Team do
