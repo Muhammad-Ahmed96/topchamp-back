@@ -12,8 +12,8 @@ class Team < ApplicationRecord
   scope :category_like, lambda {|search| joins(:category).merge(Category.where("name LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :player_1_like, lambda {|search| joins(:players => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
   scope :player_2_like, lambda {|search| joins(:players => :user).merge(User.where("LOWER(concat(users.first_name,' ', users.last_name)) LIKE LOWER(?)", "%#{search}%")) if search.present?}
-  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.young_age, event_contest_category_bracket_details.young_age, event_contest_category_bracket_details.old_age)) LIKE LOWER(?)", "%#{search}%")
-                                  .or(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.lowest_skill, event_contest_category_bracket_details.highest_skill)) LIKE LOWER(?)", search))) if  search.present?
+  scope :bracket_like, lambda {|search| joins(:bracket).merge(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.age, event_contest_category_bracket_details.young_age, ' - ', event_contest_category_bracket_details.old_age)) LIKE LOWER(?)", "%#{search}%")
+                                  .or(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.lowest_skill,' - ', event_contest_category_bracket_details.highest_skill)) LIKE LOWER(?)", "%#{search}%"))) if  search.present?
   }
   scope :bracket_in, lambda {|id|  where(:event_bracket_id => id) if id}
   scope :skill_filter, lambda {|skill|  joins(:bracket).merge(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill <= ?", skill).where("event_contest_category_bracket_details.highest_skill >= LOWER(?)", skill).or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil))) if skill.present?}

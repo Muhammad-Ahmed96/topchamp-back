@@ -14,8 +14,8 @@ class TeamsController < ApplicationController
     category_like = params[:category_like]
     player_1_like = params[:player_1]
     player_2_like = params[:player_2]
-    bracket_like = params[:bracket_like]
-    bracket_in = params[:bracket]
+    bracket_like = params[:bracket]
+    bracket_in = params[:bracket_in]
 
     contest_order = nil
     if column == 'contest'
@@ -52,7 +52,7 @@ class TeamsController < ApplicationController
     end
 
     teams = @event.teams.in_id(in_id).contest_index(contest_index).category_in(categories_ids).category_like(category_like)
-    .player_1_like(player_1_like).player_2_like(player_2_like).bracket_in(bracket_in)
+    .player_1_like(player_1_like).player_2_like(player_2_like).bracket_in(bracket_in).bracket_like(bracket_like)
     .my_order(column, direction).categories_order(categories_order, direction).contest_order(contest_order, direction)
                 .contest_order(contest_order, direction).player_1_order(player_1_order, direction).player_2_order(player_2_order, direction)
                 .bracket_order(bracket_order, direction)
@@ -73,7 +73,7 @@ class TeamsController < ApplicationController
     bracket_player.is_root = true
     bracket_player.partner_id = player2.user_id
     bracket_player.save!
-    result = User.create_teams([bracket_player], player1.user_id, @event_id, false, true)
+    result = User.create_teams([bracket_player], player1.user_id, @event.id, false, true)
     if result
       json_response_success(t("created_success", model: Team.model_name.human), true)
     else
