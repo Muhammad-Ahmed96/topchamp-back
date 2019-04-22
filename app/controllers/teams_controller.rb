@@ -79,9 +79,19 @@ class TeamsController < ApplicationController
   end
 
   def create
+    bracket = EventContestCategoryBracketDetail.find(create_params[:bracket_id])
+    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => bracket.id)
+                     .first
+    if tournament.present?
+      #tournament.update_internal_data
+      if tournament.have_score?
+        return response_tournament_error
+      else
+        tournament.delete
+      end
+    end
     player1 = Player.find(create_params[:player_1_id])
     player2 = Player.find(create_params[:player_2_id])
-    bracket = EventContestCategoryBracketDetail.find(create_params[:bracket_id])
 
     bracket_player = player1.brackets.where(:event_bracket_id => bracket.id).first!
 
@@ -90,11 +100,6 @@ class TeamsController < ApplicationController
     bracket_player.save!
     result = User.create_teams([bracket_player], player1.user_id, @event.id, false, true)
     if result
-      tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => bracket.id)
-                       .first
-      if tournament.present?
-        tournament.update_internal_data
-      end
       json_response_success(t("created_success", model: Team.model_name.human), true)
     else
       json_response_error(['Failed create'], 422)
@@ -103,6 +108,14 @@ class TeamsController < ApplicationController
 
   def destroy
     players = []
+    tournament = Tournament.where(:event_id => @team.event_id).where(:event_bracket_id => @team.event_bracket_id)
+                     .first
+    if tournament.present?
+      #tournament.update_internal_data
+      if tournament.have_score?
+        return response_tournament_error
+      end
+    end
      @team.players.each do |player|
        player.teams.destroy(@team)
        player.save
@@ -111,10 +124,10 @@ class TeamsController < ApplicationController
     players.each do |player|
       User.create_team(player.user_id, @team.event_id, @team.event_bracket_id, @team.category_id, [player.id])
     end
-    tournament = Tournament.where(:event_id => @team.event_id).where(:event_bracket_id => @team.event_bracket_id)
-                     .first
+
     if tournament.present?
-      tournament.update_internal_data
+      #tournament.update_internal_data
+      tournament.delete
     end
      @team.destroy
     json_response_success(t("deleted_success", model: Team.model_name.human), true)
@@ -137,5 +150,9 @@ class TeamsController < ApplicationController
     params.required(:player_1_id)
     params.required(:player_2_id)
     params.permit(:event_id, :bracket_id, :player_1_id, :player_2_id)
+  end
+
+  def response_tournament_error
+    json_response_error('Tournament have score', 422, 1)
   end
 end

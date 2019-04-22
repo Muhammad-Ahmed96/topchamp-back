@@ -416,6 +416,12 @@ class Tournament < ApplicationRecord
     end
   end
 
+
+  def have_score?
+   count = Score.joins(set: [match: [round: [:tournament]]]).merge(Tournament.where :id => self.id).count
+   count > 0 ? true : false
+  end
+
   swagger_schema :Tournament do
     property :id do
       key :type, :integer
