@@ -17,21 +17,27 @@ class TeamsController < ApplicationController
     bracket_like = params[:bracket]
     bracket_in = params[:bracket_in]
 
+    group_string = ['teams.id']
+
     contest_order = nil
     if column == 'contest'
       contest_order = '  index'
       column = nil
+      group_string << 'event_contests.index'
     end
 
     categories_order = nil
     if column == 'category'
       categories_order = 'name'
       column = nil
+      group_string << 'categories.name'
     end
 
     player_1_order = nil
     if column == 'player_1'
       player_1_order = 'first_name'
+      group_string << "users.first_name"
+      group_string << "users.last_name"
       column = nil
     end
 
@@ -39,12 +45,19 @@ class TeamsController < ApplicationController
     if column == 'player_2'
       player_2_order = 'first_name'
       column = nil
+      group_string << "users.first_name"
+      group_string << "users.last_name"
     end
 
     bracket_order = nil
     if column == 'bracket'
       bracket_order = 'bracket'
       column = nil
+      group_string << 'event_contest_category_bracket_details.age'
+      group_string << 'event_contest_category_bracket_details.young_age'
+      group_string << 'event_contest_category_bracket_details.old_age'
+      group_string << 'event_contest_category_bracket_details.lowest_skill'
+      group_string << 'event_contest_category_bracket_details.highest_skill'
     end
 
     if category_in.present? and categories_ids.include? category_in.to_i
@@ -55,7 +68,8 @@ class TeamsController < ApplicationController
     .player_1_like(player_1_like).player_2_like(player_2_like).bracket_in(bracket_in).bracket_like(bracket_like)
     .my_order(column, direction).categories_order(categories_order, direction).contest_order(contest_order, direction)
                 .contest_order(contest_order, direction).player_1_order(player_1_order, direction).player_2_order(player_2_order, direction)
-                .bracket_order(bracket_order, direction).group('teams.id').having('COUNT(players_teams.team_id) > 1')
+                .bracket_order(bracket_order, direction).group(group_string)
+                .having('COUNT(players_teams.team_id) > 1')
 
     if paginate.to_s == "0"
       json_response_serializer_collection(teams.all, TeamListSerializer)
