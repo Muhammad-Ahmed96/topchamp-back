@@ -1911,8 +1911,14 @@ class EventsController < ApplicationController
   end
 
   def players_bracket
+    ids = []
     players = Player.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => brackets_params[:bracket_id]))
-    json_response_serializer_collection(players, PlayerSingleSerializer)
+    players.each do |player|
+      unless player.have_partner?(nil, brackets_params[:bracket_id])
+        ids << player.id
+      end
+    end
+    json_response_serializer_collection(Player.where(:id => ids).all, PlayerSingleSerializer)
   end
 
   def tournament_brackets

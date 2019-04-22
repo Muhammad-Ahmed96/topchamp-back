@@ -439,13 +439,15 @@ class User < ApplicationRecord
       return false
     end
     old_team = player.teams.where(:event_bracket_id => event_bracket_id).first
-    old_player = nil
+    old_players = nil
     if old_team.present?
-      old_player = old_team.players.where.not(:id => player.id)
+      old_players = old_team.players.where.not(:id => player.id)
     end
     self.create_team(user_root_id, event_id, event_bracket_id, category_id, [player.id, partner_player.id])
-    if old_player.present?
-      self.create_team(old_player.id, event_id, event_bracket_id, category_id, [old_player.id])
+    if old_players.present?
+      old_players.each do |old|
+        self.create_team(old.id, event_id, event_bracket_id, category_id, [old.id])
+      end
     end
     player.brackets.where(:event_bracket_id => event_bracket_id).update({:is_root => true, :partner_id => partner_player.user_id})
     partner_player.brackets.where(:event_bracket_id => event_bracket_id).update({:is_root => false, :partner_id => player.user_id})
