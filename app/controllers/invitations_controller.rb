@@ -547,8 +547,21 @@ class InvitationsController < ApplicationController
           @invitation.brackets.where(:category_id => category_id).each do |item|
             bracket = item.bracket
             type = nil
-            result = User.create_partner(@invitation.sender_id, event.id, @invitation.user_id, item.event_bracket_id, category_id)
-            if result == false
+            result = Player.validate_partner( @invitation.user_id, @invitation.sender_id,item.event_bracket_id, category_id)
+            if result == true
+              players = []
+              player1 = Player.where(user_id: @invitation.user_id).where(event_id: event.id).first
+              player2 = Player.where(user_id: @invitation.sender_id).where(event_id: event.id).first
+              if player1.present? and player2.present?
+                players << player1
+                players << player2
+                Team.create_team(bracket, players)
+              else
+                @invitation.status = :pending_confirmation
+                @invitation.save!
+                return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)
+              end
+            else
               @invitation.status = :pending_confirmation
               @invitation.save!
               return json_response_error([t("player.partner.validation.invalid_inforamtion")], 422)

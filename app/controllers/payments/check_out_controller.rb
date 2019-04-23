@@ -234,7 +234,7 @@ class Payments::CheckOutController < ApplicationController
 
   def subscribe
     #only for test
-    #@resource = User.find(params[:user_id])
+    @resource = User.find(params[:user_id])
     event = Event.find(subscribe_params[:event_id])
     brackets = event.available_brackets(player_brackets_params)
     if brackets.length <= 0
@@ -309,6 +309,7 @@ class Payments::CheckOutController < ApplicationController
     # Only for test
     #amount = 1
     #tax[:amount] = 1
+=begin
     if items.length > 0
       customer = Payments::Customer.get(@resource)
       amount = number_with_precision(amount, precision: 2)
@@ -333,9 +334,10 @@ class Payments::CheckOutController < ApplicationController
         end
       end
     end
+=end
     # end Comment on test
     #only for test
-    #response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+    response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
@@ -370,21 +372,24 @@ class Payments::CheckOutController < ApplicationController
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
         .update(:payment_transaction_id => response.transactionResponse.transId)
-
-    player.brackets do |bracket|
+    my_brackets =  player.brackets_enroll.where(:event_bracket_id => brackets.pluck(:event_bracket_id)).all
+    my_brackets.each do |bracket|
       category_type = ""
-      if [bracket[:category_id].to_i].included_in? Category.doubles_categories
+      if [bracket.category_id.to_i].included_in? Category.doubles_categories_exact
         category_type = "partner_double"
-      elsif [bracket[:category_id].to_i].included_in? Category.mixed_categories
+      elsif [bracket.category_id.to_i].included_in? Category.mixed_categories
         category_type = "partner_mixed"
       end
       invitation = Invitation.where(:event_id => player.event_id).where(:user_id => player.user_id).where(:status => :accepted).where(:invitation_type => category_type)
-                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket[:event_bracket_id])).first
+                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket.event_bracket_id)).first
       if invitation.present?
-        bracket.update({:is_root => false, :partner_id => invitation.sender_id})
+        result = Player.validate_partner(player.user_id, invitation.sender_id,  bracket.event_bracket_id, bracket.category_id)
+        if result == true
+          bracket.update({:is_root => false, :partner_id => invitation.sender_id})
+        end
       end
     end
-    player.set_teams
+    player.set_teams my_brackets
     json_response_data({:transaction => response.transactionResponse.transId})
   end
 

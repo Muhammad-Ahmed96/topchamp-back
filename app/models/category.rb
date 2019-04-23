@@ -19,6 +19,10 @@ class Category < ApplicationRecord
     [2,4, 5]
   end
 
+  def self.doubles_categories_exact
+    [2,4]
+  end
+
   def self.single_categories
     [1,3]
   end

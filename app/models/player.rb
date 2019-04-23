@@ -70,7 +70,7 @@ class Player < ApplicationRecord
           status = current_bracket.get_status
           partner_id = bracket[:partner_id].present? ? bracket[:partner_id] : nil
           save_data = {:category_id => current_bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status,
-          :partner_id => partner_id}
+                       :partner_id => partner_id}
           saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
           if saved_bracket.enroll_status != "enroll"
             saved_bracket.enroll_status = status
@@ -96,18 +96,28 @@ class Player < ApplicationRecord
     end
     #delete other brackets
     self.brackets.where.not(:id => brackets_ids).destroy_all
+    # delete teams
+    self.teams.where.not(event_bracket_id: brackets_ids).each do |team|
+      self.teams.destroy(team)
+      self.save
+    end
     if self.status == "Inactive" and self.brackets.count > 0
       self.activate
     end
   end
 
-  def set_teams(mainRoot = true)
-    User.create_teams(self.brackets_enroll, self.user_id, event.id, mainRoot)
-  end
-
-  def set_paid(data, reference)
-    self.set_teams
-    #User.create_teams(self.brackets_enroll, self.user_id, event.id)
+  def set_teams(brackets)
+    brackets.each do |bracket|
+      category_id = bracket.bracket.category_id.to_i
+      players = [self]
+      if Category.doubles_categories.include? category_id and bracket.partner_id.present?
+        partner = Player.where(user_id: bracket.partner_id).where(event_id: bracket.bracket.event_id).first
+        if partner.present?
+          players << partner
+        end
+      end
+      Team.create_team(bracket.bracket, players)
+    end
   end
 
   swagger_schema :Player do
@@ -179,7 +189,7 @@ class Player < ApplicationRecord
   end
 
   #validate partner complete information
-  def validate_partner(partner_id, user_root_id, bracket_id, category_id)
+  def self.validate_partner(partner_id, user_root_id, bracket_id, category_id)
     total = 4
     message = nil
     current = 0
@@ -256,7 +266,7 @@ class Player < ApplicationRecord
     bracket.send_free_mail
 
     tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => event_bracket_id)
-                    .first
+                     .first
     if tournament.present?
       tournament.update_internal_data
     end
@@ -318,6 +328,7 @@ class Player < ApplicationRecord
     end
     return partner
   end
+
   private
 
   def set_status

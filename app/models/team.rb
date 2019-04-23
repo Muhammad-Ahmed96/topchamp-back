@@ -52,6 +52,33 @@ class Team < ApplicationRecord
     tournament.present? ? true : false
   end
 
+  def self.create_team(bracket, players, force = false)
+    category_id = bracket.category_id.to_i
+    event_id = bracket.event_id.to_i
+    valid_to_create = false
+    if Category.single_categories.include? category_id and players.size == 1
+      valid_to_create = true
+    elsif Category.doubles_categories.include? category_id and players.size == 2
+      valid_to_create = true
+    end
+    if !valid_to_create
+      return  1
+    end
+    players_ids = players.pluck(:id)
+    #Validate team existance
+    exist = Team.joins(:players).merge(Player.where(id: players_ids)).where(event_bracket_id: bracket.id).count
+    if exist > 0
+      return  2
+    end
+    current_team_index = bracket.team_counter + 1
+    team_name = "Team #{current_team_index}"
+    team = Team.create!({:name => team_name, :event_id => event_id, :event_bracket_id => bracket.id,
+                                   :category_id => category_id})
+    team.player_ids = players_ids
+    bracket.team_counter = current_team_index
+    bracket.save
+    return 0
+  end
   swagger_schema :Team do
     property :id do
       key :type, :integer
