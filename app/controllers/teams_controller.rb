@@ -82,7 +82,6 @@ class TeamsController < ApplicationController
     tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => bracket.id)
                      .first
     if tournament.present?
-      #tournament.update_internal_data
       if tournament.have_score?
         return response_tournament_error
       else
@@ -97,8 +96,8 @@ class TeamsController < ApplicationController
     bracket_player.is_root = true
     bracket_player.partner_id = player2.user_id
     bracket_player.save!
-    result = User.create_teams([bracket_player], player1.user_id, @event.id, false, true)
-    if result
+    result = Team.create_team(bracket, [player1, player2])
+    if result == 0
       json_response_success(t("created_success", model: Team.model_name.human), true)
     else
       json_response_error(['Failed create'], 422)
@@ -106,11 +105,9 @@ class TeamsController < ApplicationController
   end
 
   def destroy
-    players = []
     tournament = Tournament.where(:event_id => @team.event_id).where(:event_bracket_id => @team.event_bracket_id)
                      .first
     if tournament.present?
-      #tournament.update_internal_data
       if tournament.have_score?
         return response_tournament_error
       end
@@ -118,14 +115,8 @@ class TeamsController < ApplicationController
      @team.players.each do |player|
        player.teams.destroy(@team)
        player.save
-       players.push(player)
      end
-    players.each do |player|
-      User.create_team(player.user_id, @team.event_id, @team.event_bracket_id, @team.category_id, [player.id])
-    end
-
     if tournament.present?
-      #tournament.update_internal_data
       tournament.delete
     end
      @team.destroy

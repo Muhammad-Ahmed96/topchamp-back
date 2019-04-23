@@ -362,7 +362,32 @@ class PlayersController < ApplicationController
         tournament.update_internal_data
       end
     end
-    @player.set_teams
+    brackets_ids = @player.brackets_enroll.pluck(:event_bracket_id)
+    in_team_ids = @player.teams.where(event_bracket_id: brackets_ids).pluck(:event_bracket_id)
+    only_ids = []
+    brackets_ids.each do |id|
+      if in_team_ids.include? id == false
+        only_ids << id
+      end
+    end
+    my_brackets =  @player.brackets_enroll.where(:event_bracket_id => only_ids)
+    my_brackets.each do |bracket|
+      category_type = ""
+      if [bracket.category_id.to_i].included_in? Category.doubles_categories_exact
+        category_type = "partner_double"
+      elsif [bracket.category_id.to_i].included_in? Category.mixed_categories
+        category_type = "partner_mixed"
+      end
+      invitation = Invitation.where(:event_id => @player.event_id).where(:user_id => @player.user_id).where(:status => :accepted).where(:invitation_type => category_type)
+                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket.event_bracket_id)).first
+      if invitation.present?
+        result = Player.validate_partner(@player.user_id, invitation.sender_id,  bracket.event_bracket_id, bracket.category_id)
+        if result == true
+          bracket.update({:is_root => false, :partner_id => invitation.sender_id})
+        end
+      end
+    end
+    @player.set_teams(my_brackets)
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
@@ -690,7 +715,7 @@ class PlayersController < ApplicationController
     if player.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
-    result = player.validate_partner(validate_partner_params[:partner_id], @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
+    result = Player.validate_partner(validate_partner_params[:partner_id], @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
     if result != true
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
