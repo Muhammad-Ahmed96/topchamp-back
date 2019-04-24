@@ -793,33 +793,22 @@ class UsersController < ApplicationController
       item.first_name  = row['First Name']
       item.last_name  = row['Last Name']
       item.gender  = row['Sex'] === 'F' ? 'Female' : row['Sex'] === 'M' ? 'Male' : nil
+
       birth = Date.strptime(row['Birthdate'], '%m/%d/%Y') rescue nil
-      item.birth_date  = birth.nil? ? birth : Date.strptime(row['Birthdate'], '%m/%d/%Y')
+      item.birth_date  = row['Birthdate']
       item.status = :Active
       item.confirm
       item.role = "Member"
       item.save!
       data = { :raking => row['Skill']}
-      item.create_association_information! data
-
-      #invite
-      if last.present?
-        data = {:event_id => event.id, :email => email, :url => nil, attendee_types: [AttendeeType.player_id]}
-        invitation = Invitation.get_invitation(data, last, 'partner_mixed')
-        invitation.status = :accepted
-        invitation.save!
-        saved = invitation.brackets.where(:event_bracket_id => bracket, :category_id => category).first
-        if saved.nil?
-          invitation.brackets.create!({:event_bracket_id => bracket, :category_id => category, :accepted => true})
-        end
-        last = nil
+      if item.association_information.nil?
+        item.create_association_information! data
       else
-        last = item.id
+        item.association_information.update! data
       end
 
-      self.subscribe(event, item, fees, [{:category_id => category, :contest_id => contest, :event_bracket_id => bracket}])
     end
-    return json_response_success(t("success"), true)
+    json_response_success(t("success"), true)
   end
 
 
