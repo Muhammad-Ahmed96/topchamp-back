@@ -774,13 +774,6 @@ class UsersController < ApplicationController
   def import_users
     spreadsheet = open_spreadsheet
     header = spreadsheet.row(1)
-    event = Event.find(params[:event])
-    contest = params[:contest]
-    category = params[:category]
-    bracket = params[:bracket]
-    fees = EventFee.first
-    now = Date.today
-    last = nil
     (2..spreadsheet.last_row).map do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
       email = row["Email"].gsub(/\s+/, "").downcase
@@ -793,11 +786,11 @@ class UsersController < ApplicationController
       item.first_name  = row['First Name']
       item.last_name  = row['Last Name']
       item.gender  = row['Sex'] === 'F' ? 'Female' : row['Sex'] === 'M' ? 'Male' : nil
-
-      birth = Date.strptime(row['Birthdate'], '%m/%d/%Y') rescue nil
       item.birth_date  = row['Birthdate']
       item.status = :Active
       item.confirm
+      item.password = 'topchamp2019'
+      item.password_confirmation = 'topchamp2019'
       item.role = "Member"
       item.save!
       data = { :raking => row['Skill']}
