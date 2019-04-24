@@ -362,7 +362,32 @@ class PlayersController < ApplicationController
         tournament.update_internal_data
       end
     end
-    @player.set_teams
+    brackets_ids = @player.brackets_enroll.pluck(:event_bracket_id)
+    in_team_ids = @player.teams.where(event_bracket_id: brackets_ids).pluck(:event_bracket_id)
+    only_ids = []
+    brackets_ids.each do |id|
+      if in_team_ids.include? id == false
+        only_ids << id
+      end
+    end
+    my_brackets =  @player.brackets_enroll.where(:event_bracket_id => only_ids)
+    my_brackets.each do |bracket|
+      category_type = ""
+      if [bracket.category_id.to_i].included_in? Category.doubles_categories_exact
+        category_type = "partner_double"
+      elsif [bracket.category_id.to_i].included_in? Category.mixed_categories
+        category_type = "partner_mixed"
+      end
+      invitation = Invitation.where(:event_id => @player.event_id).where(:user_id => @player.user_id).where(:status => :accepted).where(:invitation_type => category_type)
+                       .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket.event_bracket_id)).first
+      if invitation.present?
+        result = Player.validate_partner(@player.user_id, invitation.sender_id,  bracket.event_bracket_id, bracket.category_id)
+        if result == true
+          bracket.update({:is_root => false, :partner_id => invitation.sender_id})
+        end
+      end
+    end
+    @player.set_teams(my_brackets)
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
@@ -690,7 +715,7 @@ class PlayersController < ApplicationController
     if player.nil?
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
-    result = player.validate_partner(validate_partner_params[:partner_id], @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
+    result = Player.validate_partner(validate_partner_params[:partner_id], @resource.id, validate_partner_params[:bracket_id], validate_partner_params[:category_id])
     if result != true
       return json_response_error([t("player.partner.validation.invalid_inforamtion")])
     end
@@ -944,6 +969,40 @@ class PlayersController < ApplicationController
 
   def update_brackets
     authorize Player.find(params[:id])
+  end
+
+  def my_contest
+    player = Player.where(user_id: 110).where(event_id: categories_params[:event_id]).first
+    if player.nil?
+      return json_response_error([t("no_player")], 422)
+    end
+    brackets_ids = []
+    details_ids = []
+    player.brackets_enroll.all.each do |item|
+      details_ids.push(item.event_bracket_id)
+      unless item.bracket.nil?
+        if item.bracket.event_contest_category_bracket_id.present?
+          brackets_ids.push(item.bracket.event_contest_category_bracket_id)
+        else
+          brackets_idspush(item.bracket.parent_bracket.event_contest_category_bracket_id)
+        end
+      end
+    end
+    contest = EventContest.joins(:categories => [:brackets]).merge(EventContestCategoryBracket.where(:id => brackets_ids))
+                  .where(:event_id => categories_params[:event_id]).all
+    contest.each do |item|
+      item.filter_categories = EventContestCategory.joins(:brackets).merge(EventContestCategoryBracket.where(:id => brackets_ids)).all
+      item.filter_categories.each do |category|
+        category.filter_brackets = category.brackets.where(:id => brackets_ids).all
+        category.filter_brackets.each do |bracket|
+          bracket.filter_details = bracket.details.where(:id => details_ids).all
+          bracket.filter_details.each do |detail|
+            detail.filter_brackets = detail.brackets.where(:id => details_ids).all
+          end
+        end
+      end
+    end
+    json_response_serializer_collection(contest, EventContestFilterSerializer)
   end
 
   private
