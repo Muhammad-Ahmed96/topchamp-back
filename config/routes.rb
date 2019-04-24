@@ -14,6 +14,7 @@ Rails.application.routes.draw do
         get :current_enrolls
         get :my_events
         post :import_users
+        post :subscribe_import
         post :set_teams
       end
       member do
