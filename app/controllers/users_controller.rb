@@ -817,17 +817,17 @@ class UsersController < ApplicationController
       user = User.find_by_email(email)
       brackets = event.available_brackets(data)
       if user.present? and brackets.length > 0
-        player = Player.where(user_id: user.id).where(event_id: event.id).first_or_create!
         for_continue = false
         if start_age.nil? or end_age.nil?
           for_continue = true
         else
-          age = player.user.age
+          age = user.age
           if age >= start_age.to_i  and age <= end_age.to_i
             for_continue = true
           end
         end
         if for_continue
+          player = Player.where(user_id: user.id).where(event_id: event.id).first_or_create!
           player.sync_brackets!(brackets, true)
           my_brackets = player.brackets_enroll.where(:event_bracket_id => brackets.pluck(:event_bracket_id)).all
           fees = 0
