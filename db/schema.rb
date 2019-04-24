@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_04_04_074057) do
+ActiveRecord::Schema.define(version: 2019_04_23_203908) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -98,7 +98,6 @@ ActiveRecord::Schema.define(version: 2019_04_04_074057) do
     t.integer "team_b_id"
     t.integer "team_winner_id"
     t.integer "user_id"
-    t.float "score"
     t.datetime "date_at"
     t.string "signature_file_name"
     t.string "signature_content_type"
@@ -183,6 +182,7 @@ ActiveRecord::Schema.define(version: 2019_04_04_074057) do
     t.date "start_date"
     t.time "time_start"
     t.time "time_end"
+    t.integer "team_counter", default: 0
   end
 
   create_table "event_contest_category_brackets", force: :cascade do |t|
@@ -893,12 +893,12 @@ ActiveRecord::Schema.define(version: 2019_04_04_074057) do
     t.date "availability_date_start"
     t.date "availability_date_end"
     t.string "availability_time_zone"
-    t.string "restrictions"
-    t.boolean "is_insurance_requirements", default: false
+    t.text "restrictions"
+    t.boolean "is_insurance_requirements"
     t.text "insurance_requirements"
-    t.boolean "is_decorations", default: false
+    t.boolean "is_decorations"
     t.text "decorations"
-    t.boolean "is_vehicles", default: false
+    t.boolean "is_vehicles"
     t.integer "vehicles"
     t.string "status", default: "Active"
     t.datetime "created_at", null: false

@@ -556,8 +556,7 @@ class TournamentsController < ApplicationController
   end
 
   def details
-    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id])
-                     .where(:event_contest_category_id => players_list_params[:category_id]).first!
+    tournament = Tournament.where(:event_id => @event.id).where(:event_bracket_id => players_list_params[:bracket_id]).first!
     json_response_serializer(tournament, TournamentWithTeamsSerializer)
   end
 

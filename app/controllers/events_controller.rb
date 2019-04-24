@@ -1910,6 +1910,44 @@ class EventsController < ApplicationController
     json_response_serializer_collection(event_brackets, EventBracketSerializer)
   end
 
+  def players_bracket
+    ids = []
+    players = Player.joins(:brackets_enroll).merge(PlayerBracket.where(:event_bracket_id => brackets_params[:bracket_id]))
+    players.each do |player|
+      unless player.have_partner?(nil, brackets_params[:bracket_id])
+        ids << player.id
+      end
+    end
+    json_response_serializer_collection(Player.where(:id => ids).all, PlayerSingleSerializer)
+  end
+
+  def tournament_brackets
+=begin
+    response = []
+    tournaments = Tournament.where(event_contest_category_id: params[:event_contest_category_id]).all
+    brackets_ids = tournaments.pluck(:event_bracket_id)
+=end
+    brackets = EventContestCategoryBracketDetail.joins(:contest_bracket)
+                   .merge(EventContestCategoryBracket.where(:event_contest_category_id =>  params[:event_contest_category_id])).all
+=begin
+    brackets.each do |item|
+      if item.event_contest_category_bracket_id.present?
+        response << item
+      else
+        parent = item.parent_bracket
+        saved = response.select { |object| object.id == parent.id }
+        if saved.present?
+          saved.filter_brackets << item
+        else
+          parent.filter_brackets = [item]
+          response << item
+        end
+      end
+    end
+=end
+    json_response_serializer_collection(brackets, EventContestCategoryBracketDetailSerializer)
+  end
+
   private
 
   def resource_params
@@ -2070,5 +2108,10 @@ class EventsController < ApplicationController
 
   def available_categories_params
     params.permit('player_id', 'user_id', 'contest_id', 'only_contest')
+  end
+
+  def brackets_params
+    params.required('bracket_id')
+    params.permit('bracket_id')
   end
 end
