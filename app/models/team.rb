@@ -52,6 +52,12 @@ class Team < ApplicationRecord
     tournament.present? ? true : false
   end
 
+  def have_score?
+    count = Score.joins(set: [match: [round: [:tournament]]]).merge(Tournament.where(:event_id => self.event_id)
+                                                                        .where(:event_bracket_id => self.event_bracket_id)).count
+    count > 0 ? true : false
+  end
+
   def self.create_team(bracket, players, force = false)
     category_id = bracket.category_id.to_i
     event_id = bracket.event_id.to_i

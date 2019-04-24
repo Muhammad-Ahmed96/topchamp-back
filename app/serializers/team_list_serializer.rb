@@ -1,5 +1,5 @@
 class TeamListSerializer < ActiveModel::Serializer
-  attributes :id, :is_in_tournament
+  attributes :id, :is_in_tournament, :have_score
   has_many :players, :serializer => PlayerListSerializer
   belongs_to :bracket, :serializer => EventBracketTeamListSerializer
   belongs_to :contest, :serializer => EventContestSingleSerializer
@@ -13,5 +13,9 @@ class TeamListSerializer < ActiveModel::Serializer
 
   def is_in_tournament
     object.is_in_tournament?
+  end
+
+  def have_score
+    object.have_score?
   end
 end
