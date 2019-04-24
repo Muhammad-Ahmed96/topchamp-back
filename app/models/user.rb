@@ -388,7 +388,6 @@ class User < ApplicationRecord
     else
       0
     end
-
   end
 
   def is_my_partner
