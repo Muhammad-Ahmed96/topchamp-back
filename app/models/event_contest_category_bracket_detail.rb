@@ -121,6 +121,12 @@ class EventContestCategoryBracketDetail < ApplicationRecord
     status
   end
 
+  def have_score?
+    count = Score.joins(set: [match: [round: [:tournament]]]).merge(Tournament.where(:event_id => self.event_id)
+                                                                        .where(:event_bracket_id => self.id)).count
+    count > 0 ? true : false
+  end
+
 
   def send_free_mail
     event = self.event
