@@ -789,9 +789,11 @@ class UsersController < ApplicationController
       item.birth_date = row['Birthdate']
       item.status = :Active
       item.confirm
-      item.password = 'topchamp2019'
-      item.password_confirmation = 'topchamp2019'
-      item.role = "Member"
+      if item.id.nil?
+        item.password = 'topchamp2019'
+        item.password_confirmation = 'topchamp2019'
+        item.role = "Member"
+      end
       item.save!
       data = {:raking => row['Skill']}
       if item.association_information.nil?
