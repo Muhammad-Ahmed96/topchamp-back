@@ -54,6 +54,7 @@ class Player < ApplicationRecord
 
   def sync_brackets!(data, old_enrolls = false)
     brackets_ids = []
+    teams_to_destroy = []
     schedules_ids = self.schedule_ids
     any_one = false
     event = self.event
@@ -100,6 +101,13 @@ class Player < ApplicationRecord
     self.teams.where.not(event_bracket_id: brackets_ids).each do |team|
       self.teams.destroy(team)
       self.save
+      count = team.players.count
+      if count == 0
+        teams_to_destroy << team.id
+      end
+    end
+    if teams_to_destroy.length > 0
+      Team.where(:id => teams_to_destroy).destroy_all
     end
     if self.status == "Inactive" and self.brackets.count > 0
       self.activate
