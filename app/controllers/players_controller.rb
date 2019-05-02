@@ -349,28 +349,35 @@ class PlayersController < ApplicationController
     event = @player.event
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
+    brackets_ids = @player.brackets_enroll.all.pluck(:event_bracket_id)
     # @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
     #    .update(:payment_transaction_id => "000")
     enrolls_old.each do |item|
-      enroll = @player.brackets.where(:enroll_status => :enroll).where(:event_bracket_id => item.event_bracket_id)
-                   .first
-      if enroll.nil?
-        @player.unsubscribe(nil, item.event_bracket_id)
-      end
-      tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item.event_bracket_id).first
-      if tournament.present?
-        tournament.update_internal_data
+      if brackets_ids.include? item.event_bracket_id == false
+        enroll = @player.brackets.where(:enroll_status => :enroll).where(:event_bracket_id => item.event_bracket_id)
+                     .first
+        if enroll.nil?
+          @player.unsubscribe(nil, item.event_bracket_id)
+        end
+        tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item.event_bracket_id).first
+        if tournament.present?
+          tournament.update_internal_data
+        end
       end
     end
-    brackets_ids = @player.brackets_enroll.pluck(:event_bracket_id)
-    in_team_ids = @player.teams.where(event_bracket_id: brackets_ids).pluck(:event_bracket_id)
+    in_team_ids = @player.teams.where(event_bracket_id: brackets_ids).all.pluck(:event_bracket_id)
     only_ids = []
-    brackets_ids.each do |id|
-      if in_team_ids.include? id == false
-        only_ids << id
+    if in_team_ids.size == 0
+      only_ids = brackets_ids
+    else
+      brackets_ids.each do |id|
+        if in_team_ids.include? id == false
+          only_ids << id
+        end
       end
     end
-    my_brackets =  @player.brackets_enroll.where(:event_bracket_id => only_ids)
+
+    my_brackets = @player.brackets_enroll.where(:event_bracket_id => only_ids)
     my_brackets.each do |bracket|
       category_type = ""
       if [bracket.category_id.to_i].included_in? Category.doubles_categories_exact
@@ -381,7 +388,7 @@ class PlayersController < ApplicationController
       invitation = Invitation.where(:event_id => @player.event_id).where(:user_id => @player.user_id).where(:status => :accepted).where(:invitation_type => category_type)
                        .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket.event_bracket_id)).first
       if invitation.present?
-        result = Player.validate_partner(@player.user_id, invitation.sender_id,  bracket.event_bracket_id, bracket.category_id)
+        result = Player.validate_partner(@player.user_id, invitation.sender_id, bracket.event_bracket_id, bracket.category_id)
         if result == true
           bracket.update({:is_root => false, :partner_id => invitation.sender_id})
         end
