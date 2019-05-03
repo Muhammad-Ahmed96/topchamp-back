@@ -345,23 +345,23 @@ class PlayersController < ApplicationController
 
   def update
     authorize @player
-    enrolls_old = @player.brackets_enroll.all
+    enrolls_old = @player.brackets_enroll.all.pluck(:event_bracket_id).to_a
     event = @player.event
     brackets = @player.event.available_brackets(player_brackets_params)
     @player.sync_brackets! brackets
-    brackets_ids = @player.brackets_enroll.all.pluck(:event_bracket_id)
+    brackets_ids = @player.brackets_enroll.all.pluck(:event_bracket_id).to_a
     # @player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil).where(:event_bracket_id => brackets.pluck(:event_bracket_id))
     #    .update(:payment_transaction_id => "000")
     enrolls_old.each do |item|
-      if brackets_ids.include? item.event_bracket_id == false
-        enroll = @player.brackets.where(:enroll_status => :enroll).where(:event_bracket_id => item.event_bracket_id)
+      if brackets_ids.exclude? item
+        enroll = @player.brackets.where(:enroll_status => :enroll).where(:event_bracket_id => item)
                      .first
         if enroll.nil?
-          @player.unsubscribe(nil, item.event_bracket_id)
+          @player.unsubscribe(nil, item)
         end
-        tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item.event_bracket_id).first
-        if tournament.present?
-          tournament.update_internal_data
+        tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item).first
+        if tournament.present? and tournament.have_score? == false
+            tournament.delete
         end
       end
     end
@@ -371,7 +371,7 @@ class PlayersController < ApplicationController
       only_ids = brackets_ids
     else
       brackets_ids.each do |id|
-        if in_team_ids.include? id == false
+        if in_team_ids.exclude? id
           only_ids << id
         end
       end
