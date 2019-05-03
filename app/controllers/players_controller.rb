@@ -365,6 +365,14 @@ class PlayersController < ApplicationController
         end
       end
     end
+    brackets_ids.each do |item|
+      if enrolls_old.exclude? item
+        tournament = Tournament.where(:event_id => event.id).where(:event_bracket_id => item).first
+        if tournament.present? and tournament.have_score? == false
+          tournament.delete
+        end
+      end
+    end
     in_team_ids = @player.teams.where(event_bracket_id: brackets_ids).all.pluck(:event_bracket_id)
     only_ids = []
     if in_team_ids.size == 0
