@@ -54,6 +54,7 @@ class Player < ApplicationRecord
 
   def sync_brackets!(data, old_enrolls = false)
     brackets_ids = []
+    teams_to_destroy = []
     schedules_ids = self.schedule_ids
     any_one = false
     event = self.event
@@ -100,6 +101,10 @@ class Player < ApplicationRecord
     self.teams.where.not(event_bracket_id: brackets_ids).each do |team|
       self.teams.destroy(team)
       self.save
+      teams_to_destroy << team.id
+    end
+    if teams_to_destroy.length > 0
+      Team.where(:id => teams_to_destroy).destroy_all
     end
     if self.status == "Inactive" and self.brackets.count > 0
       self.activate
@@ -237,22 +242,16 @@ class Player < ApplicationRecord
 
   def unsubscribe(category_id, event_bracket_id)
     event = self.event
+    teams_to_destroy = []
     brackets = self.brackets.where(:event_bracket_id => event_bracket_id).where(:enroll_status => :enroll).all
     brackets.each do |bracket|
       team = Team.joins(:players).merge(Player.where(:id => self.id)).where(:event_id => event.id)
                  .where(:event_bracket_id => event_bracket_id).first
       if team.present?
         self.teams.destroy(team)
+        teams_to_destroy << team.id
       end
       bracket.destroy
-    end
-    teams_ids = Team.where(:event_bracket_id => event_bracket_id).where(:event_id => event.id).pluck(:id)
-    teams_to_destroy = []
-    teams_ids.each do |team_id|
-      count = Team.where(:id => team_id).first.players.count
-      if count == 0
-        teams_to_destroy << team_id
-      end
     end
     if teams_to_destroy.length > 0
       Team.where(:id => teams_to_destroy).destroy_all
