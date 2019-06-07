@@ -776,30 +776,41 @@ class UsersController < ApplicationController
     header = spreadsheet.row(1)
     (2..spreadsheet.last_row).map do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
-      email = row["Email"].gsub(/\s+/, "").downcase
-      if email.blank?
-        email = Faker::Internet.email
-      end
-      item = User.find_by_email(email) || User.new
-      item.uid = email
-      item.email = email
-      item.first_name = row['First Name']
-      item.last_name = row['Last Name']
-      item.gender = row['Sex'] === 'F' ? 'Female' : row['Sex'] === 'M' ? 'Male' : nil
-      item.birth_date = row['Birthdate']
-      item.status = :Active
-      item.confirm
-      if item.id.nil?
-        item.password = 'topchamp2019'
-        item.password_confirmation = 'topchamp2019'
-        item.role = "Member"
-      end
-      item.save!
-      data = {:raking => row['Skill']}
-      if item.association_information.nil?
-        item.create_association_information! data
-      else
-        item.association_information.update! data
+      unless row['First Name'].blank?
+        email = row["Email"].gsub(/\s+/, "").downcase
+        if email.blank?
+          email = Faker::Internet.email
+        end
+        item = User.find_by_email(email) || User.new
+        item.uid = email
+        item.email = email
+        item.first_name = row['First Name']
+        item.last_name = row['Last Name']
+        item.gender = row['Gender'] === 'F' ? 'Female' : row['Gender'] === 'M' ? 'Male' : nil
+        if item.birth_date.nil?
+          item.birth_date = Time.now + 30.years
+        end
+        item.status = :Active
+        item.confirm
+        if item.id.nil?
+          item.password = 'topchamp2019'
+          item.password_confirmation = 'topchamp2019'
+          item.role = "Member"
+        end
+        item.save!
+        data = {:raking => row['Skill Level']}
+        if item.association_information.nil?
+          item.create_association_information! data
+        else
+          item.association_information.update! data
+        end
+
+        data = {:cell_phone => row['Skill Level']}
+        if item.contact_information.nil?
+          item.create_contact_information! data
+        else
+          item.contact_information.update! data
+        end
       end
 
     end
@@ -811,57 +822,63 @@ class UsersController < ApplicationController
     event = Event.find(params[:event_id])
     start_age = params[:start_age]
     end_age = params[:end_age]
-    data = [{event_bracket_id: params[:bracket]}]
-    header = spreadsheet.row(1)
-    (2..spreadsheet.last_row).map do |i|
-      row = Hash[[header, spreadsheet.row(i)].transpose]
-      email = row["Email"].gsub(/\s+/, "").downcase
-      user = User.find_by_email(email)
-      brackets = event.available_brackets(data)
-      if user.present? and brackets.length > 0
-        for_continue = false
+    (1..spreadsheet.sheets.length - 1).each do |index|
+      name = index.is_a?(::String) ? index : spreadsheet.sheets[index]
+      sheet = spreadsheet.sheet(index)
+      data = [{event_bracket_id: name.to_id}]
+      header = sheet.row(1)
+      (2..sheet.last_row).map do |i|
+        row = Hash[[header, sheet.row(i)].transpose]
+        email = row["Email"].gsub(/\s+/, "").downcase
+        user = User.find_by_email(email)
+        brackets = event.available_brackets(data)
+        if user.present? and brackets.length > 0
+          for_continue = false
+=begin
         if start_age.nil? or end_age.nil?
           for_continue = true
         else
           age = user.age
-          if age >= start_age.to_i  and age <= end_age.to_i
+          if age >= start_age.to_i and age <= end_age.to_i
             for_continue = true
           end
         end
-        if for_continue
-          player = Player.where(user_id: user.id).where(event_id: event.id).first_or_create!
-          player.sync_brackets!(brackets, true)
-          my_brackets = player.brackets_enroll.where(:event_bracket_id => brackets.pluck(:event_bracket_id)).all
-          fees = 0
-          app_fee = 0.0
-          amount = 0
-          authorize_fee = 0
-          account = 0
-          director_receipt = 0
-          tax_total = 0
-          discounts_total = 0
-          tax_for_bracket = 0
-          bracket_fee = 0
-          tax_for_registration = 0
-          enroll_fee = 0
-          paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => '000', :user_id => user.id,
-                                                                   :amount => amount, :tax => number_with_precision(tax_total, precision: 2), :description => "TransactionForSubscribe",
-                                                                   :event_id => player.event_id, :discount => discounts_total, :authorize_fee => authorize_fee, :app_fee => app_fee,
-                                                                   :director_receipt => director_receipt, :account => account)
-          my_brackets.each do |item|
-            bracket = item.bracket
-            paymentTransaction.details.create!({:amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
-                                                :event_bracket_id => bracket.id, :category_id => bracket.category_id,
-                                                :event_id => player.event_id, :type_payment => "bracket", :contest_id => bracket.contest_id})
+=end
+          if for_continue
+            player = Player.where(user_id: user.id).where(event_id: event.id).first_or_create!
+            player.sync_brackets!(brackets, true)
+            my_brackets = player.brackets_enroll.where(:event_bracket_id => brackets.pluck(:event_bracket_id)).all
+            fees = 0
+            app_fee = 0.0
+            amount = 0
+            authorize_fee = 0
+            account = 0
+            director_receipt = 0
+            tax_total = 0
+            discounts_total = 0
+            tax_for_bracket = 0
+            bracket_fee = 0
+            tax_for_registration = 0
+            enroll_fee = 0
+            paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => '000', :user_id => user.id,
+                                                                     :amount => amount, :tax => number_with_precision(tax_total, precision: 2), :description => "TransactionForSubscribe",
+                                                                     :event_id => player.event_id, :discount => discounts_total, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                                     :director_receipt => director_receipt, :account => account)
+            my_brackets.each do |item|
+              bracket = item.bracket
+              paymentTransaction.details.create!({:amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
+                                                  :event_bracket_id => bracket.id, :category_id => bracket.category_id,
+                                                  :event_id => player.event_id, :type_payment => "bracket", :contest_id => bracket.contest_id})
+            end
+
+            player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
+                .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
+                .update(:payment_transaction_id => '000')
+            player.set_teams my_brackets
           end
-
-          player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
-              .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
-              .update(:payment_transaction_id => '000')
-          player.set_teams my_brackets
         end
-      end
 
+      end
     end
     json_response_success(t("success"), true)
   end
