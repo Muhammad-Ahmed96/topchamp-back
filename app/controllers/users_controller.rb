@@ -825,7 +825,7 @@ class UsersController < ApplicationController
     (1..spreadsheet.sheets.length - 1).each do |index|
       name = index.is_a?(::String) ? index : spreadsheet.sheets[index]
       sheet = spreadsheet.sheet(index)
-      data = [{event_bracket_id: name.to_id}]
+      data = [{event_bracket_id: name.to_i}]
       header = sheet.row(1)
       (2..sheet.last_row).map do |i|
         row = Hash[[header, sheet.row(i)].transpose]
