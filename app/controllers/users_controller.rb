@@ -833,7 +833,7 @@ class UsersController < ApplicationController
         user = User.find_by_email(email)
         brackets = event.available_brackets(data)
         if user.present? and brackets.length > 0
-          for_continue = false
+          for_continue = true
 =begin
         if start_age.nil? or end_age.nil?
           for_continue = true
