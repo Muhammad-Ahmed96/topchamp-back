@@ -787,12 +787,12 @@ class UsersController < ApplicationController
         item.first_name = row['First Name']
         item.last_name = row['Last Name']
         item.gender = row['Gender'] === 'F' ? 'Female' : row['Gender'] === 'M' ? 'Male' : nil
-        if item.birth_date.nil?
-          item.birth_date = Time.now + 30.years
-        end
+       # if item.birth_date.nil? or item.birth_date >  Time.now
+          item.birth_date = Time.now - 30.years
+        #end
         item.status = :Active
         item.confirm
-        if item.id.nil?
+        if item.password.nil?
           item.password = 'topchamp2019'
           item.password_confirmation = 'topchamp2019'
           item.role = "Member"
