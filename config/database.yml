@@ -41,7 +41,7 @@ development:
 
 #local
   database: top_champ_development_contest #topchamp_development
-  username: daniel
+  username: root
   password: password
   host: localhost
 
