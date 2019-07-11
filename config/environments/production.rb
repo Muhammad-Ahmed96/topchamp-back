@@ -90,6 +90,6 @@ Rails.application.configure do
       address:              'secure.emailsrvr.com',
       port:                 465,
       user_name:            'testomator@amplemind.com',
-      password:             'Password01',
+      password:             'testTh1st35tTh4T',
       authentication:       :login  }
 end

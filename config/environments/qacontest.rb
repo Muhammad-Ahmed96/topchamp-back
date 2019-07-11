@@ -89,7 +89,7 @@ Rails.application.configure do
       address:              'secure.emailsrvr.com',
       port:                 465,
       user_name:            'testomator@amplemind.com',
-      password:             'Password01',
+      password:             'testTh1st35tTh4T',
       authentication:       :login  }
   config.hours_bracket = 8
   config.front_url = "http://ec2-34-215-184-35.us-west-2.compute.amazonaws.com:444"
