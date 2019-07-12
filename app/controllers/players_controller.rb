@@ -202,7 +202,7 @@ class PlayersController < ApplicationController
 
     players = PlayerPolicy::Scope.new(current_user, Player).resolve.my_order(column, direction).event_like(event_title).first_name_like(first_name).last_name_like(last_name)
                   .email_like(email).category_in(category).bracket_in(bracket).skill_level_like(skill_level).birth_date_like(birth_date).event_in(event)
-                  .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction).gender_like(gender)
+                  .status_in(status).event_order(event_column, direction).first_name_order(first_name_column, direction).gender_in(gender)
                   .last_name_order(last_name_column, direction).email_order(email_column, direction).sport_in(sport)
                   .sports_order(sports_column, direction).categories_order(category_column, direction).gender_order(gender_column, direction)
                   .role_in(role).skill_level_order(skill_level_column, direction).age_order(age_column, direction).age_like(age)
