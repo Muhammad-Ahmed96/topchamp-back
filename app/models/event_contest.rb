@@ -2,6 +2,7 @@ class EventContest < ApplicationRecord
   include Swagger::Blocks
   belongs_to :event
   has_many :categories, :class_name => 'EventContestCategory', :dependent => :destroy
+  has_many :tournaments, foreign_key: 'contest_id'
 
   belongs_to :scoring_option_match_1, foreign_key: "scoring_option_match_1_id", class_name: "ScoringOption", optional: true
   belongs_to :scoring_option_match_2, foreign_key: "scoring_option_match_2_id", class_name: "ScoringOption", optional: true
@@ -28,6 +29,10 @@ class EventContest < ApplicationRecord
 
   def has_players
     !self.is_for_delete?
+  end
+
+  def has_score
+    self.tournaments.joins(rounds: [matches: [sets: [:scores]]]).count > 0
   end
 
   def players

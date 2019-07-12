@@ -115,7 +115,7 @@ class EventContestCategoryBracketDetail < ApplicationRecord
     status = :waiting_list
     if self.available_for_enroll
       status = :enroll
-    elsif !self.event.registration_rule.allow_wait_list
+    elsif self.event.registration_rule and !self.event.registration_rule.allow_wait_list
       status = :sold_out
     end
     status
