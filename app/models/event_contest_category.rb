@@ -40,4 +40,9 @@ class EventContestCategory < ApplicationRecord
     return ids
   end
 
+
+  def has_score
+    self.contest.has_score
+  end
+
 end
