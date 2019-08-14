@@ -78,24 +78,6 @@ class EventBracket < ApplicationRecord
       key :format, :int64
       key :description, "Unique identifier associated with bracket"
     end
-    property :event_id do
-      key :type, :integer
-      key :format, :int64
-      key :description, "Event id associated with bracket"
-    end
-    property :event_bracket_id do
-      key :type, :integer
-      key :format, :int64
-      key :description, "Belong to bracket id associated with bracket"
-    end
-    property :lowest_skill do
-      key :type, :number
-      key :description, "Lowest skill associated with bracket"
-    end
-    property :highest_skill do
-      key :type, :number
-      key :description, "Highest skill associated with bracket"
-    end
     property :age do
       key :type, :number
       key :description, "Age associated with bracket"
@@ -108,9 +90,37 @@ class EventBracket < ApplicationRecord
       key :type, :number
       key :description, "Old age associated with bracket"
     end
+    property :lowest_skill do
+      key :type, :number
+      key :description, "Lowest skill associated with bracket"
+    end
+    property :highest_skill do
+      key :type, :number
+      key :description, "Highest skill associated with bracket"
+    end
     property :quantity do
       key :type, :number
       key :description, "Quantity of players associated with bracket"
+    end
+    property :start_date do
+      key :type, :string
+    end
+    property :time_start do
+      key :type, :string
+    end
+    property :time_end do
+      key :type, :string
+    end
+    property :has_players do
+      key :type, :boolean
+    end
+    property :bracket_type do
+      key :type, :string
+    end
+    property :contest_index do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Contest index associated with bracket"
     end
     property :brackets do
       key :type, :array
@@ -127,24 +137,6 @@ class EventBracket < ApplicationRecord
       key :format, :int64
       key :description, "Unique identifier associated with bracket"
     end
-    property :event_id do
-      key :type, :integer
-      key :format, :int64
-      key :description, "Event id associated with bracket"
-    end
-    property :event_bracket_id do
-      key :type, :integer
-      key :format, :int64
-      key :description, "Belong to bracket id associated with bracket"
-    end
-    property :lowest_skill do
-      key :type, :number
-      key :description, "Lowest skill associated with bracket"
-    end
-    property :highest_skill do
-      key :type, :number
-      key :description, "Highest skill associated with bracket"
-    end
     property :age do
       key :type, :number
       key :description, "Age associated with bracket"
@@ -157,9 +149,37 @@ class EventBracket < ApplicationRecord
       key :type, :number
       key :description, "Old age associated with bracket"
     end
+    property :lowest_skill do
+      key :type, :number
+      key :description, "Lowest skill associated with bracket"
+    end
+    property :highest_skill do
+      key :type, :number
+      key :description, "Highest skill associated with bracket"
+    end
     property :quantity do
       key :type, :number
       key :description, "Quantity of players associated with bracket"
+    end
+    property :start_date do
+      key :type, :string
+    end
+    property :time_start do
+      key :type, :string
+    end
+    property :time_end do
+      key :type, :string
+    end
+    property :has_players do
+      key :type, :boolean
+    end
+    property :bracket_type do
+      key :type, :string
+    end
+    property :contest_index do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Contest index associated with bracket"
     end
   end
 

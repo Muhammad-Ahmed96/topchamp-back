@@ -1,4 +1,5 @@
 class EventContestCategory < ApplicationRecord
+  include Swagger::Blocks
   belongs_to :contest, :class_name => 'EventContest', :optional => true, :foreign_key => 'event_contest_id'
   has_many :brackets, :class_name => 'EventContestCategoryBracket', :dependent => :destroy
   belongs_to :category
@@ -43,6 +44,31 @@ class EventContestCategory < ApplicationRecord
 
   def has_score
     self.contest.has_score
+  end
+
+  swagger_schema :EventContestCategory do
+    property :id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Unique identifier of category"
+    end
+    property :category_id do
+      key :type, :integer
+      key :format, :int64
+    end
+    property :name do
+      key :type, :string
+    end
+    property :has_players do
+      key :type, :boolean
+    end
+    property :details do
+      key :type, :array
+      items do
+        key :'$ref', :EventBracket
+      end
+      key :description, "Brackets associated with event"
+    end
   end
 
 end
