@@ -383,6 +383,7 @@ class VenuesController < ApplicationController
       key :produces, ['application/json',]
       key :tags, ['venues']
       response 200 do
+        key :description, 'Venues Respone'
         key :required, [:data]
         schema do
           property :data do

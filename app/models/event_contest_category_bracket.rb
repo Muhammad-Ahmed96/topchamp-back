@@ -1,4 +1,5 @@
 class EventContestCategoryBracket < ApplicationRecord
+  include Swagger::Blocks
   belongs_to :category, :class_name => 'EventContestCategory',:foreign_key => 'event_contest_category_id',
              :optional => true
 
@@ -39,5 +40,39 @@ class EventContestCategoryBracket < ApplicationRecord
               .merge(EventContestCategoryBracket.where(:id => self.id)).pluck(:id)
     ids = ids + EventContestCategoryBracketDetail.where(:event_contest_category_bracket_detail_id => ids).pluck(:id)
     return ids
+  end
+
+  swagger_schema :EventContestCategoryBracket do
+    property :id do
+      key :type, :integer
+      key :format, :int64
+      key :description, "Unique identifier of bracket"
+    end
+    property :awards_for do
+      key :type, :string
+      key :description, "Defines awards for associated with event"
+    end
+    property :awards_through do
+      key :type, :string
+      key :description, "Defines awards through associated with event"
+    end
+    property :awards_plus do
+      key :type, :string
+      key :description, "Defines a awards plus associated with event"
+    end
+    property :bracket_type do
+      key :type, :string
+      key :description, "Type of bracket associated with event\nExample: Age, Skill, Age/Skill or SkillAge"
+    end
+    property :has_players do
+      key :type, :boolean
+    end
+    property :details do
+      key :type, :array
+      items do
+        key :'$ref', :EventBracket
+      end
+      key :description, "Brackets associated with event"
+    end
   end
 end
