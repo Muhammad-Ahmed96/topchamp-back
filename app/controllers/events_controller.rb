@@ -149,7 +149,7 @@ class EventsController < ApplicationController
     if only_not_subscribe.present? && only_not_subscribe.to_s == "1"
       not_event = User.find(to_subscribe_user).players.pluck(:event_id)
     end
-    if is_all == '1'
+    if is_all == '0'
       query = EventPolicy::Scope.new(current_user, Event).resolve
     else
       query = Event
