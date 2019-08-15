@@ -126,7 +126,7 @@ class EventsController < ApplicationController
     only_not_subscribe = params[:only_not_subscribe]
     to_subscribe_user = params[:to_subscribe_user]
     visibility = params[:visibility]
-    is_all = params[:all].nil? ? '0' : params[:paginate]
+    is_all = params[:is_all].nil? ? '0' : params[:is_all]
 
 
     state = params[:state]
