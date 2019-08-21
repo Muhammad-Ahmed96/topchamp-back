@@ -80,6 +80,7 @@ class Event < ApplicationRecord
   scope :only_creator, lambda {|id| where(:creator_user_id => id) if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
   scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :url_like, lambda {|search| where ["LOWER(event_url) LIKE LOWER(?)", "%/#{search}"] if search.present?}
   scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
 
 
@@ -374,39 +375,8 @@ class Event < ApplicationRecord
       key :type, :boolean
       key :description, "Indicate if is valid to activate"
     end
-    property :sport_regulator_id do
-      key :type, :integer
-      key :format, :int64
-      key :description, "Unique identifier of sport regulator associated with event"
-    end
-    property :elimination_format_id do
-      key :type, :integer
-      key :format, :int64
-      key :description, "Unique identifier of elimination format associated with event"
-    end
-    property :bracket_by do
-      key :type, :string
-      key :description, "Type of bracket associated with event\nExample: Age, Skill, Age/Skill or SkillAge"
-    end
-    property :scoring_option_match_1_id do
-      key :type, :string
-      key :description, "Unique identifier of scoring option of match 1 associated with event"
-    end
-    property :scoring_option_match_2_id do
-      key :type, :string
-      key :description, "Unique identifier of scoring option of match 2 associated with event"
-    end
-    property :awards_for do
-      key :type, :string
-      key :description, "Defines awards for associated with event"
-    end
-    property :awards_through do
-      key :type, :string
-      key :description, "Defines awards through associated with event"
-    end
-    property :awards_plus do
-      key :type, :string
-      key :description, "Defines a awards plus associated with event"
+    property :reminder do
+      key :type, :boolean
     end
     property :sports do
       key :type, :array
@@ -429,13 +399,6 @@ class Event < ApplicationRecord
         key :'$ref', :EventSchedule
       end
       key :description, "Schedules associated with event"
-    end
-    property :categories do
-      key :type, :array
-      items do
-        key :'$ref', :Category
-      end
-      key :description, "Categories associated with event"
     end
     property :venue do
       key :'$ref', :Venue
@@ -472,45 +435,16 @@ class Event < ApplicationRecord
       key :'$ref', :EventTax
       key :description, "Tax associated with event"
     end
-
     property :registration_rule do
       key :'$ref', :EventRegistrationRule
       key :description, "Registration rule associated with event"
     end
-    property :sport_regulator do
+    property :contests do
       key :type, :array
       items do
-        key :'$ref', :SportRegulator
+        key :'$ref', :EventContest
       end
-      key :description, "Sport regulators associated with event"
-    end
-    property :elimination_format do
-      key :type, :array
-      items do
-        key :'$ref', :EliminationFormat
-      end
-      key :description, "Elimination formats associated with event"
-    end
-    property :brackets do
-      key :type, :array
-      items do
-        key :'$ref', :EventBracket
-      end
-      key :description, "Brackets associated with event"
-    end
-    property :scoring_option_match_1 do
-      key :type, :array
-      items do
-        key :'$ref', :ScoringOption
-      end
-      key :description, "Scoring option match 1 associated with event"
-    end
-    property :scoring_option_match_1 do
-      key :type, :array
-      items do
-        key :'$ref', :ScoringOption
-      end
-      key :description, "Scoring option match 2 associated with event"
+      key :description, "Contests associated with event"
     end
   end
   swagger_schema :EventInput do

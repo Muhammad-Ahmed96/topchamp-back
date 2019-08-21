@@ -126,6 +126,7 @@ class EventsController < ApplicationController
     only_not_subscribe = params[:only_not_subscribe]
     to_subscribe_user = params[:to_subscribe_user]
     visibility = params[:visibility]
+    is_all = params[:is_all].nil? ? '0' : params[:is_all]
 
 
     state = params[:state]
@@ -148,7 +149,12 @@ class EventsController < ApplicationController
     if only_not_subscribe.present? && only_not_subscribe.to_s == "1"
       not_event = User.find(to_subscribe_user).players.pluck(:event_id)
     end
-    events = EventPolicy::Scope.new(current_user, Event).resolve.my_order(column, direction).venue_order(column_venue, direction)
+    if is_all == '0'
+      query = EventPolicy::Scope.new(current_user, Event).resolve
+    else
+      query = Event
+    end
+    events = query.my_order(column, direction).venue_order(column_venue, direction)
                  .sport_in(sport_id).sports_order(column_sports, direction).title_like(title).not_in(not_event)
                  .start_date_like(start_date).in_status(status).state_like(state).city_like(city).in_visibility(visibility)
 

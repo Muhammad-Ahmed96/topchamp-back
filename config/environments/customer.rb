@@ -82,7 +82,7 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-  config.action_mailer.asset_host = 'topchamp.tk'
+  config.action_mailer.asset_host = 'topchampsport.com'
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
       tls: true,
@@ -92,7 +92,7 @@ Rails.application.configure do
       password:             'testTh1st35tTh4T',
       authentication:       :login  }
   config.hours_bracket = 8
-  config.front_url = "http://topchamp.tk:444"
+  config.front_url = "https://topchampsport.com"
   config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
   config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
   config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"

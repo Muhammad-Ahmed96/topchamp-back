@@ -24,10 +24,10 @@ default: &default
 development:
   <<: *default
   #Customer
-#  database: top_champ_production_contest
-#  username: deploy
-#  password: password
-#  host: ec2-54-200-72-86.us-west-2.compute.amazonaws.com
+  database: top_champ_production_contest
+  username: deploy
+  password: password
+  host: ec2-54-200-72-86.us-west-2.compute.amazonaws.com
 #  #Dev
 #  database: top_champ_production
 #  username: deploy
@@ -40,10 +40,10 @@ development:
 #  host: ec2-34-215-184-35.us-west-2.compute.amazonaws.com
 
 #local
-  database: top_champ_development_contest #topchamp_development
-  username: root
-  password: password
-  host: localhost
+#  database: top_champ_development_contest #topchamp_development
+#  username: root
+#  password: password
+#  host: localhost
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
