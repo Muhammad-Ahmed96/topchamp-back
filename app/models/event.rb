@@ -80,6 +80,7 @@ class Event < ApplicationRecord
   scope :only_creator, lambda {|id| where(:creator_user_id => id) if id.present?}
   scope :in_visibility, lambda {|data| where visibility: data if data.present?}
   scope :title_like, lambda {|search| where ["LOWER(title) LIKE LOWER(?)", "%#{search}%"] if search.present?}
+  scope :url_like, lambda {|search| where ["LOWER(event_url) LIKE LOWER(?)", "%/#{search}"] if search.present?}
   scope :start_date_like, lambda {|search| where("LOWER(concat(trim(to_char(start_date, 'Month')),',',to_char(start_date, ' DD, YYYY'))) LIKE LOWER(?)", "%#{search}%") if search.present?}
 
 

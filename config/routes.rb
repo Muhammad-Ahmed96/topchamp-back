@@ -258,6 +258,7 @@ Rails.application.routes.draw do
         collection do
           get :coming_soon
           get :upcoming
+          get 'by_url/:uri', action: :by_url, controller: :events
         end
       end
     end
