@@ -1,4 +1,5 @@
 class Public::EventsController < ApplicationController
+  include Swagger::Blocks
   def index
 
     column = params[:column].nil? ? 'title' : params[:column]
@@ -106,6 +107,48 @@ class Public::EventsController < ApplicationController
 
   def show
     @event = Event.find(params[:id])
+    json_response_serializer(@event, EventSerializer)
+  end
+
+
+  swagger_path '/public/events/by_url/:uri' do
+    operation :get do
+      key :summary, 'Show event by url param'
+      key :description, 'Event Catalog'
+      key :operationId, 'eventsShow'
+      key :produces, ['application/json',]
+      key :tags, ['events']
+      parameter do
+        key :name, :uri
+        key :in, :path
+        key :description, 'Uri of event to fetch'
+        key :required, true
+        key :type, :string
+      end
+      response 200 do
+        key :description, 'Event Respone'
+        schema do
+          property :data do
+            key :'$ref', :Event
+          end
+        end
+      end
+      response 401 do
+        key :description, 'not authorized'
+        schema do
+          key :'$ref', :ErrorModel
+        end
+      end
+      response :default do
+        key :description, 'unexpected error'
+      end
+    end
+  end
+
+  def by_url
+    # authorize Event
+    uri = params[:uri].nil? ? 'not_found' : params[:uri]
+    @event = Event.in_visibility('Public').in_status('Active').url_like(uri).first!
     json_response_serializer(@event, EventSerializer)
   end
 end
