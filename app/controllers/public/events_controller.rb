@@ -147,8 +147,14 @@ class Public::EventsController < ApplicationController
 
   def by_url
     # authorize Event
-    uri = params[:uri].nil? ? 'not_found' : params[:uri]
+    uri = by_url_params[:uri].nil? ? 'not_found' : by_url_params[:uri]
     @event = Event.in_visibility('Public').in_status('Active').url_like(uri).first!
     json_response_serializer(@event, EventSerializer)
+  end
+
+  private
+  def by_url_params
+    params.required(:uri)
+    params.permit(:uri)
   end
 end
