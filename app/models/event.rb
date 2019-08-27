@@ -793,6 +793,76 @@ class Event < ApplicationRecord
     CreateEventMailer.on_create(self, self.director).deliver
   end
 
+  def calculate_prices(brackets, user , discount_code)
+    total = 0
+    sub_total = 0
+    amount = 0
+    tax_total = 0
+    discounts_total = 0
+    tax_for_registration = 0
+    tax_for_bracket = 0
+    enroll_discount = 0
+    enroll_total = 0
+    enroll_amount = 0
+    bracket_discount = 0
+    bracket_total = 0
+    bracket_amount= 0
+    tax = nil
+    enroll_fee = self.registration_fee
+    bracket_fee = self.payment_method.present? ? self.payment_method.bracket_fee : 0
+    #Calculate total
+    sub_total = enroll_fee
+    brackets.each do |bracket|
+      if bracket[:enroll_status] == :enroll
+        sub_total += bracket_fee
+      end
+    end
+    #set tax of event
+    #todo review process
+    if self.tax.present?
+      if self.tax.is_percent
+        tax = {:amount => ((self.tax.tax * sub_total) / 100), :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = ((self.tax.tax * enroll_fee) / 100)
+        tax_for_bracket = ((self.tax.tax * bracket_fee) / 100)
+      else
+        tax = {:amount => self.tax.tax, :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = self.tax.tax / (1 + (brackets.length))
+        tax_for_bracket = self.tax.tax / (1 + (brackets.length))
+      end
+
+    end
+    enroll_total = (enroll_fee + tax_for_registration)
+    bracket_total = ((bracket_fee * brackets.length) + tax_for_bracket)
+    if tax.present?
+      tax_total = tax[:amount]
+    end
+    total = sub_total + tax_total
+    #apply discounts
+    #event_discount = event.get_discount
+    personalized_discount = self.discount_personalizeds.where(:code => discount_code).where(:email => user.email).first
+    general_discount = self.discount_generals.where(:code => discount_code).first
+    if personalized_discount.present?
+      discounts_total = ((personalized_discount.discount * total) / 100)
+      enroll_discount = ((personalized_discount.discount  * enroll_total) / 100)
+      bracket_discount = ((personalized_discount.discount * bracket_total)  / 100)
+    elsif general_discount.present? and general_discount.limited > general_discount.applied
+      discounts_total = ((general_discount.discount * total) / 100)
+      enroll_discount = ((general_discount.discount  * enroll_total) / 100)
+      bracket_discount = ((general_discount.discount * bracket_total)  / 100)
+      general_discount.applied = general_discount.applied + 1
+      general_discount.save!(:validate => false)
+    end
+    amount = total - discounts_total
+    enroll_amount = enroll_total - enroll_discount
+    bracket_amount = bracket_total - bracket_discount
+
+    JSON.parse({amount: amount, enroll_amount: enroll_amount, bracket_amount: bracket_amount,
+                total: total, sub_total: sub_total, tax_total: tax_total, discounts_total:discounts_total,
+                tax_for_registration: tax_for_registration, tax_for_bracket: tax_for_bracket, enroll_discount: enroll_discount,
+                enroll_total: enroll_total, bracket_discount: bracket_discount, tax: tax,
+                bracket_total: bracket_total, enroll_fee: enroll_fee, bracket_fee: bracket_fee}.to_json, object_class: OpenStruct)
+  end
+
   private
 
   #validate a url

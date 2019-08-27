@@ -241,79 +241,34 @@ class Payments::CheckOutController < ApplicationController
       return response_no_enroll_error
     end
     config = Payments::ItemsConfig.get_bracket
+    prices = event.calculate_prices(brackets, @resource, subscribe_params[:discount_code])
     items = []
-    amount = 0
-    tax_total = 0
-    discounts_total = 0
-    tax_for_registration = 0
-    tax_for_bracket = 0
-    enroll_fee = event.registration_fee
-    bracket_fee = event.payment_method.present? ? event.payment_method.bracket_fee : 0
-    #aply discounts
-    #event_discount = event.get_discount
-    personalized_discount = event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first
-    general_discount = event.discount_generals.where(:code => subscribe_params[:discount_code]).first
-
-    #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
-    #todo discount
-    #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
-
-    if personalized_discount.present?
-      discounts_total = ((personalized_discount.discount * enroll_fee) / 100)
-      enroll_fee = enroll_fee - discounts_total
-      # bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
-    elsif general_discount.present? and general_discount.limited > general_discount.applied
-      discounts_total = ((general_discount.discount * enroll_fee) / 100)
-      enroll_fee = enroll_fee - discounts_total
-      #bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
-      general_discount.applied = general_discount.applied + 1
-      general_discount.save!(:validate => false)
-    end
     #only for test
     #enroll_fee = 1
     #bracket_fee = 1
     #first item event fee
-    item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: enroll_fee,
+    item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: prices.enroll_amount,
             taxable: true}
     items << item
+
     brackets.each do |bracket|
       if bracket[:enroll_status] == :enroll
-        item = {id: "#{config[:id]}-#{bracket[:event_bracket_id]}", name: "Bracket-#{bracket[:event_bracket_id]}", description: "Subscribe to Bracket-#{bracket[:event_bracket_id]}", quantity: 1, unit_price: bracket_fee,
+        item = {id: "#{config[:id]}-#{bracket[:event_bracket_id]}", name: "Bracket-#{bracket[:event_bracket_id]}",
+                description: "Subscribe to Bracket-#{bracket[:event_bracket_id]}", quantity: 1, unit_price: prices.bracket_amount,
                 taxable: true}
-        amount += bracket_fee
         items << item
       end
-    end
-    amount += enroll_fee
-    #set tax of event
-    tax = nil
-    #todo review process
-    if event.tax.present?
-      if event.tax.is_percent
-        tax = {:amount => ((event.tax.tax * amount) / 100), :name => "tax", :description => "Tax to enroll"}
-        tax_for_registration = ((event.tax.tax * enroll_fee) / 100)
-        tax_for_bracket = ((event.tax.tax * bracket_fee) / 100)
-      else
-        tax = {:amount => event.tax.tax, :name => "tax", :description => "Tax to enroll"}
-        tax_for_registration = event.tax.tax / (1 + (brackets.length))
-        tax_for_bracket = event.tax.tax / (1 + (brackets.length))
-      end
-
-    end
-    if tax.present?
-      tax_total = tax[:amount]
-      amount = amount + tax_total
     end
     # no payment if items is empty
     # Comment on test
     # Only for test
     #amount = 1
     #tax[:amount] = 1
-    if items.length > 0
+    amount =  prices.amount <= 0 ? 0 : number_with_precision(prices.amount, precision: 2)
+    if items.length > 0 and amount > 0
       customer = Payments::Customer.get(@resource)
-      amount = number_with_precision(amount, precision: 2)
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
-                                           amount, items, tax)
+                                           amount, items, prices.tax)
       if response.messages.resultCode == MessageTypeEnum::Ok
         #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
         if response.transactionResponse.responseCode != "1"
@@ -335,7 +290,7 @@ class Payments::CheckOutController < ApplicationController
     end
     # end Comment on test
     #only for test
-    # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+     response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
@@ -350,22 +305,25 @@ class Payments::CheckOutController < ApplicationController
         app_fee = fees.transaction_fee
       end
     end
-    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+    authorize_fee =  amount <=0 ? 0 : ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
     account = amount - authorize_fee
-
     director_receipt = amount - (authorize_fee + app_fee)
-
     paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
-                                                             :amount => amount, :tax => number_with_precision(tax_total, precision: 2), :description => "TransactionForSubscribe",
-                                                             :event_id => player.event_id, :discount => discounts_total, :authorize_fee => authorize_fee, :app_fee => app_fee,
-                                                             :director_receipt => director_receipt, :account => account)
+                                                             :amount => amount, :tax => number_with_precision(prices.tax_total, precision: 2), :description => "TransactionForSubscribe",
+                                                             :event_id => player.event_id, :discount => prices.discounts_total, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                             :director_receipt => director_receipt, :account => account,
+                                                             :total => prices.sub_total)
+    bracket_amount_one = brackets.length <= 0 ? 0 : prices.bracket_amount / brackets.length
+    bracket_discount_one = brackets.length <= 0 ? 0 : prices.bracket_discount / brackets.length
     brackets.each do |item|
-      paymentTransaction.details.create!({:amount => bracket_fee, :tax => number_with_precision(tax_for_bracket, precision: 2),
+      paymentTransaction.details.create!({:amount => bracket_amount_one, :tax => number_with_precision(prices.tax_for_bracket, precision: 2),
                                   :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
-                                  :event_id => player.event_id, :type_payment => "bracket", :contest_id => item[:contest_id]})
+                                  :event_id => player.event_id, :type_payment => "bracket", :contest_id => item[:contest_id],
+                                          :discount => bracket_discount_one, :total => prices.bracket_fee})
     end
-    paymentTransaction.details.create!({:amount => enroll_fee, :tax => number_with_precision(tax_for_registration, precision: 2),
-                                :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id})
+    paymentTransaction.details.create!({:amount => prices.enroll_amount, :tax => number_with_precision(prices.tax_for_registration, precision: 2),
+                                :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id,
+                                       :discount => prices.enroll_discount, :total => prices.enroll_fee})
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
