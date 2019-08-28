@@ -264,7 +264,7 @@ class Payments::CheckOutController < ApplicationController
     # Only for test
     #amount = 1
     #tax[:amount] = 1
-    amount =  prices.amount <= 0 ? 0 : number_with_precision(prices.amount, precision: 2)
+    amount =  prices.amount <= 0 ? 0 : number_with_precision(prices.amount, precision: 2).to_f
     if items.length > 0 and amount > 0
       customer = Payments::Customer.get(@resource)
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
