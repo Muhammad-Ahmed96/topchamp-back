@@ -161,8 +161,8 @@ class EventsController < ApplicationController
                  .start_date_like(start_date).in_status(status).state_like(state).city_like(city).in_visibility(visibility)
 
     if is_all.to_s == '1'
-      # events  = events.start_date_order('desc').end_date_greater(Time.now()).distance_order(lat, lng)
-      events  = events.distance_order(lat, lng)
+      events  = events.start_date_order('desc').distance_order(lat, lng).end_date_greater(Time.now())
+      # events  = events.distance_order(lat, lng)
     end
 
     if paginate.to_s == "0"
