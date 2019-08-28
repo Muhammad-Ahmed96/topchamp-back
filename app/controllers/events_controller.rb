@@ -156,13 +156,14 @@ class EventsController < ApplicationController
     else
       query = EventPolicy::Scope.new(current_user, Event).resolve
     end
-    events = query.my_order(column, direction).venue_order(column_venue, direction)
+    events = query.distance_order(lat, lng).my_order(column, direction).venue_order(column_venue, direction)
                  .sport_in(sport_id).sports_order(column_sports, direction).title_like(title).not_in(not_event)
                  .start_date_like(start_date).in_status(status).state_like(state).city_like(city).in_visibility(visibility)
 
     if is_all.to_s == '1'
-      events  = events.start_date_order('desc').distance_order(lat, lng).end_date_greater(Time.now())
+      events  = events.start_date_order('desc').end_date_greater(Time.now())
       # events  = events.distance_order(lat, lng)
+      # events = events.sort_by &:distance
     end
 
     if paginate.to_s == "0"
