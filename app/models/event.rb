@@ -818,7 +818,8 @@ class Event < ApplicationRecord
     bracket_total = 0
     bracket_amount= 0
     tax = nil
-    enroll_fee = self.registration_fee
+    is_paid_fee = self.is_paid_fee(user.id)
+    enroll_fee =  is_paid_fee ? 0 : self.registration_fee
     bracket_fee = self.payment_method.present? ? self.payment_method.bracket_fee : 0
     #Calculate total
     sub_total = enroll_fee
@@ -866,11 +867,17 @@ class Event < ApplicationRecord
     enroll_amount = enroll_total - enroll_discount
     bracket_amount = bracket_total - bracket_discount
 
-    JSON.parse({amount: amount, enroll_amount: enroll_amount, bracket_amount: bracket_amount,
+    JSON.parse({amount: amount, enroll_amount: enroll_amount, bracket_amount: bracket_amount, is_paid_fee: is_paid_fee,
                 total: total, sub_total: sub_total, tax_total: tax_total, discounts_total:discounts_total,
                 tax_for_registration: tax_for_registration, tax_for_bracket: tax_for_bracket, enroll_discount: enroll_discount,
                 enroll_total: enroll_total, bracket_discount: bracket_discount, tax: tax,
                 bracket_total: bracket_total, enroll_fee: enroll_fee, bracket_fee: bracket_fee}.to_json, object_class: OpenStruct)
+  end
+
+
+  def is_paid_fee(user_id)
+    Payments::PaymentTransaction.where(event_id: self.id).where(user_id: user_id).joins(:details)
+        .merge(Payments::PaymentTransactionDetail.where(type_payment: 'event_enroll')).count > 0
   end
 
   private

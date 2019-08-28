@@ -93,7 +93,7 @@ class Payments::CheckOutController < ApplicationController
         end
         if personalized_discount.present?
           if personalized_discount.is_discount_percent
-            total_discount =  ((personalized_discount.discount * amount) / 100)
+            total_discount = ((personalized_discount.discount * amount) / 100)
             amount = amount - total_discount
           else
             total_discount = personalized_discount.discount
@@ -105,7 +105,7 @@ class Payments::CheckOutController < ApplicationController
 
         if fees.present?
           if fees.is_transaction_fee_percent
-            total_fee =  ((fees.transaction_fee * amount) / 100)
+            total_fee = ((fees.transaction_fee * amount) / 100)
             amount = amount + total_fee
           else
             total_fee = fees.transaction_fee
@@ -146,14 +146,14 @@ class Payments::CheckOutController < ApplicationController
         response = JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
       end
 
-      authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+      authorize_fee = ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
       account = amount - authorize_fee
       app_fee = total_fee
       director_receipt = amount - (authorize_fee + app_fee)
       paymentTransaction = event.create_payment_transaction!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
-                                                               :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "EventPayment",
-                                                               :event_id => event.id, :discount => total_discount, :authorize_fee => authorize_fee, :app_fee => app_fee,
-                                                               :director_receipt => director_receipt, :account => account)
+                                                             :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "EventPayment",
+                                                             :event_id => event.id, :discount => total_discount, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                             :director_receipt => director_receipt, :account => account)
 
       paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),
                                           :event_id => event.id, :type_payment => "event_payment", :discount => total_discount})
@@ -247,9 +247,11 @@ class Payments::CheckOutController < ApplicationController
     #enroll_fee = 1
     #bracket_fee = 1
     #first item event fee
-    item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: prices.enroll_amount,
-            taxable: true}
-    items << item
+    if !prices.is_paid_fee
+      item = {id: "Fee-#{event.id}", name: "Enroll fee", description: "Enroll fee", quantity: 1, unit_price: prices.enroll_amount,
+              taxable: true}
+      items << item
+    end
 
     brackets.each do |bracket|
       if bracket[:enroll_status] == :enroll
@@ -264,7 +266,7 @@ class Payments::CheckOutController < ApplicationController
     # Only for test
     #amount = 1
     #tax[:amount] = 1
-    amount =  prices.amount <= 0 ? 0 : number_with_precision(prices.amount, precision: 2).to_f
+    amount = prices.amount <= 0 ? 0 : number_with_precision(prices.amount, precision: 2).to_f
     if items.length > 0 and amount > 0
       customer = Payments::Customer.get(@resource)
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
@@ -288,11 +290,11 @@ class Payments::CheckOutController < ApplicationController
         end
       end
     else
-      response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+      response = JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     end
     # end Comment on test
     #only for test
-     # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+    # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
@@ -302,12 +304,12 @@ class Payments::CheckOutController < ApplicationController
     amount = amount.to_f
     if fees.present?
       if fees.is_transaction_fee_percent
-        app_fee =  ((fees.transaction_fee * amount) / 100)
+        app_fee = ((fees.transaction_fee * amount) / 100)
       else
         app_fee = fees.transaction_fee
       end
     end
-    authorize_fee =  amount <=0 ? 0 : ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+    authorize_fee = amount <= 0 ? 0 : ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
     account = amount - authorize_fee
     director_receipt = amount - (authorize_fee + app_fee)
     paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
@@ -319,18 +321,20 @@ class Payments::CheckOutController < ApplicationController
     bracket_discount_one = brackets.length <= 0 ? 0 : prices.bracket_discount / brackets.length
     brackets.each do |item|
       paymentTransaction.details.create!({:amount => bracket_amount_one, :tax => number_with_precision(prices.tax_for_bracket, precision: 2),
-                                  :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
-                                  :event_id => player.event_id, :type_payment => "bracket", :contest_id => item[:contest_id],
+                                          :event_bracket_id => item[:event_bracket_id], :category_id => item[:category_id],
+                                          :event_id => player.event_id, :type_payment => "bracket", :contest_id => item[:contest_id],
                                           :discount => bracket_discount_one, :total => prices.bracket_fee})
     end
-    paymentTransaction.details.create!({:amount => prices.enroll_amount, :tax => number_with_precision(prices.tax_for_registration, precision: 2),
-                                :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id,
-                                       :discount => prices.enroll_discount, :total => prices.enroll_fee})
+    if !prices.is_paid_fee
+      paymentTransaction.details.create!({:amount => prices.enroll_amount, :tax => number_with_precision(prices.tax_for_registration, precision: 2),
+                                          :event_id => player.event_id, :type_payment => "event_enroll", :attendee_type_id => AttendeeType.player_id,
+                                          :discount => prices.enroll_discount, :total => prices.enroll_fee})
+    end
 
     player.brackets.where(:enroll_status => :enroll).where(:payment_transaction_id => nil)
         .where(:event_bracket_id => brackets.pluck(:event_bracket_id))
         .update(:payment_transaction_id => response.transactionResponse.transId)
-    my_brackets =  player.brackets_enroll.where(:event_bracket_id => brackets.pluck(:event_bracket_id)).all
+    my_brackets = player.brackets_enroll.where(:event_bracket_id => brackets.pluck(:event_bracket_id)).all
     my_brackets.each do |bracket|
       category_type = ""
       if [bracket.category_id.to_i].included_in? Category.doubles_categories_exact
@@ -341,7 +345,7 @@ class Payments::CheckOutController < ApplicationController
       invitation = Invitation.where(:event_id => player.event_id).where(:user_id => player.user_id).where(:status => :accepted).where(:invitation_type => category_type)
                        .joins(:brackets).merge(InvitationBracket.where(:event_bracket_id => bracket.event_bracket_id)).first
       if invitation.present?
-        result = Player.validate_partner(player.user_id, invitation.sender_id,  bracket.event_bracket_id, bracket.category_id)
+        result = Player.validate_partner(player.user_id, invitation.sender_id, bracket.event_bracket_id, bracket.category_id)
         if result == true
           bracket.update({:is_root => false, :partner_id => invitation.sender_id})
         end
@@ -447,23 +451,23 @@ class Payments::CheckOutController < ApplicationController
     app_fee = 0.0
     if fees.present?
       if fees.is_transaction_fee_percent
-        app_fee =  ((fees.transaction_fee * amount) / 100)
+        app_fee = ((fees.transaction_fee * amount) / 100)
       else
         app_fee = fees.transaction_fee
       end
     end
-    authorize_fee =  ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
+    authorize_fee = ((Rails.configuration.authorize[:transaction_fee] * amount) / 100) + Rails.configuration.authorize[:extra_charges]
     account = amount - authorize_fee
     director_receipt = amount - (authorize_fee + app_fee)
     player = Player.where(user_id: user.id).where(event_id: schedule.event_id).first
     if player.present?
       if save_transaction
         paymentTransaction = player.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
-                                                                :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "SchedulePayment",
-                                                                :event_id => event.id, :discount => 0, :authorize_fee => authorize_fee, :app_fee => app_fee,
-                                                                :director_receipt => director_receipt, :account => account)
+                                                                 :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "SchedulePayment",
+                                                                 :event_id => event.id, :discount => 0, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                                 :director_receipt => director_receipt, :account => account)
 
-        paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),:event_schedule_id => schedule.id,
+        paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :event_schedule_id => schedule.id,
                                             :event_id => event.id, :type_payment => "shedule", :discount => 0})
       end
       schedules_ids = player.schedule_ids + [schedule.id]
@@ -473,11 +477,11 @@ class Payments::CheckOutController < ApplicationController
       if save_transaction
 
         paymentTransaction = participant.payment_transactions.create!(:payment_transaction_id => response.transactionResponse.transId, :user_id => @resource.id,
-                                                                 :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "SchedulePayment",
-                                                                 :event_id => event.id, :discount => total_discount, :authorize_fee => authorize_fee, :app_fee => app_fee,
-                                                                 :director_receipt => director_receipt, :account => account)
+                                                                      :amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :description => "SchedulePayment",
+                                                                      :event_id => event.id, :discount => total_discount, :authorize_fee => authorize_fee, :app_fee => app_fee,
+                                                                      :director_receipt => director_receipt, :account => account)
 
-        paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2),:event_schedule_id => schedule.id,
+        paymentTransaction.details.create!({:amount => amount, :tax => number_with_precision(tax[:amount], precision: 2), :event_schedule_id => schedule.id,
                                             :event_id => event.id, :type_payment => "shedule", :discount => total_discount})
       end
       schedules_ids = participant.schedule_ids + [schedule.id]
