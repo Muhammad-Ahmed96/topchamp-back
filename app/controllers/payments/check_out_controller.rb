@@ -287,10 +287,12 @@ class Payments::CheckOutController < ApplicationController
           return json_response_error([response.messages.messages[0].text], 422, response.messages.messages[0].code)
         end
       end
+    else
+      response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     end
     # end Comment on test
     #only for test
-     response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
+     # response =  JSON.parse({transactionResponse: {transId: '000'}}.to_json, object_class: OpenStruct)
     #save bracket on player
     player = Player.where(user_id: @resource.id).where(event_id: event.id).first_or_create!
     player.sync_brackets!(brackets, true)
