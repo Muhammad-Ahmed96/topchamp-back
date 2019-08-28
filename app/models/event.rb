@@ -87,7 +87,9 @@ class Event < ApplicationRecord
   scope :state_like, lambda {|search| joins(:venue).merge(Venue.where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :city_like, lambda {|search| joins(:venue).merge(Venue.where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :venue_order, lambda {|column, direction = "desc"| includes(:venue).order("venues.#{column} #{direction}") if column.present?}
-  scope :distance_order, lambda {|lat, lng| joins('LEFT JOIN venues ON venues.id = events.venue_id').order("ST_Distance (ST_SetSRID(ST_MakePoint('-85.3078294', '35.0609500'), 4326), places.geom)") if lat.present? and lng.present?}
+  # scope :distance_order, lambda {|lat, lng| joins('LEFT JOIN venues ON venues.id = events.venue_id').order("ST_Distance (ST_SetSRID(ST_MakePoint(long::double precision, lat::double precision), 4326), places.geom)") if lat.present? and lng.present?}
+  scope :distance_order, lambda {|lat, lng| joins('LEFT JOIN venues ON venues.id = events.venue_id').order("(point(#{lng}::double precision, #{lat}::double precision) <@> point(venues.longitude::double precision,venues.latitude::double precision)) ASC") if lat.present? and lng.present?}
+  # scope :distance_order, lambda {|lat, lng| joins('LEFT JOIN venues ON venues.id = events.venue_id').order("ST_Distance (ST_GeographyFromText('SRID=4326;POINT(-76.000000 39.000000)'),  ST_SetSRID(ST_MakePoint(venues.longitude, venues.latitude),4326)::geography)") if lat.present? and lng.present?}
 
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
