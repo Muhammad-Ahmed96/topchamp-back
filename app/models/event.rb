@@ -87,9 +87,16 @@ class Event < ApplicationRecord
   scope :state_like, lambda {|search| joins(:venue).merge(Venue.where ["LOWER(state) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :city_like, lambda {|search| joins(:venue).merge(Venue.where ["LOWER(city) LIKE LOWER(?)", "%#{search}%"]) if search.present?}
   scope :venue_order, lambda {|column, direction = "desc"| includes(:venue).order("venues.#{column} #{direction}") if column.present?}
+  scope :distance_order, lambda {|lat, lng| joins('LEFT JOIN venues ON venues.id = events.venue_id').order("ST_Distance (ST_SetSRID(ST_MakePoint('-85.3078294', '35.0609500'), 4326), places.geom)") if lat.present? and lng.present?}
 
   scope :sport_in, lambda {|search| joins(:sports).merge(Sport.where id: search) if search.present?}
   scope :sports_order, lambda {|column, direction = "desc"| includes(:sports).order("sports.#{column} #{direction}") if column.present?}
+  scope :end_date_order, lambda {|direction = "desc"| order("events.end_date #{direction}") if direction.present?}
+  scope :start_date_order, lambda {|direction = "desc"| order("events.start_date #{direction}") if direction.present?}
+
+
+
+  scope :end_date_greater, lambda {|date|  where ["events.end_date >= ?", date] if date.present?}
 
   scope :coming_soon, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is null')}
   scope :upcoming, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}

@@ -127,6 +127,8 @@ class EventsController < ApplicationController
     to_subscribe_user = params[:to_subscribe_user]
     visibility = params[:visibility]
     is_all = params[:is_all].nil? ? '0' : params[:is_all]
+    lat = params[:lat]
+    lng = params[:lng]
 
 
     state = params[:state]
@@ -149,14 +151,18 @@ class EventsController < ApplicationController
     if only_not_subscribe.present? && only_not_subscribe.to_s == "1"
       not_event = User.find(to_subscribe_user).players.pluck(:event_id)
     end
-    if is_all == '0'
-      query = EventPolicy::Scope.new(current_user, Event).resolve
-    else
+    if is_all.to_s == '1'
       query = Event
+    else
+      query = EventPolicy::Scope.new(current_user, Event).resolve
     end
     events = query.my_order(column, direction).venue_order(column_venue, direction)
                  .sport_in(sport_id).sports_order(column_sports, direction).title_like(title).not_in(not_event)
                  .start_date_like(start_date).in_status(status).state_like(state).city_like(city).in_visibility(visibility)
+
+    if is_all.to_s == '1'
+      events  = events.start_date_order('desc').end_date_greater(Time.now())
+    end
 
     if paginate.to_s == "0"
       json_response_serializer_collection(events.all, EventSerializer)
