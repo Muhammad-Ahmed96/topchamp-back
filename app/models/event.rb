@@ -320,7 +320,7 @@ class Event < ApplicationRecord
     end
     property :icon do
       key :type, :string
-      key :description, "Uri to icon image\nExample. https://topchamp.tk/ + icon"
+      key :description, "Uri to icon image\nExample. https://api.topchampsport.com/ + icon"
     end
     property :description do
       key :type, :string
