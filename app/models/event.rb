@@ -833,7 +833,7 @@ class Event < ApplicationRecord
     #todo review process
     if self.tax.present?
       if self.tax.is_percent
-        tax = {:amount => ((self.tax.tax * sub_total) / 100), :name => "tax", :description => "Tax to enroll"}
+        tax = {:amount => ((self.tax.tax * sub_total) / 100).round(2), :name => "tax", :description => "Tax to enroll"}
         tax_for_registration = ((self.tax.tax * enroll_fee) / 100)
         tax_for_bracket = ((self.tax.tax * bracket_fee) / 100)
       else
@@ -868,11 +868,12 @@ class Event < ApplicationRecord
     enroll_amount = enroll_total - enroll_discount
     bracket_amount = bracket_total - bracket_discount
 
-    JSON.parse({amount: amount, enroll_amount: enroll_amount, bracket_amount: bracket_amount, is_paid_fee: is_paid_fee,
-                total: total, sub_total: sub_total, tax_total: tax_total, discounts_total:discounts_total,
-                tax_for_registration: tax_for_registration, tax_for_bracket: tax_for_bracket, enroll_discount: enroll_discount,
-                enroll_total: enroll_total, bracket_discount: bracket_discount, tax: tax,
-                bracket_total: bracket_total, enroll_fee: enroll_fee, bracket_fee: bracket_fee}.to_json, object_class: OpenStruct)
+    # amount = amount - 0.001
+    JSON.parse({amount: amount.round(2), enroll_amount: enroll_amount.round(2), bracket_amount: bracket_amount.round(2), is_paid_fee: is_paid_fee,
+                total: total.round(2), sub_total: sub_total.round(2), tax_total: tax_total.round(2), discounts_total:discounts_total.round(2),
+                tax_for_registration: tax_for_registration.round(2), tax_for_bracket: tax_for_bracket.round(2), enroll_discount: enroll_discount.round(2),
+                enroll_total: enroll_total.round(2), bracket_discount: bracket_discount.round(2), tax: tax,
+                bracket_total: bracket_total.round(2), enroll_fee: enroll_fee.round(2), bracket_fee: bracket_fee.round(2)}.to_json, object_class: OpenStruct)
   end
 
 
