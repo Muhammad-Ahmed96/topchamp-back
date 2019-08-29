@@ -639,7 +639,7 @@ class Event < ApplicationRecord
     gender = user.gender
     age = user.age
     skill = user.skill_level
-    skill = skill.nil? ? 0 : skill
+    skill = skill.nil? ? 99999999 : skill
     #subsrcibed categories
     in_categories_id = player.present? && include == false ? player.brackets.pluck(:category_id) : []
     #Validate gender
