@@ -98,8 +98,7 @@ class Event < ApplicationRecord
   scope :start_date_order, lambda {|direction = "desc"| order("events.start_date #{direction}") if direction.present?}
 
 
-
-  scope :end_date_greater, lambda {|date|  where ["events.end_date >= ?", date] if date.present?}
+  scope :end_date_greater, lambda {|date| where ["events.end_date >= ?", date] if date.present?}
 
   scope :coming_soon, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is null')}
   scope :upcoming, -> {where("start_date > ?", Date.today).where("end_date > ? OR end_date is null", Date.today).where('venue_id is not null')}
@@ -706,10 +705,10 @@ class Event < ApplicationRecord
           end
         end
         if include
-         bracket.filter_details.map {|item|
-           item.current = except.include?(item.id)
-           item.partner = player.partner(item.id)
-         }
+          bracket.filter_details.map {|item|
+            item.current = except.include?(item.id)
+            item.partner = player.partner(item.id)
+          }
         end
         if bracket.filter_details.length > 0
           category.filter_brackets << bracket
@@ -804,7 +803,7 @@ class Event < ApplicationRecord
     CreateEventMailer.on_create(self, self.director).deliver
   end
 
-  def calculate_prices(brackets, user , discount_code)
+  def calculate_prices(brackets, user, discount_code, is_applied = true)
     total = 0
     sub_total = 0
     amount = 0
@@ -817,10 +816,10 @@ class Event < ApplicationRecord
     enroll_amount = 0
     bracket_discount = 0
     bracket_total = 0
-    bracket_amount= 0
+    bracket_amount = 0
     tax = nil
     is_paid_fee = self.is_paid_fee(user.id)
-    enroll_fee =  is_paid_fee ? 0 : self.registration_fee
+    enroll_fee = is_paid_fee ? 0 : self.registration_fee
     bracket_fee = self.payment_method.present? ? self.payment_method.bracket_fee : 0
     #Calculate total
     sub_total = enroll_fee
@@ -829,6 +828,7 @@ class Event < ApplicationRecord
         sub_total += bracket_fee
       end
     end
+    sub_total = sub_total.round(2)
     #set tax of event
     #todo review process
     if self.tax.present?
@@ -855,22 +855,41 @@ class Event < ApplicationRecord
     general_discount = self.discount_generals.where(:code => discount_code).first
     if personalized_discount.present?
       discounts_total = ((personalized_discount.discount * total) / 100)
-      enroll_discount = ((personalized_discount.discount  * enroll_total) / 100)
-      bracket_discount = ((personalized_discount.discount * bracket_total)  / 100)
+      enroll_discount = ((personalized_discount.discount * enroll_total) / 100)
+      bracket_discount = ((personalized_discount.discount * bracket_total) / 100)
     elsif general_discount.present? and general_discount.limited > general_discount.applied
       discounts_total = ((general_discount.discount * total) / 100)
-      enroll_discount = ((general_discount.discount  * enroll_total) / 100)
-      bracket_discount = ((general_discount.discount * bracket_total)  / 100)
-      general_discount.applied = general_discount.applied + 1
-      general_discount.save!(:validate => false)
+      enroll_discount = ((general_discount.discount * enroll_total) / 100)
+      bracket_discount = ((general_discount.discount * bracket_total) / 100)
+      if is_applied
+        general_discount.applied = general_discount.applied + 1
+        general_discount.save!(:validate => false)
+      end
     end
     amount = total - discounts_total
     enroll_amount = enroll_total - enroll_discount
     bracket_amount = bracket_total - bracket_discount
 
+
+    if self.tax.present? and amount > 0
+      if self.tax.is_percent
+        tax = {:amount => ((self.tax.tax * (amount - tax_total)) / 100).round(2), :name => "tax", :description => "Tax to enroll"}
+        tax_for_registration = ((self.tax.tax * (enroll_amount - tax_for_registration)) / 100)
+        tax_for_bracket = ((self.tax.tax * (bracket_amount - tax_for_bracket)) / 100)
+      end
+    else
+      tax = {:amount => 0, :name => "tax", :description => "Tax to enroll"}
+      tax_for_registration = 0
+      tax_for_bracket = 0
+    end
+=begin
+    if tax.present?
+      tax_total = tax[:amount]
+    end
+=end
     # amount = amount - 0.001
     JSON.parse({amount: amount.round(2), enroll_amount: enroll_amount.round(2), bracket_amount: bracket_amount.round(2), is_paid_fee: is_paid_fee,
-                total: total.round(2), sub_total: sub_total.round(2), tax_total: tax_total.round(2), discounts_total:discounts_total.round(2),
+                total: total.round(2), sub_total: sub_total.round(2), tax_total: tax_total.round(2), discounts_total: discounts_total.round(2),
                 tax_for_registration: tax_for_registration.round(2), tax_for_bracket: tax_for_bracket.round(2), enroll_discount: enroll_discount.round(2),
                 enroll_total: enroll_total.round(2), bracket_discount: bracket_discount.round(2), tax: tax,
                 bracket_total: bracket_total.round(2), enroll_fee: enroll_fee.round(2), bracket_fee: bracket_fee.round(2)}.to_json, object_class: OpenStruct)
