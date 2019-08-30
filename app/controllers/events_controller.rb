@@ -1851,7 +1851,7 @@ class EventsController < ApplicationController
     for i in 1..brackets_count
       brackets << {enroll_status: :enroll}
     end
-    prices = @event.calculate_prices(brackets, @resource, subscribe_params[:discount_code])
+    prices = @event.calculate_prices(brackets, @resource, subscribe_params[:discount_code], false)
 
     json_response_data({:enroll_fee => prices.enroll_fee, :bracket_fee => prices.bracket_fee, :tax => prices.tax_total, :total => prices.amount,
                         discount: prices.discounts_total, :is_paid_fee => prices.is_paid_fee})
