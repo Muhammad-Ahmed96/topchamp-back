@@ -352,7 +352,8 @@ class Payments::CheckOutController < ApplicationController
       end
     end
     player.set_teams my_brackets
-    json_response_data({:transaction => response.transactionResponse.transId})
+    json_response_data({:transaction => response.transactionResponse.transId,
+                        :transaction_id => paymentTransaction.id})
   end
 
   swagger_path '/payments/check_out/schedule' do

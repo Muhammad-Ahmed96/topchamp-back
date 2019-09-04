@@ -52,6 +52,10 @@ COALESCE((SELECT SUM(ptd.amount) FROM payment_transaction_details AS ptd WHERE p
     json_response_serializer_collection  items, EventScheduleReportSerializer
   end
 
+  def refund
+
+  end
+
   private
 
   def event_id
