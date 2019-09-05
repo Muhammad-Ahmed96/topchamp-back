@@ -269,8 +269,9 @@ class Payments::CheckOutController < ApplicationController
     amount = prices.amount <= 0 ? 0 : number_with_precision(prices.amount, precision: 2).to_f
     if items.length > 0 and amount > 0
       customer = Payments::Customer.get(@resource)
+      description =  "player: #{@resource.last_name} #{@resource.first_name} (#{@resource.email}). Event: #{event.title}"
       response = Payments::Charge.customer(customer.profile.customerProfileId, event_params[:card_id], event_params[:cvv],
-                                           amount, items, prices.tax)
+                                           amount, items, prices.tax, description)
       if response.messages.resultCode == MessageTypeEnum::Ok
         #return json_response_error([response.transactionResponse.responseCode], 422, response.messages.messages[0].code)
         if response.transactionResponse.responseCode != "1"

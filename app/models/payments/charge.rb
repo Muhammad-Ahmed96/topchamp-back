@@ -7,14 +7,14 @@ module Payments
       transaction = Conexion.get
     end
 
-    def self.customer(customerProfileId, customerPaymentProfileId, cardCode, amount, items, tax= nil)
+    def self.customer(customerProfileId, customerPaymentProfileId, cardCode, amount, items, tax= nil, description = '')
       transaction = Conexion.get
       request = CreateTransactionRequest.new
 
       request.transactionRequest = TransactionRequestType.new()
       request.transactionRequest.amount = amount
       request.transactionRequest.transactionType = TransactionTypeEnum::AuthCaptureTransaction
-      #request.transactionRequest.order = OrderType.new("invoiceNumber#{(SecureRandom.random_number * 1000000).round(0)}", "Order Description")
+      request.transactionRequest.order = OrderType.new(nil,  description)
       request.transactionRequest.profile = CustomerProfilePaymentType.new
       request.transactionRequest.profile.customerProfileId = customerProfileId
       request.transactionRequest.profile.paymentProfile = AuthorizeNet::API::PaymentProfile.new(customerPaymentProfileId, cardCode)
