@@ -988,7 +988,7 @@ class PlayersController < ApplicationController
   end
 
   def my_contest
-    player = Player.where(user_id: 110).where(event_id: categories_params[:event_id]).first
+    player = Player.where(user_id:  @resource.id).where(event_id: categories_params[:event_id]).first
     if player.nil?
       return json_response_error([t("no_player")], 422)
     end
@@ -1000,7 +1000,7 @@ class PlayersController < ApplicationController
         if item.bracket.event_contest_category_bracket_id.present?
           brackets_ids.push(item.bracket.event_contest_category_bracket_id)
         else
-          brackets_idspush(item.bracket.parent_bracket.event_contest_category_bracket_id)
+          brackets_ids.push(item.bracket.parent_bracket.event_contest_category_bracket_id)
         end
       end
     end
