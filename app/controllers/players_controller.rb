@@ -908,7 +908,8 @@ class PlayersController < ApplicationController
     if player.nil?
       return json_response_error([t("no_player")], 422)
     end
-    brackets = player.brackets_enroll.where(:category_id => brackets_list_params[:category_id])
+    brackets = player.brackets_enroll
+    brackets = brackets.where(:category_id => brackets_list_params[:category_id]) if brackets_list_params[:category_id].present?
     json_response_serializer_collection(brackets, PlayerBracketSingleSerializer)
   end
 
@@ -1086,7 +1087,6 @@ class PlayersController < ApplicationController
   def brackets_list_params
     # whitelist params
     params.required(:event_id)
-    params.required(:category_id)
     params.permit(:event_id, :category_id)
   end
 
