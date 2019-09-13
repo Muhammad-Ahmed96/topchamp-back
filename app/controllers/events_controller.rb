@@ -127,6 +127,8 @@ class EventsController < ApplicationController
     to_subscribe_user = params[:to_subscribe_user]
     visibility = params[:visibility]
     is_all = params[:is_all].nil? ? '0' : params[:is_all]
+    lat = params[:lat]
+    lng = params[:lng]
 
 
     state = params[:state]
@@ -149,14 +151,20 @@ class EventsController < ApplicationController
     if only_not_subscribe.present? && only_not_subscribe.to_s == "1"
       not_event = User.find(to_subscribe_user).players.pluck(:event_id)
     end
-    if is_all == '0'
-      query = EventPolicy::Scope.new(current_user, Event).resolve
-    else
+    if is_all.to_s == '1'
       query = Event
+    else
+      query = EventPolicy::Scope.new(current_user, Event).resolve
     end
-    events = query.my_order(column, direction).venue_order(column_venue, direction)
+    events = query.distance_order(lat, lng).my_order(column, direction).venue_order(column_venue, direction)
                  .sport_in(sport_id).sports_order(column_sports, direction).title_like(title).not_in(not_event)
                  .start_date_like(start_date).in_status(status).state_like(state).city_like(city).in_visibility(visibility)
+
+    if is_all.to_s == '1'
+      events  = events.start_date_order('desc').end_date_greater(Time.now())
+      # events  = events.distance_order(lat, lng)
+      # events = events.sort_by &:distance
+    end
 
     if paginate.to_s == "0"
       json_response_serializer_collection(events.all, EventSerializer)
@@ -1838,40 +1846,15 @@ class EventsController < ApplicationController
 
   def get_registration_fee
     @event = Event.find(params[:id])
-    #set tax of event
-    tax = @event.tax
+    brackets = []
     brackets_count = subscribe_params[:brackets_count].present? ? subscribe_params[:brackets_count].to_i : 1
-    payment_method = @event.payment_method
-    enroll_fee = @event.registration_fee
-    tax_amount = 0
-
-    #apply discounts
-    #event_discount = @event.get_discount
-    personalized_discount = subscribe_params[:discount_code].present? ? @event.discount_personalizeds.where(:code => subscribe_params[:discount_code]).where(:email => @resource.email).first : nil
-    general_discount = subscribe_params[:discount_code].present? ? @event.discount_generals.where(:code => subscribe_params[:discount_code]).first : nil
-    bracket_fee = payment_method.present? ? payment_method.bracket_fee : 0
-    bracket_fee = bracket_fee * brackets_count
-    #enroll_fee = enroll_fee - ((event_discount * enroll_fee) / 100)
-    #bracket_fee = bracket_fee - ((event_discount * bracket_fee) / 100)
-    if personalized_discount.present?
-      enroll_fee = enroll_fee - ((personalized_discount.discount * enroll_fee) / 100)
-      #bracket_fee = bracket_fee - ((personalized_discount.discount * bracket_fee) / 100)
-    elsif general_discount.present? and (general_discount.limited > general_discount.applied)
-
-      enroll_fee = enroll_fee - ((general_discount.discount * enroll_fee) / 100)
-      # bracket_fee = bracket_fee - ((general_discount.discount * bracket_fee) / 100)
+    for i in 1..brackets_count
+      brackets << {enroll_status: :enroll}
     end
-    amount = enroll_fee + bracket_fee
-    if tax.present?
-      if tax.is_percent
-        tax_amount = (tax.tax * amount) / 100
-      else
-        tax_amount = tax.tax
-      end
-      amount = amount + tax_amount
-    end
+    prices = @event.calculate_prices(brackets, @resource, subscribe_params[:discount_code], false)
 
-    json_response_data({:enroll_fee => enroll_fee, :bracket_fee => bracket_fee, :tax => tax_amount, :total => amount})
+    json_response_data({:enroll_fee => prices.enroll_fee, :bracket_fee => prices.bracket_fee, :tax => prices.tax_total, :total => prices.amount,
+                        discount: prices.discounts_total, :is_paid_fee => prices.is_paid_fee})
   end
 
   swagger_path '/events/:id/taken_brackets' do

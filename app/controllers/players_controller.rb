@@ -908,7 +908,8 @@ class PlayersController < ApplicationController
     if player.nil?
       return json_response_error([t("no_player")], 422)
     end
-    brackets = player.brackets_enroll.where(:category_id => brackets_list_params[:category_id])
+    brackets = player.brackets_enroll
+    brackets = brackets.where(:category_id => brackets_list_params[:category_id]) if brackets_list_params[:category_id].present?
     json_response_serializer_collection(brackets, PlayerBracketSingleSerializer)
   end
 
@@ -987,7 +988,7 @@ class PlayersController < ApplicationController
   end
 
   def my_contest
-    player = Player.where(user_id: 110).where(event_id: categories_params[:event_id]).first
+    player = Player.where(user_id:  @resource.id).where(event_id: categories_params[:event_id]).first
     if player.nil?
       return json_response_error([t("no_player")], 422)
     end
@@ -999,12 +1000,12 @@ class PlayersController < ApplicationController
         if item.bracket.event_contest_category_bracket_id.present?
           brackets_ids.push(item.bracket.event_contest_category_bracket_id)
         else
-          brackets_idspush(item.bracket.parent_bracket.event_contest_category_bracket_id)
+          brackets_ids.push(item.bracket.parent_bracket.event_contest_category_bracket_id)
         end
       end
     end
     contest = EventContest.joins(:categories => [:brackets]).merge(EventContestCategoryBracket.where(:id => brackets_ids))
-                  .where(:event_id => categories_params[:event_id]).all
+                  .where(:event_id => categories_params[:event_id]).distinct.all
     contest.each do |item|
       item.filter_categories = EventContestCategory.joins(:brackets).merge(EventContestCategoryBracket.where(:id => brackets_ids)).all
       item.filter_categories.each do |category|
@@ -1086,7 +1087,6 @@ class PlayersController < ApplicationController
   def brackets_list_params
     # whitelist params
     params.required(:event_id)
-    params.required(:category_id)
     params.permit(:event_id, :category_id)
   end
 

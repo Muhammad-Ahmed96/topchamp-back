@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_04_23_203908) do
+ActiveRecord::Schema.define(version: 2019_08_27_203928) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -126,6 +126,10 @@ ActiveRecord::Schema.define(version: 2019_04_23_203908) do
     t.string "emergency_contact_phone"
     t.string "country_code_work_phone"
     t.string "country"
+  end
+
+  create_table "customer-all", id: false, force: :cascade do |t|
+    t.text "--"
   end
 
   create_table "devices", force: :cascade do |t|
@@ -457,7 +461,7 @@ ActiveRecord::Schema.define(version: 2019_04_23_203908) do
     t.string "token"
     t.string "email"
     t.datetime "send_at"
-    t.string "status", default: "pending_confirmation"
+    t.string "status", default: "pending_invitation"
     t.string "invitation_type", default: "event"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -543,6 +547,7 @@ ActiveRecord::Schema.define(version: 2019_04_23_203908) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "contest_id"
+    t.integer "total", default: 0
   end
 
   create_table "payment_transactions", force: :cascade do |t|
@@ -566,6 +571,7 @@ ActiveRecord::Schema.define(version: 2019_04_23_203908) do
     t.boolean "is_refund", default: false
     t.float "refund_total", default: 0.0
     t.bigint "contest_id"
+    t.integer "total", default: 0
     t.index ["transactionable_type", "transactionable_id"], name: "index_transactionable"
   end
 
@@ -894,11 +900,11 @@ ActiveRecord::Schema.define(version: 2019_04_23_203908) do
     t.date "availability_date_end"
     t.string "availability_time_zone"
     t.text "restrictions"
-    t.boolean "is_insurance_requirements"
+    t.boolean "is_insurance_requirements", default: false
     t.text "insurance_requirements"
-    t.boolean "is_decorations"
+    t.boolean "is_decorations", default: false
     t.text "decorations"
-    t.boolean "is_vehicles"
+    t.boolean "is_vehicles", default: false
     t.integer "vehicles"
     t.string "status", default: "Active"
     t.datetime "created_at", null: false

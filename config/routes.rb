@@ -209,6 +209,7 @@ Rails.application.routes.draw do
 
     namespace :payments do
       resources :profiles, only: [:create, :destroy, :show]
+      resources :transaction, only: [:show]
       resources :credit_cards, only: [:index, :create, :destroy]
       resources :check_out, only: [] do
         collection do

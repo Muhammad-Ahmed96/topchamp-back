@@ -82,15 +82,16 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-  config.action_mailer.asset_host = 'topchampsport.com'
+  config.action_mailer.asset_host = 'api.topchampsport.com'
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-      tls: true,
-      address:              'secure.emailsrvr.com',
-      port:                 465,
-      user_name:            'testomator@amplemind.com',
-      password:             'testTh1st35tTh4T',
-      authentication:       :login  }
+      :address => "smtp.gmail.com",
+      :port => "587",
+      # :domain => "topchampsports.com",
+      :user_name => "info@topchampsports.com",
+      :password => "En5kPrbjxUKZDj0eOJXV",
+      :authentication => "plain",
+      :enable_starttls_auto => true }
   config.hours_bracket = 8
   config.front_url = "https://topchampsport.com"
   config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
