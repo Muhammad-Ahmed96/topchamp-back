@@ -1005,7 +1005,7 @@ class PlayersController < ApplicationController
       end
     end
     contest = EventContest.joins(:categories => [:brackets]).merge(EventContestCategoryBracket.where(:id => brackets_ids))
-                  .where(:event_id => categories_params[:event_id]).all
+                  .where(:event_id => categories_params[:event_id]).distinct.all
     contest.each do |item|
       item.filter_categories = EventContestCategory.joins(:brackets).merge(EventContestCategoryBracket.where(:id => brackets_ids)).all
       item.filter_categories.each do |category|
