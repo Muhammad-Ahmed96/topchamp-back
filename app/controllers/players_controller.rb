@@ -994,9 +994,7 @@ class PlayersController < ApplicationController
     end
     brackets_ids = []
     details_ids = []
-    logger.info('segue')
     player.brackets_enroll.all.each do |item|
-      logger.info(item.event_bracket_id)
       details_ids.push(item.event_bracket_id)
       unless item.bracket.nil?
         if item.bracket.event_contest_category_bracket_id.present?
@@ -1007,9 +1005,6 @@ class PlayersController < ApplicationController
         end
       end
     end
-    logger.info('segue2')
-    logger.info(brackets_ids)
-    logger.info(details_ids)
     contest = EventContest.joins(:categories => [:brackets]).merge(EventContestCategoryBracket.where(:id => brackets_ids))
                   .where(:event_id => categories_params[:event_id]).distinct.all
     contest.each do |item|
