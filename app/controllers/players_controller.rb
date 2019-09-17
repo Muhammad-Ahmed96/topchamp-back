@@ -1001,6 +1001,7 @@ class PlayersController < ApplicationController
           brackets_ids.push(item.bracket.event_contest_category_bracket_id)
         else
           brackets_ids.push(item.bracket.parent_bracket.event_contest_category_bracket_id)
+          details_ids.push(item.bracket.event_contest_category_bracket_detail_id)
         end
       end
     end
