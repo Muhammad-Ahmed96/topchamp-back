@@ -250,6 +250,7 @@ Rails.application.routes.draw do
       get 'reports/:user_id/account', action: :account, controller: :reports
       get 'reports/transaction', action: :transaction, controller: :reports
       get 'director/balance', action: :balance, controller: :director
+      get 'player/receipts', action: :receipts, controller: :player
     end
 
     resources :processing_fees, only: [:index]
