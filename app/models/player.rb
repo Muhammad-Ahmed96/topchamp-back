@@ -48,9 +48,11 @@ class Player < ApplicationRecord
   scope :categories_order, lambda {|column, direction = "desc"| joins(brackets: [:category]).order("categories.#{column} #{direction}") if column.present?}
 
   def skill_level
+    level = 0
     if self.user.present? and self.user.association_information.present?
-      self.user.association_information.raking
+      level = self.user.association_information.raking
     end
+    level
   end
 
   def sync_brackets!(data, old_enrolls = false)
