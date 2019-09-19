@@ -4,7 +4,7 @@ class EventBracketStatusSerializer < ActiveModel::Serializer
 
   def brackets
     brackets = []
-      object.brackets.age_filter(object.user_age, object.event.sport_regulator.allow_age_range).skill_filter(object.user_skill).each do  |bracket|
+      object.brackets.age_filter(object.user_age, object.event.sport_regulator.allow_age_range, []).skill_filter(object.user_skill).each do  |bracket|
         bracket.user_age = object.user_age
         bracket.user_skill = object.user_skill
         brackets << bracket
