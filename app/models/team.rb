@@ -20,8 +20,9 @@ class Team < ApplicationRecord
   }
   scope :bracket_in, lambda {|id|  where(:event_bracket_id => id) if id}
   scope :skill_filter, lambda {|skill|  joins(:bracket).merge(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill <= ?", skill).where("event_contest_category_bracket_details.highest_skill >= LOWER(?)", skill)
-                                                                  .or(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill >= ?", skill).where("event_contest_category_bracket_details.highest_skill >= ?", skill))
                                                                   .or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil))) if skill.present?}
+  
+  # .or(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill >= ?", skill).where("event_contest_category_bracket_details.highest_skill >= ?", skill))
 
 
   scope :categories_order, lambda {|column, direction = "desc"| joins(:category).order("categories.#{column} #{direction}") if column.present?}
