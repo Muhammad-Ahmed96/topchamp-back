@@ -656,11 +656,12 @@ class Event < ApplicationRecord
       return []
     end
     except = []
+    force_in = []
     not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
-    force_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
     if include
       except = not_in
       not_in = []
+      force_in = not_in
     end
     #Validate skills
     categories.each do |category|
