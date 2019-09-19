@@ -17,16 +17,18 @@ class EventBracket < ApplicationRecord
   validates :highest_skill, inclusion: {in: SkillLevels.collection}, numericality: {greater_than_or_equal_to: :lowest_skill},  :allow_nil => true
   has_many :brackets, class_name: "EventBracket"
 
-  scope :age_filter, lambda {|age, allow_age_range|
+  scope :age_filter, lambda {|age, allow_age_range, force_in = []|
     if age.present?
       if allow_age_range
         where("young_age <= ?", age).where("old_age >= ?", age).or(EventBracket.where(:young_age => nil).where(:old_age => nil))
+            .or(EventBracket.where(:id => force_in))
       else
-        where("age <= ?", age).or(EventBracket.where(:age => nil))
+        where("age <= ?", age).or(EventBracket.where(:age => nil)).or(EventBracket.where(:id => force_in))
       end
     end
   }
-  scope :skill_filter, lambda {|skill| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill)
+  scope :skill_filter, lambda {|skill, force_in = []| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill)
+                                                     .or(EventBracket.where(:id => force_in))
                                            .or(EventBracket.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
   scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
 

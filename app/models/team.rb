@@ -19,7 +19,8 @@ class Team < ApplicationRecord
                                   .or(EventContestCategoryBracketDetail.where("LOWER(concat(event_contest_category_bracket_details.lowest_skill,' - ', event_contest_category_bracket_details.highest_skill)) LIKE LOWER(?)", "%#{search}%"))) if  search.present?
   }
   scope :bracket_in, lambda {|id|  where(:event_bracket_id => id) if id}
-  scope :skill_filter, lambda {|skill|  joins(:bracket).merge(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill <= ?", skill).where("event_contest_category_bracket_details.highest_skill >= LOWER(?)", skill)
+  scope :skill_filter, lambda {|skill, force_in = []|  joins(:bracket).merge(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill <= ?", skill).where("event_contest_category_bracket_details.highest_skill >= LOWER(?)", skill)
+                                                                  .or(EventContestCategoryBracketDetail.where(:id => force_in))
                                                                   .or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil))) if skill.present?}
   
   # .or(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill >= ?", skill).where("event_contest_category_bracket_details.highest_skill >= ?", skill))
