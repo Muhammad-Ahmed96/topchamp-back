@@ -657,6 +657,7 @@ class Event < ApplicationRecord
     end
     except = []
     not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
+    force_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
     if include
       except = not_in
       not_in = []
@@ -686,19 +687,19 @@ class Event < ApplicationRecord
         type = bracket.bracket_type
         case type
         when 'age'
-          bracket.filter_details = bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
+          bracket.filter_details = bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range, force_in).not_in(not_in).all
         when 'skill'
-          bracket.filter_details = bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
+          bracket.filter_details = bracket.details.only_filter(only_brackets).skill_filter(skill, force_in).not_in(not_in).all
         when 'skill_age'
-          bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
-            detail.filter_brackets = detail.brackets.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
+          bracket.details.only_filter(only_brackets).skill_filter(skill, force_in).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).age_filter(age, allow_age_range, force_in).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
           end
         when 'age_skill'
-          bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
-            detail.filter_brackets = detail.brackets.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
+          bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range, force_in).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).skill_filter(skill, force_in).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
