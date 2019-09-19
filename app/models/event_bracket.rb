@@ -21,6 +21,7 @@ class EventBracket < ApplicationRecord
     if age.present?
       if allow_age_range
         where("young_age <= ?", age).where("old_age >= ?", age).or(EventBracket.where(:young_age => nil).where(:old_age => nil))
+            .or(EventContestCategoryBracketDetail.where("event_bracket.young_age <= ?", age).where("event_bracket.old_age <= ?", age))
             .or(EventBracket.where(:id => force_in))
       else
         where("age <= ?", age).or(EventBracket.where(:age => nil)).or(EventBracket.where(:id => force_in))
@@ -29,6 +30,7 @@ class EventBracket < ApplicationRecord
   }
   scope :skill_filter, lambda {|skill, force_in = []| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill)
                                                      .or(EventBracket.where(:id => force_in))
+                                                          .or(EventBracket.where("lowest_skill >= ?", skill).where("highest_skill >= ?", skill))
                                            .or(EventBracket.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
   scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
 
