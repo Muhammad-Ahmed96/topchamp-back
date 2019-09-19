@@ -27,7 +27,6 @@ class EventBracket < ApplicationRecord
     end
   }
   scope :skill_filter, lambda {|skill| where("lowest_skill <= ?", skill).where("highest_skill >= ?", skill)
-                                           .or(EventBracket.where("lowest_skill >= ?", skill).where("highest_skill >= ?", skill))
                                            .or(EventBracket.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
   scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
 
