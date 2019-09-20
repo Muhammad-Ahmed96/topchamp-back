@@ -28,7 +28,7 @@ class EventContestCategoryBracketDetail < ApplicationRecord
             .or(EventContestCategoryBracketDetail.where(:id => force_in))
       else
         where("event_contest_category_bracket_details.age <= ?", age).or(EventContestCategoryBracketDetail.where(:age => nil))
-            .or(EventBracket.where(:id => force_in))
+            .or(EventContestCategoryBracketDetail.where(:id => force_in))
       end
     end
   }
