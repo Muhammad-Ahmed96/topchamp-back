@@ -805,7 +805,7 @@ class Event < ApplicationRecord
     response = true
     payment_method = self.payment_method
     if payment_method.present? and payment_method.last_registration_date.present?
-      response = Time.now >= payment_method.last_registration_date
+      response = Time.now <= payment_method.last_registration_date
     end
     response
   end
