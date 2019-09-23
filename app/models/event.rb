@@ -810,6 +810,15 @@ class Event < ApplicationRecord
     response
   end
 
+  def last_registration_date
+    response = nil
+    payment_method = self.payment_method
+    if payment_method.present? and payment_method.last_registration_date.present?
+      response = payment_method.last_registration_date
+    end
+    response
+  end
+
   def send_email_to_admin
     CreateEventMailer.on_create(self, self.director).deliver
   end

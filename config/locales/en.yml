@@ -230,6 +230,7 @@ en:
   attendee_types_required: "attendee types required"
   refuse_success: "%{model} decline success"
   not_brackets_to_enrroll: "No brackets to enroll"
+  event_not_available: "No available for subscribe"
   not_type: "Type required"
   not_subscribe_to_category: "No subscribe to category"
   player:
