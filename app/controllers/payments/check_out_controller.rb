@@ -240,6 +240,9 @@ class Payments::CheckOutController < ApplicationController
     if brackets.length <= 0
       return response_no_enroll_error
     end
+    if event.is_registration_available == FALSE
+      return response_no_available_error
+    end
     config = Payments::ItemsConfig.get_bracket
     prices = event.calculate_prices(brackets, @resource, subscribe_params[:discount_code])
     items = []
@@ -538,6 +541,10 @@ class Payments::CheckOutController < ApplicationController
 
   def response_no_enroll_error
     json_response_error([t("not_brackets_to_enrroll")], 422)
+  end
+
+  def response_no_available_error
+    json_response_error([t("event_not_available")], 422)
   end
 
 
