@@ -1982,7 +1982,8 @@ class EventsController < ApplicationController
   def payment_method_params
     # whitelist params
     unless params[:payment_method].nil?
-      params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency, :processing_fee_id)
+      params.required(:last_registration_date)
+      params.require(:payment_method).permit(:enrollment_fee, :bracket_fee, :currency, :processing_fee_id, :last_registration_date)
     end
   end
 

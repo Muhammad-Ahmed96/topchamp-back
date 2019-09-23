@@ -801,6 +801,15 @@ class Event < ApplicationRecord
     Category.where(:id => categories)
   end
 
+  def is_registration_available
+    response = true
+    payment_method = self.payment_method
+    if payment_method.present? and payment_method.last_registration_date.present?
+      response = Time.now <= payment_method.last_registration_date
+    end
+    response
+  end
+
   def send_email_to_admin
     CreateEventMailer.on_create(self, self.director).deliver
   end
