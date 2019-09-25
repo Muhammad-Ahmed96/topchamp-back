@@ -148,6 +148,7 @@ class Tournament < ApplicationRecord
         end
       end
     end
+    elimination_format = self.contest.elimination_format
     if self.matches_status == 'complete'
       self.set_playing
       if elimination_format.present? && elimination_format.slug == 'round_robin'
