@@ -805,7 +805,7 @@ class Event < ApplicationRecord
     response = true
     payment_method = self.payment_method
     if payment_method.present? and payment_method.last_registration_date.present?
-      response = Time.now.in_time_zone('Central Time (US & Canada)') <= payment_method.last_registration_date.to_s + ' 23:59:59'
+      response = Time.now <= payment_method.last_registration_date.to_s + ' 23:59:59'
     end
     response
   end
