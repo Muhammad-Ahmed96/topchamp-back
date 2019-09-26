@@ -72,7 +72,8 @@ class Player < ApplicationRecord
         # check if category exist in event
         if current_bracket.present?
           status = current_bracket.get_status
-          partner_id = bracket[:partner_id].present? ? bracket[:partner_id] : nil
+          oldSaved = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).first
+          partner_id = oldSaved.present? &&  bracket[:partner_id].nil? ? oldSaved.partner_id  : bracket[:partner_id]
           save_data = {:category_id => current_bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status,
                        :partner_id => partner_id}
           saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
