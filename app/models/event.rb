@@ -649,12 +649,6 @@ class Event < ApplicationRecord
       genderCategories = Category.men_categories
     end
     event_categories = self.internal_category_ids(in_categories_id)
-    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => self.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
-    categories = categories.where(:event_contest_id => contest_id) if contest_id.present?
-    #Validate categories
-    if categories.length <= 0
-      return []
-    end
     except = []
     force_in = []
     not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
@@ -662,6 +656,12 @@ class Event < ApplicationRecord
       except = not_in
       force_in = not_in
       not_in = []
+    end
+    categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => self.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
+    categories = categories.where(:event_contest_id => contest_id) if contest_id.present?
+    #Validate categories
+    if categories.length <= 0
+      return []
     end
     #Validate skills
     categories.each do |category|
