@@ -57,13 +57,16 @@ class Player < ApplicationRecord
 
   def sync_brackets!(data, old_enrolls = false)
     brackets_ids = []
+    event_brackets_ids = []
     teams_to_destroy = []
     schedules_ids = self.schedule_ids
     any_one = false
     event = self.event
     user = self.user
     if old_enrolls
-      brackets_ids = brackets_ids + self.brackets_enroll.pluck(:id)
+      brackets_enroll = self.brackets_enroll
+      brackets_ids = brackets_ids + brackets_enroll.pluck(:id)
+      event_brackets_ids = event_brackets_ids + brackets_enroll.pluck(:event_bracket_id)
     end
     if data.present? and data.kind_of?(Array)
       data.each do |bracket|
@@ -72,16 +75,17 @@ class Player < ApplicationRecord
         # check if category exist in event
         if current_bracket.present?
           status = current_bracket.get_status
-          oldSaved = self.brackets.where(:category_id => current_bracket[:category_id]).where(:event_bracket_id => current_bracket[:event_bracket_id]).first
+          oldSaved = self.brackets.where(:event_bracket_id => bracket[:event_bracket_id]).first
           partner_id = oldSaved.present? &&  bracket[:partner_id].nil? ? oldSaved.partner_id  : bracket[:partner_id]
           save_data = {:category_id => current_bracket[:category_id], :event_bracket_id => bracket[:event_bracket_id], :enroll_status => status,
                        :partner_id => partner_id}
-          saved_bracket = self.brackets.where(:category_id => save_data[:category_id]).where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
+          saved_bracket = self.brackets.where(:event_bracket_id => save_data[:event_bracket_id]).update_or_create!(save_data)
           if saved_bracket.enroll_status != "enroll"
             saved_bracket.enroll_status = status
             saved_bracket.save!
           end
           brackets_ids << saved_bracket.id
+          event_brackets_ids << saved_bracket.event_bracket_id
           #save schedule on player
           shedules = event.schedules.where(:category_id => current_bracket.category_id).where(:agenda_type_id => AgendaType.competition_id).pluck(:id)
           schedules_ids = schedules_ids + shedules
@@ -102,7 +106,7 @@ class Player < ApplicationRecord
     #delete other brackets
     self.brackets.where.not(:id => brackets_ids).destroy_all
     # delete teams
-    self.teams.where.not(event_bracket_id: brackets_ids).each do |team|
+    self.teams.where.not(event_bracket_id: event_brackets_ids).each do |team|
       self.teams.destroy(team)
       self.save
       teams_to_destroy << team.id
