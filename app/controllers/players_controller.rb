@@ -402,7 +402,7 @@ class PlayersController < ApplicationController
         end
       end
     end
-    @player.(my_brackets)
+    @player.set_teams(my_brackets)
     json_response_success(t("edited_success", model: Player.model_name.human), true)
   end
 
