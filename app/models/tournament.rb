@@ -27,6 +27,7 @@ class Tournament < ApplicationRecord
                                                                  .order("event_brackets.highest_skill #{direction}").order("event_brackets.young_age #{direction}").order("event_brackets.old_age #{direction}") if column.present?}
 
   def sync_matches!(data, losers_params = nil)
+    elimination_format = self.contest.elimination_format
     Score.joins(set: [match: [round: [:tournament]]]).merge(Tournament.where :id => self.id).destroy_all
     MatchSet.joins(match: [round: [:tournament]]).merge(Tournament.where :id => self.id).destroy_all
     deleteIds = []
@@ -58,11 +59,20 @@ class Tournament < ApplicationRecord
     self.update_internal_data
     if self.matches_status == 'complete'
       self.set_playing
-      round = self.rounds.where(:index => 0).first
-      if round.present?
-        round.set_playing
-        round.matches.each do |match|
-          match.set_playing
+      if elimination_format.present? && elimination_format.slug == 'round_robin'
+        self.rounds.each do |round|
+          round.set_playing
+          round.matches.each do |match|
+            match.set_playing
+          end
+        end
+      else
+        round = self.rounds.where(:index => 0).first
+        if round.present?
+          round.set_playing
+          round.matches.each do |match|
+            match.set_playing
+          end
         end
       end
     end
@@ -134,6 +144,26 @@ class Tournament < ApplicationRecord
             if match.present?
               match.update!(item_match)
             end
+          end
+        end
+      end
+    end
+    elimination_format = self.contest.elimination_format
+    if self.matches_status == 'complete'
+      self.set_playing
+      if elimination_format.present? && elimination_format.slug == 'round_robin'
+        self.rounds.each do |round|
+          round.set_playing
+          round.matches.each do |match|
+            match.set_playing
+          end
+        end
+      else
+        round = self.rounds.where(:index => 0).first
+        if round.present?
+          round.set_playing
+          round.matches.each do |match|
+            match.set_playing
           end
         end
       end

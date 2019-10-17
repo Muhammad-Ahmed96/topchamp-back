@@ -649,17 +649,19 @@ class Event < ApplicationRecord
       genderCategories = Category.men_categories
     end
     event_categories = self.internal_category_ids(in_categories_id)
+    except = []
+    force_in = []
+    not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
+    if include
+      except = not_in
+      force_in = not_in
+      not_in = []
+    end
     categories = EventContestCategory.joins(contest: [:event]).merge(Event.where(:id => self.id)).where(:category_id => event_categories).where(:category_id => genderCategories)
     categories = categories.where(:event_contest_id => contest_id) if contest_id.present?
     #Validate categories
     if categories.length <= 0
       return []
-    end
-    except = []
-    not_in = player.present? ? player.brackets.pluck(:event_bracket_id) : []
-    if include
-      except = not_in
-      not_in = []
     end
     #Validate skills
     categories.each do |category|
@@ -686,19 +688,19 @@ class Event < ApplicationRecord
         type = bracket.bracket_type
         case type
         when 'age'
-          bracket.filter_details = bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
+          bracket.filter_details = bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range, force_in).not_in(not_in).all
         when 'skill'
-          bracket.filter_details = bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
+          bracket.filter_details = bracket.details.only_filter(only_brackets).skill_filter(skill, force_in).not_in(not_in).all
         when 'skill_age'
-          bracket.details.only_filter(only_brackets).skill_filter(skill).not_in(not_in).each do |detail|
-            detail.filter_brackets = detail.brackets.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).all
+          bracket.details.only_filter(only_brackets).skill_filter(skill, force_in).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).age_filter(age, allow_age_range, force_in).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
           end
         when 'age_skill'
-          bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range).not_in(not_in).each do |detail|
-            detail.filter_brackets = detail.brackets.only_filter(only_brackets).skill_filter(skill).not_in(not_in).all
+          bracket.details.only_filter(only_brackets).age_filter(age, allow_age_range, force_in).not_in(not_in).each do |detail|
+            detail.filter_brackets = detail.brackets.only_filter(only_brackets).skill_filter(skill, force_in).not_in(not_in).all
             if detail.filter_brackets.length > 0
               bracket.filter_details << detail
             end
@@ -797,6 +799,24 @@ class Event < ApplicationRecord
   def categories
     categories = EventContestCategory.joins(:contest).merge(EventContest.where(:event_id => self.id)).pluck(:category_id)
     Category.where(:id => categories)
+  end
+
+  def is_registration_available
+    response = true
+    payment_method = self.payment_method
+    if payment_method.present? and payment_method.last_registration_date.present?
+      response = Time.now <= payment_method.last_registration_date.to_s + ' 23:59:59'
+    end
+    response
+  end
+
+  def last_registration_date
+    response = nil
+    payment_method = self.payment_method
+    if payment_method.present? and payment_method.last_registration_date.present?
+      response = payment_method.last_registration_date
+    end
+    response
   end
 
   def send_email_to_admin

@@ -17,19 +17,26 @@ class EventContestCategoryBracketDetail < ApplicationRecord
   attr_accessor :filter_brackets
   attr_accessor :current
   attr_accessor :partner
+  attr_accessor :receipt
 
 
-  scope :age_filter, lambda {|age, allow_age_range|
+  scope :age_filter, lambda {|age, allow_age_range, force_in = []|
     if age.present?
       if allow_age_range
         where("event_contest_category_bracket_details.young_age <= ?", age).where("event_contest_category_bracket_details.old_age >= ?", age).or(EventContestCategoryBracketDetail.where(:young_age => nil).where(:old_age => nil))
+            .or(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.young_age <= ?", age).where("event_contest_category_bracket_details.old_age <= ?", age))
+            .or(EventContestCategoryBracketDetail.where(:id => force_in))
       else
         where("event_contest_category_bracket_details.age <= ?", age).or(EventContestCategoryBracketDetail.where(:age => nil))
+            .or(EventContestCategoryBracketDetail.where(:id => force_in))
       end
     end
   }
 
-  scope :skill_filter, lambda {|skill| where("event_contest_category_bracket_details.lowest_skill <= ?", skill).where("event_contest_category_bracket_details.highest_skill >= ?", skill).or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
+  scope :skill_filter, lambda {|skill, force_in  = []| where("event_contest_category_bracket_details.lowest_skill <= ?", skill).where("event_contest_category_bracket_details.highest_skill >= ?", skill)
+                                                     .or(EventContestCategoryBracketDetail.where(:id => force_in))
+                                                           .or(EventContestCategoryBracketDetail.where("event_contest_category_bracket_details.lowest_skill >= ?", skill).where("event_contest_category_bracket_details.highest_skill >= ?", skill))
+                                                      .or(EventContestCategoryBracketDetail.where(:lowest_skill => nil).where(:highest_skill => nil)) if skill.present?}
   scope :not_in, lambda {|id| where.not(:id => id) if id.present?}
   scope :start_date_between, lambda {|start_date, end_date| where("start_date >= ? AND start_date <= ?", start_date, end_date ) if start_date.present? and end_date.present?}
   scope :only_filter, lambda {|only_brackets| where(:id => only_brackets) if only_brackets.present?}

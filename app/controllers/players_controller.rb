@@ -1001,19 +1001,22 @@ class PlayersController < ApplicationController
           brackets_ids.push(item.bracket.event_contest_category_bracket_id)
         else
           brackets_ids.push(item.bracket.parent_bracket.event_contest_category_bracket_id)
+          details_ids.push(item.bracket.event_contest_category_bracket_detail_id)
         end
       end
     end
     contest = EventContest.joins(:categories => [:brackets]).merge(EventContestCategoryBracket.where(:id => brackets_ids))
                   .where(:event_id => categories_params[:event_id]).distinct.all
     contest.each do |item|
-      item.filter_categories = EventContestCategory.joins(:brackets).merge(EventContestCategoryBracket.where(:id => brackets_ids)).all
+      item.filter_categories = EventContestCategory.joins(:brackets => [:details])
+                                   .merge(EventContestCategoryBracketDetail
+                                              .where(:contest_id => item.id)).merge(EventContestCategoryBracket.where(:id => brackets_ids)).distinct.all
       item.filter_categories.each do |category|
         category.filter_brackets = category.brackets.where(:id => brackets_ids).all
         category.filter_brackets.each do |bracket|
-          bracket.filter_details = bracket.details.where(:id => details_ids).all
+          bracket.filter_details = bracket.details.where(:id => details_ids).where(:contest_id => item.id).all
           bracket.filter_details.each do |detail|
-            detail.filter_brackets = detail.brackets.where(:id => details_ids).all
+            detail.filter_brackets = detail.brackets.where(:id => details_ids).where(:contest_id => item.id).all
           end
         end
       end
