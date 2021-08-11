@@ -46,7 +46,8 @@ class ApplicationConfirmationsController < ApplicationController
       @resource.confirm
       if @resource.confirmed?
         # email auth has been bypassed, authenticate user
-        @client_id, @token = @resource.create_token
+        @token = @resource.create_token
+        @client_id = @token
         @resource.pin = nil
         @resource.status = :Active
         #@resource.role = "Member"
