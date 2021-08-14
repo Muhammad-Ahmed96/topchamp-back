@@ -35,8 +35,8 @@ development:
 #  host: ec2-34-211-229-184.us-west-2.compute.amazonaws.com
 #qa
   database: top_champ_development
-  username: deploy
-  password: password
+  username: muzzamil
+  password: 12345678
   host: localhost
 
 #local
@@ -78,6 +78,9 @@ development:
 test:
   <<: *default
   database: topchamp_test
+  username: muzzamil
+  password: 12345678
+  host: localhost
 
 # As with config/secrets.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is

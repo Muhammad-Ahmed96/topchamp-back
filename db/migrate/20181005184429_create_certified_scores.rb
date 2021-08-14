@@ -10,7 +10,10 @@ class CreateCertifiedScores < ActiveRecord::Migration[5.2]
       t.integer :team_winner_id
       t.integer :user_id
       t.datetime :date_at
-      t.attachment :signature, :nil => true
+      t.string :signature_file_name
+      t.integer :signature_file_size
+      t.string :signature_content_type
+      t.datetime :signature_updated_at
       t.string :status
       t.timestamps
       t.datetime :deleted_at

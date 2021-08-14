@@ -4,7 +4,10 @@ class CreateEvents < ActiveRecord::Migration[5.2]
       t.integer :venue_id, :limit => 8
       t.integer :event_type_id, :limit => 8
       t.string :title
-      t.attachment :icon
+      t.string :icon_file_name
+      t.integer :icon_file_size
+      t.string :icon_content_type
+      t.datetime :icon_updated_at
       t.text :description
       t.date :start_date
       t.date :end_date

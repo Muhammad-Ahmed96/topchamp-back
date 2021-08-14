@@ -1,11 +1,15 @@
 class AddAttachmentProfileToUsers < ActiveRecord::Migration[5.2]
   def self.up
-    change_table :users do |t|
-      t.attachment :profile
-    end
+    add_column :users, :profile_file_name, :string
+    add_column :users, :profile_file_size, :integer
+    add_column :users, :profile_content_type, :string
+    add_column :users, :profile_updated_at, :datetime
   end
 
   def self.down
-    remove_attachment :users, :profile
+    remove_column :users, :profile_file_name, :string
+    remove_column :users, :profile_file_size, :integer
+    remove_column :users, :profile_content_type, :string
+    remove_column :users, :profile_updated_at, :datetime
   end
 end

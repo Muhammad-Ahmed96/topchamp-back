@@ -2,7 +2,10 @@ class CreateSponsors < ActiveRecord::Migration[5.2]
   def change
     create_table :sponsors do |t|
       t.string :company_name
-      t.attachment :logo
+      t.string :logo_file_name
+      t.integer :logo_file_size
+      t.string :logo_content_type
+      t.datetime :logo_updated_at
       t.string :brand
       t.string :product
       t.string :franchise_brand

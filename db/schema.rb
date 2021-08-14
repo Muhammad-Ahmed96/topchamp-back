@@ -2,15 +2,15 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your
-# database schema. If you need to create the application database on another
-# system, you should be using db:schema:load, not running all the migrations
-# from scratch. The latter is a flawed and unsustainable approach (the more migrations
-# you'll amass, the slower it'll run and the greater likelihood for issues).
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_27_203928) do
+ActiveRecord::Schema.define(version: 2019_09_23_212631) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -100,8 +100,8 @@ ActiveRecord::Schema.define(version: 2019_08_27_203928) do
     t.integer "user_id"
     t.datetime "date_at"
     t.string "signature_file_name"
-    t.string "signature_content_type"
     t.integer "signature_file_size"
+    t.string "signature_content_type"
     t.datetime "signature_updated_at"
     t.string "status"
     t.datetime "created_at", null: false
@@ -275,6 +275,7 @@ ActiveRecord::Schema.define(version: 2019_08_27_203928) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "processing_fee_id"
+    t.date "last_registration_date"
   end
 
   create_table "event_personalized_discounts", force: :cascade do |t|
@@ -380,8 +381,8 @@ ActiveRecord::Schema.define(version: 2019_08_27_203928) do
     t.bigint "event_type_id"
     t.string "title"
     t.string "icon_file_name"
-    t.string "icon_content_type"
     t.integer "icon_file_size"
+    t.string "icon_content_type"
     t.datetime "icon_updated_at"
     t.text "description"
     t.date "start_date"
@@ -597,8 +598,8 @@ ActiveRecord::Schema.define(version: 2019_08_27_203928) do
     t.bigint "partner_mixed_id"
     t.bigint "attendee_type_id"
     t.string "signature_file_name"
-    t.string "signature_content_type"
     t.integer "signature_file_size"
+    t.string "signature_content_type"
     t.datetime "signature_updated_at"
     t.index ["deleted_at"], name: "index_players_on_deleted_at"
   end
@@ -701,8 +702,8 @@ ActiveRecord::Schema.define(version: 2019_08_27_203928) do
   create_table "sponsors", force: :cascade do |t|
     t.string "company_name"
     t.string "logo_file_name"
-    t.string "logo_content_type"
     t.integer "logo_file_size"
+    t.string "logo_content_type"
     t.datetime "logo_updated_at"
     t.string "brand"
     t.string "product"
@@ -829,8 +830,8 @@ ActiveRecord::Schema.define(version: 2019_08_27_203928) do
     t.date "birth_date"
     t.datetime "deleted_at"
     t.string "profile_file_name"
-    t.string "profile_content_type"
     t.integer "profile_file_size"
+    t.string "profile_content_type"
     t.datetime "profile_updated_at"
     t.string "status", default: "Active"
     t.boolean "is_receive_text", default: false
@@ -870,8 +871,8 @@ ActiveRecord::Schema.define(version: 2019_08_27_203928) do
   create_table "venue_pictures", force: :cascade do |t|
     t.bigint "venue_id", null: false
     t.string "picture_file_name"
-    t.string "picture_content_type"
     t.integer "picture_file_size"
+    t.string "picture_content_type"
     t.datetime "picture_updated_at"
   end
 
