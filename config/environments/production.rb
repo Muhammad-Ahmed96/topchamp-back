@@ -80,26 +80,29 @@ Rails.application.configure do
     config.logger    = ActiveSupport::TaggedLogging.new(logger)
   end
 
+  config.front_url = "http://pick-frontend.s3-website.us-east-2.amazonaws.com/"
+  config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
+  config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
+  config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"
+  config.front_partner_url = config.front_url + "/auth?type=need_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}&by=invitation"
+  config.front_partner_choose_url = config.front_url + "/auth?type=choose_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}&by=invitation"
+  config.front_new_spot_url = config.front_url + "?type=new_spot&event_id={event_id}&event_bracket_id={event_bracket_id}&category_id={category_id}"
+  config.front_login = config.front_url + "/auth"    
+
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-  config.action_mailer.asset_host = 'ec2-34-215-140-55.us-west-2.compute.amazonaws.com'
-  config.action_mailer.default_url_options = { host: 'ec2-34-215-140-55.us-west-2.compute.amazonaws.com' }
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-      :address => "smtp.gmail.com",
-      :port => "587",
-      # :domain => "topchampsports.com",
-      :user_name => "info@topchampsports.com",
-      :password => "En5kPrbjxUKZDj0eOJXV",
-      :authentication => "plain",
-      :enable_starttls_auto => true  }
-end
+  # config.action_mailer.asset_host = 'ec2-34-215-140-55.us-west-2.compute.amazonaws.com'
+  # config.action_mailer.default_url_options = { host: 'ec2-34-215-140-55.us-west-2.compute.amazonaws.com' }
+  # config.action_mailer.delivery_method = :smtp
+  # config.action_mailer.smtp_settings = {
+  #     :address => "smtp.gmail.com",
+  #     :port => "587",
+  #     # :domain => "topchampsports.com",
+  #     :user_name => "info@topchampsports.com",
+  #     :password => "En5kPrbjxUKZDj0eOJXV",
+  #     :authentication => "plain",
+  #     :enable_starttls_auto => true  }
 
-config.front_url = "http://pick-frontend.s3-website.us-east-2.amazonaws.com/"
-config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
-config.front_sing_up_url = config.front_url + "/auth/register?type=sign_up"
-config.front_date_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=date&id={id}&invitatio_id={invitatio_id}"
-config.front_partner_url = config.front_url + "/auth?type=need_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}&by=invitation"
-config.front_partner_choose_url = config.front_url + "/auth?type=choose_partner&id={id}&event_id={event_id}&invitation_type={invitation_type}&by=invitation"
-config.front_new_spot_url = config.front_url + "?type=new_spot&event_id={event_id}&event_bracket_id={event_bracket_id}&category_id={category_id}"
-config.front_login = config.front_url + "/auth"
+config.action_mailer.delivery_method = :letter_opener
+config.action_mailer.perform_deliveries = true
+end
