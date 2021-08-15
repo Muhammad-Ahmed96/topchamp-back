@@ -95,10 +95,11 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: 'ec2-3-135-231-220.us-east-2.compute.amazonaws.com' }
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-      :address => "smtp.gmail.com",
+      :address => "smtp.sendgrid.net",
       :port => "587",
-      :user_name => "Muzzamil890",
-      :password => "Iamking890123456",
+      :domain => "ec2-3-135-231-220.us-east-2.compute.amazonaws.com",
+      :user_name => "apikey",
+      :password => ENV["SENDGRID_API_KEY"],
       :authentication => "plain",
       :enable_starttls_auto => true  }
 end
