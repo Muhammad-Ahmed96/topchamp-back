@@ -53,14 +53,8 @@ Rails.application.configure do
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
 
   config.action_mailer.asset_host = 'ec2-54-203-30-224.us-west-2.compute.amazonaws.com'
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-      tls: true,
-      address:              'secure.emailsrvr.com',
-      port:                 465,
-      user_name:            'testomator@amplemind.com',
-      password:             'testTh1st35tTh4T',
-      authentication:       :login  }
+  config.action_mailer.delivery_method = :letter_opener
+  config.action_mailer.perform_deliveries = true
   config.hours_bracket = 8
   config.front_url = "http://topchampdev.tk:444"
   config.front_event_url = config.front_url + "/mail/events/wizard/detail/{id}/basics/?type=event&id={id}&invitatio_id={invitatio_id}"
