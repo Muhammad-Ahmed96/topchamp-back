@@ -64,4 +64,17 @@ class EventTypesController < ApplicationController
     paginate EventType.my_order(column, direction).search(search), per_page: 50, root: :data
   end
 
+  def create
+    authorize EventType
+    resource = EventType.create!(resource_params)
+    json_response_success(t("created_success", model: EventType.model_name.human), true)
+  end
+
+
+  private
+
+  def resource_params
+    params.permit(:name)
+  end
+
 end
