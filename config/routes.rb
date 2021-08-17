@@ -24,9 +24,9 @@ Rails.application.routes.draw do
         put :sing_up_information
       end
     end
-    resources :sports, only: [:index]
-    resources :event_types, only: [:index]
-    resources :attendee_type, only: [:index]
+    resources :sports, only: [:index, :create]
+    resources :event_types, only: [:index, :create]
+    resources :attendee_type, only: [:index, :create]
     resources :roles, only: [:index]
     resources :geography, only: [:index]
     resources :status, only: [:index]
@@ -46,10 +46,10 @@ Rails.application.routes.draw do
         put :inactive
       end
     end
-    resources :agenda_types, only: [:index]
-    resources :regions, only: [:index]
+    resources :agenda_types, only: [:index, :create]
+    resources :regions, only: [:index, :create]
     resources :invitation_status, only: [:index]
-    resources :languages, only: [:index]
+    resources :languages, only: [:index, :create]
     get 'check_reset_token/:reset_password_token', to: 'reset_token#check_reset'
     resources :application_confirmations, only: [:create]
     post 'application_confirmations/resend_pin', to: 'application_confirmations#resend_pin'
