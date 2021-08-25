@@ -1,5 +1,7 @@
 class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
   include Swagger::Blocks
+  include SetUserByToken
+
   # this action is responsible for generating password reset tokens and
   # sending emails
   swagger_path '/password' do
@@ -58,7 +60,7 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
     )
 
     return render_create_error_missing_redirect_url unless @redirect_url
-    return render_create_error_not_allowed_redirect_url if blacklisted_redirect_url?
+    # return render_create_error_not_allowed_redirect_url if blacklisted_redirect_url?
 
     @email = get_case_insensitive_field_from_resource_params(:email)
     @resource = find_resource(:uid, @email)
@@ -69,7 +71,7 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
     unless @resource.active_for_authentication?
       return render_create_error_not_confirmed
     end
-
+    
     if @resource
       yield @resource if block_given?
       @resource.send_reset_password_instructions({
@@ -92,14 +94,12 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
   # this is where users arrive after visiting the password reset confirmation link
   def edit
     # if a user is not found, return nil
-    @resource = with_reset_password_token(resource_params[:reset_password_token])
-
+    @resource = resource_class.with_reset_password_token(resource_params[:reset_password_token])
     if @resource && @resource.reset_password_period_valid?
-      client_id, token = @resource.create_token
+      token = @resource.create_token unless require_client_password_reset_token?
 
       # ensure that user is confirmed
       @resource.skip_confirmation! if confirmable_enabled? && !@resource.confirmed_at
-
       # allow user to change password once without current_password
       @resource.allow_password_change = true if recoverable_enabled?
 
@@ -107,15 +107,18 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
 
       yield @resource if block_given?
 
-      redirect_header_options = {reset_password: true, reset_password_token: resource_params[:reset_password_token]}
-      redirect_headers = build_redirect_headers(token,
-                                                client_id,
-                                                redirect_header_options)
-      redirect_to(@resource.build_auth_url(params[:redirect_url],
-                                           redirect_headers))
+      if require_client_password_reset_token?
+        redirect_to DeviseTokenAuth::Url.generate(@redirect_url, reset_password_token: resource_params[:reset_password_token])
+      else
+        redirect_header_options = { reset_password: true }
+        redirect_headers = build_redirect_headers(token.token,
+                                                  token.client,
+                                                  redirect_header_options)
+        redirect_to(@resource.build_auth_url(@redirect_url,
+                                             redirect_headers))
+      end
     else
-      url = params[:redirect_url] << "?"
-      redirect_to url << {reset_password: true, reset_password_token: resource_params[:reset_password_token]}.to_query
+      render_edit_error
     end
   end
 
@@ -207,6 +210,56 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
       end
     end
   end
+
+  def update
+    # make sure user is authorized
+    if require_client_password_reset_token? && resource_params[:reset_password_token]
+      @resource = resource_class.with_reset_password_token(resource_params[:reset_password_token])
+      return render_update_error_unauthorized unless @resource
+
+      @token = @resource.create_token
+    else
+      @resource = set_user_by_token
+    end
+
+    return render_update_error_unauthorized unless @resource
+
+    # make sure account doesn't use oauth2 provider
+    unless @resource.provider == 'email'
+      return render_update_error_password_not_required
+    end
+
+    # ensure that password params were sent
+    unless password_resource_params[:password] && password_resource_params[:password_confirmation]
+      return render_update_error_missing_password
+    end
+
+    if @resource.send(resource_update_method, password_resource_params)
+      @resource.allow_password_change = false if recoverable_enabled?
+      @resource.save!
+
+      yield @resource if block_given?
+      return render_update_success
+    else
+      return render_update_error
+    end
+  end
+
+  def update_password
+    @resource = User.find_by_reset_password_token(params[:reset_password_token])
+    @token = @resource.create_token
+    @cient_id = @token
+    @resource.save
+
+    if @resource.update(password: params[:password])
+      sign_in(:user, @resource, store: false, bypass: false)
+      yield @resource if block_given?
+      return render_update_success
+    else
+      return render_update_error
+    end
+  end
+
 
 
   def render_edit_error
