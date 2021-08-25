@@ -1,6 +1,6 @@
 class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
   include Swagger::Blocks
-  include SetUserByToken
+  include DeviseTokenAuth::Concerns::SetUserByToken
 
   # this action is responsible for generating password reset tokens and
   # sending emails
