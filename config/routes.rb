@@ -5,9 +5,16 @@ Rails.application.routes.draw do
   get 'event_schedulers/create'
   get 'event_registration_rules/create'
   get 'players/Index'
+  devise_scope :user do
+    put '/api/password', to: 'application_password#update_password', as: 'user_password'
+    get '/api/password/new', to: 'application_password#new', as: 'new_user_password'
+    get '/api/password/edit', to: 'application_password#edit', as: 'edit_user_password'
+    post '/api/password', to: 'application_password#create'
+    get '/api/check_reset_token/:reset_password_token', to: 'reset_token#check_reset', :defaults => { :format => 'json' }
+  end
+
   mount_devise_token_auth_for 'User', at: 'api', controllers: {sessions: 'application_sessions',
-                                                               passwords: 'application_password',
-                                                               registrations: 'application_registrations'}
+                                                               registrations: 'application_registrations'}                                                                
   scope :api, defaults: {format: :json} do
     resources :users, only: [:index, :create, :show, :update, :destroy] do
       collection do
