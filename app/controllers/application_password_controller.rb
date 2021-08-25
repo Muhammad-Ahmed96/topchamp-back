@@ -97,6 +97,7 @@ class ApplicationPasswordController < ::DeviseTokenAuth::PasswordsController
     @resource = resource_class.with_reset_password_token(resource_params[:reset_password_token])
     if @resource && @resource.reset_password_period_valid?
       token = @resource.create_token unless require_client_password_reset_token?
+      client_id = token
 
       # ensure that user is confirmed
       @resource.skip_confirmation! if confirmable_enabled? && !@resource.confirmed_at
