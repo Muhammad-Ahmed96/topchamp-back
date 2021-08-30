@@ -88,3 +88,4 @@ gem 'time_difference'
 gem 'fcm'
 
 gem "whenever", require: false
+gem "figaro"
