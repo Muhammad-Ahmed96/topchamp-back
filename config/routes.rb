@@ -10,7 +10,7 @@ Rails.application.routes.draw do
     get '/api/password/new', to: 'application_password#new', as: 'new_user_password'
     get '/api/password/edit', to: 'application_password#edit', as: 'edit_user_password'
     post '/api/password', to: 'application_password#create'
-    get '/api/check_reset_token/:reset_password_token', to: 'reset_token#check_reset', :defaults => { :format => 'json' }
+    get '/api/check_reset_token/:reset_password_token', to: 'reset_token#check_reset', as: 'reset_password_token', :defaults => { :format => 'json' }
   end
 
   mount_devise_token_auth_for 'User', at: 'api', controllers: {sessions: 'application_sessions',
